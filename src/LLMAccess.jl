@@ -250,30 +250,6 @@ function get_llm_type(llm_name::String)
     end
 end
 
-# Parse command-line arguments
-function parse_commandline()
-    s = ArgParseSettings()
-    @add_arg_table s begin
-        "--llm"
-            help = "LLM provider to use (openai, anthropic, google, ollama, mistral)"
-            default = "google"
-        "--model"
-            help = "Specific model to use (optional)"
-            default = ""
-        "--temperature"
-            help = "Temperature for text generation"
-            arg_type = Float64
-            default = DEFAULT_TEMPERATURE
-        "input_text"
-            help = "Input text for the LLM"
-            required = true
-        "system_instruction"
-            help = "System instruction for the LLM"
-            required = true
-    end
-    return parse_args(s)
-end
-
 # Function to select LLM and call corresponding model
 function call_llm(llm::String,
         input_text::String,
@@ -289,6 +265,47 @@ function call_llm(llm::String,
                       model, 
                       temperature)
     println(result)
+end
+
+# Create default ArgParseSettings
+function create_default_settings()
+    return ArgParseSettings(
+        description = "Process text using various LLM providers.",
+        add_version = true
+    )
+end
+
+# Parse command-line arguments
+function parse_commandline(s::ArgParseSettings = create_default_settings())
+    @add_arg_table s begin
+        "--llm", "-l"
+            help = "LLM provider to use (openai, anthropic, google, ollama, mistral)"
+            default = "google"
+        "--model", "-m"
+            help = "Specific model to use (optional)"
+            default = ""
+        "--temperature", "-t"
+            help = "Temperature for text generation"
+            arg_type = Float64
+            default = 0.7  # Assuming DEFAULT_TEMPERATURE is 0.7
+        "input_text"
+            help = "Input text for the LLM (optional, reads from stdin if not provided)"
+            required = false
+    end
+    
+    args = parse_args(s)
+
+    # If input_text is not provided, read from stdin
+    if isnothing(args["input_text"])
+        args["input_text"] = read(stdin, String)
+    end
+    
+    # Set model if not provided
+    if isempty(args["model"])
+        args["model"] = DEFAULT_MODELS[args["llm"]]
+    end
+
+    return args
 end
 
 end # module LLMAccess
