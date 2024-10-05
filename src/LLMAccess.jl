@@ -276,11 +276,14 @@ function create_default_settings()
 end
 
 # Parse command-line arguments
-function parse_commandline(s::ArgParseSettings = create_default_settings())
+function parse_commandline(
+        s::ArgParseSettings = create_default_settings(), 
+        default_llm::String="google",
+        default_model::String="")
     @add_arg_table s begin
         "--llm", "-l"
             help = "LLM provider to use (openai, anthropic, google, ollama, mistral)"
-            default = "google"
+            default = default_llm
         "--model", "-m"
             help = "Specific model to use (optional)"
             default = ""
@@ -288,6 +291,9 @@ function parse_commandline(s::ArgParseSettings = create_default_settings())
             help = "Temperature for text generation"
             arg_type = Float64
             default = 0.7  # Assuming DEFAULT_TEMPERATURE is 0.7
+        "--debug", "-d"
+            help = "Enable debug mode"
+            action = :store_true
         "input_text"
             help = "Input text for the LLM (optional, reads from stdin if not provided)"
             required = false
@@ -303,6 +309,17 @@ function parse_commandline(s::ArgParseSettings = create_default_settings())
     # Set model if not provided
     if isempty(args["model"])
         args["model"] = DEFAULT_MODELS[args["llm"]]
+    end
+
+    # Print args if debug mode is enabled
+    if args["debug"]
+        println("""
+                Calling LLM with:
+                -- llm: $(args["llm"])
+                -- input_text: $(args["input_text"])
+                -- model: $(args["model"])
+                -- temperature: $(args["temperature"])
+                """)
     end
 
     return args
