@@ -37,6 +37,40 @@ function send_request(url, headers, data)
     end
 end
 
+# Function to handle JSON responses
+function handle_json_response(response, extraction_path)
+    if response.status == 200
+        try
+            # Parse the JSON response
+            response_data = JSON.parse(String(response.body))
+            
+            # Use the extraction path to get the output
+            output_text = get_nested(response_data, extraction_path)
+            
+            return output_text
+        catch error
+            if error isa KeyError
+                @error "Failed to extract data: $error"
+            else
+                @error "Failed to parse JSON response: $error"
+            end
+            return nothing
+        end
+    else
+        @error "Request failed with status: $(response.status)"
+        println(String(response.body))
+        return nothing
+    end
+end
+
+# Helper function to navigate nested dictionaries
+function get_nested(data, path)
+    for key in path
+        data = data[key]
+    end
+    return data
+end
+
 # Function to call OpenAI API
 function call_openai(input_text::String, 
         system_instruction::String="",
@@ -62,26 +96,7 @@ function call_openai(input_text::String,
 
     response = send_request(url, headers, data)
 
-    # Check if the request was successful
-    if response.status == 200
-        try
-            # Parse the JSON response
-            response_data = JSON.parse(String(response.body))
-            # Step by step extraction for better readability
-
-            # Extract the output
-            output_text = response_data["choices"][1]["message"]["content"]
-
-            return output_text
-        catch json_error
-            @error "Failed to parse JSON response: $json_error"
-            return nothing
-        end
-    else
-        @error "Request failed with status: $(response.status)"
-        println(String(response.body))
-        return nothing
-    end
+    return handle_json_response(response, ["choices", 1, "message", "content"])
 end
 
 # Function to call Anthropic API (Claude)
@@ -110,26 +125,7 @@ function call_anthropic(input_text::String,
     )
     response = send_request(url, headers, data)
 
-    # Check if the request was successful
-    if response.status == 200
-        try
-            # Parse the JSON response
-            response_data = JSON.parse(String(response.body))
-            # Step by step extraction for better readability
-
-            # Extract the output
-            output_text = response_data["content"][1]["text"]
-
-            return output_text
-        catch json_error
-            @error "Failed to parse JSON response: $json_error"
-            return nothing
-        end
-    else
-        @error "Request failed with status: $(response.status)"
-        println(String(response.body))
-        return nothing
-    end
+    return handle_json_response(response, ["content", 1, "text"])
 end
 
 # Function to call Google API
@@ -159,19 +155,7 @@ function call_google(input_text::String,
 
     response = send_request(url, headers, data)
 
-    try
-        # Parse the JSON response
-        response_data = JSON.parse(String(response.body))
-        # Step by step extraction for better readability
-
-        # Extract the output
-        output_text = response_data["candidates"][1]["content"]["parts"][1]["text"]
-
-        return output_text 
-    catch json_error
-        @error "Failed to parse JSON response: $json_error"
-        return nothing
-    end
+    return handle_json_response(response, ["candidates", 1, "content", "parts", 1, "text"])
 end
 
 # Function to call Ollama API
@@ -196,16 +180,7 @@ function call_ollama(input_text::String,
 
     response = send_request(url, headers, data)
 
-    try
-        # Parse the JSON response
-        response_data = JSON.parse(String(response.body))
-        output_text = response_data["response"]
-
-        return output_text
-    catch json_error
-        @error "Failed to parse JSON response: $json_error"
-        return nothing
-    end
+    return handle_json_response(response, ["response"])
 end
 
 # Function to select LLM and call corresponding model
