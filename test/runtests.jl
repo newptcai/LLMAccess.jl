@@ -16,5 +16,7 @@ using Test
 
     @test LLMAccess.call_llm("anthropic", text, system_prompt) |> rstrip == text
 
+    @test LLMAccess.call_llm("mistral", text, system_prompt) |> rstrip == text
+
     @test LLMAccess.call_llm("ollama", text, system_prompt) |> rstrip == text
 end

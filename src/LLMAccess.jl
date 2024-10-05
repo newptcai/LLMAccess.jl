@@ -3,12 +3,15 @@ module LLMAccess
 using HTTP
 using JSON
 
+export call_llm
+
 # Default models for each LLM provider
 DEFAULT_MODELS = Dict(
     "openai" => "gpt-4o-mini",
     "anthropic" => "claude-3-haiku-20240307",
     "google" => "gemini-1.5-flash",
-    "ollama" => "llama3.2"
+    "ollama" => "llama3.2",
+    "mistral" => "mistral-small-latest"
 )
 
 # Default temperature
@@ -183,6 +186,35 @@ function call_ollama(input_text::String,
     return handle_json_response(response, ["response"])
 end
 
+# Function to call Mistral API
+function call_mistral(input_text::String,
+        system_instruction::String="",
+        model::String=DEFAULT_MODELS["mistral"],
+        temperature::Float64=DEFAULT_TEMPERATURE)
+
+    # Set URL and API key
+    url = "https://api.mistral.ai/v1/chat/completions"
+    api_key = ENV["MISTRAL_API_KEY"]
+
+    # Set headers
+    headers = ["Content-Type" => "application/json",
+        "Accept" => "application/json",
+        "Authorization" => "Bearer $api_key"]
+
+    # Prepare the request data
+    data = Dict("model" => model, 
+                "temperature" => temperature,
+                "messages" => [
+                    Dict("role" => "system", "content" => system_instruction),
+                    Dict("role" => "user", "content" => input_text)
+                ]
+               )
+
+    response = send_request(url, headers, data)
+
+    return handle_json_response(response, ["choices", 1, "message", "content"])
+end
+
 # Function to select LLM and call corresponding model
 function call_llm(llm::String,
         input_text::String,
@@ -201,6 +233,8 @@ function call_llm(llm::String,
         return call_google(input_text, system_instruction, model, temperature)
     elseif llm == "ollama"
         return call_ollama(input_text, system_instruction, model, temperature)
+    elseif llm == "mistral"
+        return call_mistral(input_text, system_instruction, model, temperature)
     else
         error("Unknown LLM selected!")
     end
