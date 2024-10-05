@@ -1,3 +1,3 @@
 # LLMAccess
 
-[![Build Status](https://github.com/newptcai/LLMAccess.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/newptcai/LLMAccess.jl/actions/workflows/CI.yml?query=branch%3Amain)
+This is a simpler wrapper of the major LLM provider's API.
