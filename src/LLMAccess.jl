@@ -2,10 +2,21 @@ module LLMAccess
 
 using HTTP
 using JSON
+using ArgParse
 
-export call_llm
+export call_llm, get_llm_type, parse_commandline
 
-# Default models for each LLM provider
+# Abstract type for all LLMs
+abstract type AbstractLLM end
+
+# Concrete types for each LLM provider
+struct OpenAILLM <: AbstractLLM end
+struct AnthropicLLM <: AbstractLLM end
+struct GoogleLLM <: AbstractLLM end
+struct OllamaLLM <: AbstractLLM end
+struct MistralLLM <: AbstractLLM end
+
+# Default models and temperature
 DEFAULT_MODELS = Dict(
     "openai" => "gpt-4o-mini",
     "anthropic" => "claude-3-haiku-20240307",
@@ -13,9 +24,7 @@ DEFAULT_MODELS = Dict(
     "ollama" => "llama3.2",
     "mistral" => "mistral-small-latest"
 )
-
-# Default temperature
-DEFAULT_TEMPERATURE = 0.4
+const DEFAULT_TEMPERATURE = 0.7
 
 # Function to send request and handle errors
 function send_request(url, headers, data)
@@ -74,8 +83,16 @@ function get_nested(data, path)
     return data
 end
 
+# Generic call_llm function
+function call_llm(llm::AbstractLLM, input_text::String, system_instruction::String, model::String, temperature::Float64)
+    error("Not implemented for $(typeof(llm))")
+end
+
+# Specific implementations
+
 # Function to call OpenAI API
-function call_openai(input_text::String, 
+function call_llm(::OpenAILLM,
+        input_text::String, 
         system_instruction::String="",
         model::String=DEFAULT_MODELS["openai"],
         temperature::Float64=DEFAULT_TEMPERATURE)
@@ -103,7 +120,8 @@ function call_openai(input_text::String,
 end
 
 # Function to call Anthropic API (Claude)
-function call_anthropic(input_text::String,
+function call_llm(::AnthropicLLM,
+        input_text::String,
         system_instruction::String="", 
         model::String=DEFAULT_MODELS["anthropic"],
         temperature::Float64=DEFAULT_TEMPERATURE)
@@ -132,7 +150,8 @@ function call_anthropic(input_text::String,
 end
 
 # Function to call Google API
-function call_google(input_text::String, 
+function call_llm(::GoogleLLM,
+        input_text::String, 
         system_instruction::String="",
         model::String=DEFAULT_MODELS["google"],
         temperature::Float64=DEFAULT_TEMPERATURE)
@@ -162,7 +181,8 @@ function call_google(input_text::String,
 end
 
 # Function to call Ollama API
-function call_ollama(input_text::String,
+function call_llm(::OllamaLLM,
+        input_text::String,
         system_instruction::String="",
         model::String=DEFAULT_MODELS["ollama"],
         temperature::Float64=DEFAULT_TEMPERATURE)
@@ -187,7 +207,8 @@ function call_ollama(input_text::String,
 end
 
 # Function to call Mistral API
-function call_mistral(input_text::String,
+function call_llm(::MistralLLM,
+        input_text::String,
         system_instruction::String="",
         model::String=DEFAULT_MODELS["mistral"],
         temperature::Float64=DEFAULT_TEMPERATURE)
@@ -215,29 +236,59 @@ function call_mistral(input_text::String,
     return handle_json_response(response, ["choices", 1, "message", "content"])
 end
 
+# Function to get LLM type from string
+function get_llm_type(llm_name::String)
+    llm_types = Dict(
+        "openai" => OpenAILLM(),
+        "anthropic" => AnthropicLLM(),
+        "google" => GoogleLLM(),
+        "ollama" => OllamaLLM(),
+        "mistral" => MistralLLM()
+    )
+    get(llm_types, llm_name) do
+        error("Unknown LLM: $llm_name")
+    end
+end
+
+# Parse command-line arguments
+function parse_commandline()
+    s = ArgParseSettings()
+    @add_arg_table s begin
+        "--llm"
+            help = "LLM provider to use (openai, anthropic, google, ollama, mistral)"
+            default = "google"
+        "--model"
+            help = "Specific model to use (optional)"
+            default = ""
+        "--temperature"
+            help = "Temperature for text generation"
+            arg_type = Float64
+            default = DEFAULT_TEMPERATURE
+        "input_text"
+            help = "Input text for the LLM"
+            required = true
+        "system_instruction"
+            help = "System instruction for the LLM"
+            required = true
+    end
+    return parse_args(s)
+end
+
 # Function to select LLM and call corresponding model
 function call_llm(llm::String,
         input_text::String,
         system_instruction::String,
         model::String="",
         temperature::Float64=DEFAULT_TEMPERATURE)
-    if model == ""
-        model = DEFAULT_MODELS[llm]
-    end
+    llm_type = get_llm_type(llm)
+    model = (model == "" ? DEFAULT_MODELS[llm] : model)
     
-    if llm == "openai"
-        return call_openai(input_text, system_instruction, model, temperature)
-    elseif llm == "anthropic"
-        return call_anthropic(input_text, system_instruction, model, temperature)
-    elseif llm == "google"
-        return call_google(input_text, system_instruction, model, temperature)
-    elseif llm == "ollama"
-        return call_ollama(input_text, system_instruction, model, temperature)
-    elseif llm == "mistral"
-        return call_mistral(input_text, system_instruction, model, temperature)
-    else
-        error("Unknown LLM selected!")
-    end
+    result = call_llm(llm_type,
+                      input_text, 
+                      system_instruction, 
+                      model, 
+                      temperature)
+    println(result)
 end
 
 end # module LLMAccess

@@ -10,13 +10,18 @@ using Test
 
     text = "Hello, World! This is a funny test."
 
-    @test LLMAccess.call_llm("google", text, system_prompt) |> rstrip == text
+    llm = get_llm_type("google")
+    @test LLMAccess.call_llm(llm, text, system_prompt) |> rstrip == text
 
-    @test LLMAccess.call_llm("openai", text, system_prompt) |> rstrip == text
+    llm = get_llm_type("openai")
+    @test LLMAccess.call_llm(llm, text, system_prompt) |> rstrip == text
 
-    @test LLMAccess.call_llm("anthropic", text, system_prompt) |> rstrip == text
+    llm = get_llm_type("anthropic")
+    @test LLMAccess.call_llm(llm, text, system_prompt) |> rstrip == text
 
-    @test LLMAccess.call_llm("mistral", text, system_prompt) |> rstrip == text
+    llm = get_llm_type("mistral")
+    @test LLMAccess.call_llm(llm, text, system_prompt) |> rstrip == text
 
-    @test LLMAccess.call_llm("ollama", text, system_prompt) |> rstrip == text
+    llm = get_llm_type("ollama")
+    @test LLMAccess.call_llm(llm, text, system_prompt) |> rstrip == text
 end
