@@ -279,7 +279,8 @@ end
 function parse_commandline(
         s::ArgParseSettings = create_default_settings(), 
         default_llm::String="google",
-        default_model::String="")
+        default_model::String="",
+        require_input_text::Bool=true)
     @add_arg_table s begin
         "--llm", "-l"
             help = "LLM provider to use (openai, anthropic, google, ollama, mistral)"
@@ -302,7 +303,7 @@ function parse_commandline(
     args = parse_args(s)
 
     # If input_text is not provided, read from stdin
-    if isnothing(args["input_text"])
+    if isnothing(args["input_text"]) && require_input_text
         args["input_text"] = read(stdin, String)
     end
     
