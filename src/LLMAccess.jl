@@ -33,7 +33,7 @@ function send_request(url, headers, data)
         json_data = JSON.json(data)
 
         # Send the POST request to Google's API
-        response = HTTP.request("POST", url, headers, json_data)
+        response = HTTP.request("POST", url, headers, json_data, proxy=ENV["http_proxy"])
 
         # Check if the request was successful
         if response.status == 200
