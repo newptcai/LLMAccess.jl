@@ -20,7 +20,7 @@ struct MistralLLM <: AbstractLLM end
 DEFAULT_MODELS = Dict(
     "openai" => "gpt-4o-mini",
     "anthropic" => "claude-3-haiku-20240307",
-    "google" => "gemini-1.5-flash-8b",
+    "google" => "gemini-1.5-flash-latest",
     "ollama" => "llama3.2",
     "mistral" => "mistral-small-latest"
 )
