@@ -288,6 +288,9 @@ function parse_commandline(
         "--model", "-m"
             help = "Specific model to use (optional)"
             default = ""
+        "--file", "-f"
+            help = "Specific the path to the file to process (optional)"
+            default = ""
         "--temperature", "-t"
             help = "Temperature for text generation"
             arg_type = Float64
