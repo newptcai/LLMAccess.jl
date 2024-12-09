@@ -17,6 +17,7 @@ abstract type OpenAICompatibleLLM <: AbstractLLM end
 # Concrete types for each LLM provider
 struct OpenAILLM <: OpenAICompatibleLLM end
 struct OpenRouterLLM <: OpenAICompatibleLLM end
+struct GroqLLM <: OpenAICompatibleLLM end
 struct AnthropicLLM <: AbstractLLM end
 struct GoogleLLM <: AbstractLLM end
 struct OllamaLLM <: AbstractLLM end
@@ -30,6 +31,7 @@ DEFAULT_MODELS = Dict(
     "google" => "gemini-1.5-flash-latest",
     "ollama" => "llama3.2",
     "mistral" => "mistral-small-latest",
+    "groq" => "llama-3.3-70b-versatile",
 )
 const DEFAULT_TEMPERATURE = 0.7
 
@@ -233,6 +235,30 @@ function call_llm(
     )
 end
 
+# Function to call Groq API
+function call_llm(
+    llm::GroqLLM,
+    input_text::String,
+    system_instruction::String = "",
+    model::String = DEFAULT_MODELS["openai"],
+    temperature::Float64 = DEFAULT_TEMPERATURE,
+    attach_file::String = "",
+)
+    # Set API key and URL
+    api_key = ENV["GROQ_API_KEY"]
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    return make_api_request(
+        llm,
+        api_key,
+        url,
+        input_text,
+        system_instruction,
+        model,
+        temperature,
+        attach_file,
+    )
+end
+
 # Function to call Anthropic API (Claude)
 function call_llm(
     llm::AnthropicLLM,
@@ -395,6 +421,7 @@ function get_llm_type(llm_name::String)
         "ollama" => OllamaLLM(),
         "mistral" => MistralLLM(),
         "openrouter" => OpenRouterLLM(),
+        "groq" => GroqLLM(),
     )
     get(llm_types, llm_name) do
         error("Unknown LLM: $llm_name")
