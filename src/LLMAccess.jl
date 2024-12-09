@@ -11,9 +11,12 @@ export call_llm, get_llm_type, parse_commandline
 # Abstract type for all LLMs
 abstract type AbstractLLM end
 
+# Abstract type for OpenAI-compatible LLMs
+abstract type OpenAICompatibleLLM <: AbstractLLM end
+
 # Concrete types for each LLM provider
-struct OpenAILLM <: AbstractLLM end
-struct OpenRouterLLM <: AbstractLLM end
+struct OpenAILLM <: OpenAICompatibleLLM end
+struct OpenRouterLLM <: OpenAICompatibleLLM end
 struct AnthropicLLM <: AbstractLLM end
 struct GoogleLLM <: AbstractLLM end
 struct OllamaLLM <: AbstractLLM end
@@ -45,10 +48,25 @@ function encode_file_to_base64(file_path)
     close(iob64_encode)
     base64_encoded = String(take!(io))
 
+    return (mime_type, base64_encoded)
+end
+
+function encode_file_to_base64(::OpenAICompatibleLLM, file_path)
+    mime_type, base64_encoded = encode_file_to_base64(file_path)
+
     # Construct the dictionary with the encoded string
     return Dict(
         "type" => "image_url",
         "image_url" => Dict("url" => "data:$(mime_type);base64,$base64_encoded"),
+    )
+end
+
+function encode_file_to_base64(::GoogleLLM, file_path)
+    mime_type, base64_encoded = encode_file_to_base64(file_path)
+
+    # Construct the dictionary with the encoded string
+    return Dict(
+        "inline_data" => Dict("mime_type":"$(mime_type)", "data":"$(base64_encoded)"),
     )
 end
 
@@ -116,8 +134,9 @@ end
 
 # Specific implementations
 
-# Function to build the API request for OpenAI compatible services
-function build_api_request(
+# Function to make the API request for OpenAI compatible services
+function make_api_request(
+    llm::OpenAICompatibleLLM,
     api_key,
     url,
     input_text,
@@ -132,7 +151,7 @@ function build_api_request(
     # User content
     text_data = Dict("type" => "text", "text" => input_text)
     if attach_file != ""
-        image_data = encode_file_to_base64(attach_file)
+        image_data = encode_file_to_base64(llm, attach_file)
         content = [text_data, image_data]
     else
         content = [text_data]
@@ -157,7 +176,7 @@ end
 
 # Function to call OpenAI API
 function call_llm(
-    ::OpenAILLM,
+    llm::OpenAILLM,
     input_text::String,
     system_instruction::String = "",
     model::String = DEFAULT_MODELS["openai"],
@@ -167,7 +186,8 @@ function call_llm(
     # Set API key and URL
     api_key = ENV["OPENAI_API_KEY"]
     url = "https://api.openai.com/v1/chat/completions"
-    return build_api_request(
+    return make_api_request(
+        llm,
         api_key,
         url,
         input_text,
@@ -180,7 +200,7 @@ end
 
 # Function to call OpenRouter API (example of another OpenAI compatible API)
 function call_llm(
-    ::OpenRouterLLM,
+    llm::OpenRouterLLM,
     input_text::String,
     system_instruction::String = "",
     model::String = DEFAULT_MODELS["openrouter"],
@@ -190,7 +210,8 @@ function call_llm(
     # Set API key and URL
     api_key = ENV["OPENROUTER_API_KEY"]
     url = "https://openrouter.ai/api/v1/chat/completions"
-    return build_api_request(
+    return make_api_request(
+        llm,
         api_key,
         url,
         input_text,
@@ -235,11 +256,12 @@ end
 
 # Function to call Google API
 function call_llm(
-    ::GoogleLLM,
+    llm::GoogleLLM,
     input_text::String,
     system_instruction::String = "",
     model::String = DEFAULT_MODELS["google"],
     temperature::Float64 = DEFAULT_TEMPERATURE,
+    attach_file::String = "",
 )
     # Set API key and URL
     api_key = ENV["GOOGLE_API_KEY"]
@@ -248,11 +270,20 @@ function call_llm(
     # Set headers
     headers = ["Content-Type" => "application/json"]
 
+    # Prepare parts
+    text_data = Dict("text" => input_text)
+    if attach_file != ""
+        image_data = encode_file_to_base64(llm, attach_file)
+        parts = [text_data, image_data]
+    else
+        parts = [text_data]
+    end
+
     # Prepare the request data
     data = Dict(
         "system_instruction" => Dict("parts" => Dict("text" => system_instruction)),
         "generationConfig" => Dict("temperature" => temperature),
-        "contents" => Dict("parts" => Dict("text" => input_text)),
+        "contents" => Dict("parts" => parts),
     )
 
     response = send_request(url, headers, data)
