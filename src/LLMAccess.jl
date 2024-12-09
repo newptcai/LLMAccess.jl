@@ -13,6 +13,7 @@ abstract type AbstractLLM end
 
 # Concrete types for each LLM provider
 struct OpenAILLM <: AbstractLLM end
+struct OpenRouterLLM <: AbstractLLM end
 struct AnthropicLLM <: AbstractLLM end
 struct GoogleLLM <: AbstractLLM end
 struct OllamaLLM <: AbstractLLM end
@@ -21,10 +22,11 @@ struct MistralLLM <: AbstractLLM end
 # Default models and temperature
 DEFAULT_MODELS = Dict(
     "openai" => "gpt-4o-mini",
+    "openrouter" => "amazon/nova-micro-v1",
     "anthropic" => "claude-3-haiku-20240307",
     "google" => "gemini-1.5-flash-latest",
     "ollama" => "llama3.2",
-    "mistral" => "mistral-small-latest"
+    "mistral" => "mistral-small-latest",
 )
 const DEFAULT_TEMPERATURE = 0.7
 
@@ -46,9 +48,7 @@ function encode_file_to_base64(file_path)
     # Construct the dictionary with the encoded string
     return Dict(
         "type" => "image_url",
-        "image_url" => Dict(
-            "url" => "data:$(mime_type);base64,$base64_encoded"
-        )
+        "image_url" => Dict("url" => "data:$(mime_type);base64,$base64_encoded"),
     )
 end
 
@@ -59,7 +59,7 @@ function send_request(url, headers, data)
         json_data = JSON.json(data)
 
         # Send the POST request to Google's API
-        response = HTTP.request("POST", url, headers, json_data, proxy=ENV["http_proxy"])
+        response = HTTP.request("POST", url, headers, json_data, proxy = ENV["http_proxy"])
 
         # Check if the request was successful
         if response.status == 200
@@ -81,10 +81,10 @@ function handle_json_response(response, extraction_path)
         try
             # Parse the JSON response
             response_data = JSON.parse(String(response.body))
-            
+
             # Use the extraction path to get the output
             output_text = get_nested(response_data, extraction_path)
-            
+
             return output_text
         catch error
             if error isa KeyError
@@ -110,27 +110,24 @@ function get_nested(data, path)
 end
 
 # Generic call_llm function
-function call_llm(llm::AbstractLLM, input_text::String, system_instruction::String, model::String, temperature::Float64)
+function call_llm(llm::AbstractLLM, args...)
     error("Not implemented for $(typeof(llm))")
 end
 
 # Specific implementations
 
-# Function to call OpenAI API
-function call_llm(::OpenAILLM,
-        input_text::String, 
-        system_instruction::String="",
-        model::String=DEFAULT_MODELS["openai"],
-        temperature::Float64=DEFAULT_TEMPERATURE,
-        attach_file::String=""
-    )
-    # Set API key and URL
-    api_key = ENV["OPENAI_API_KEY"]
-    url = "https://api.openai.com/v1/chat/completions"
-
+# Function to build the API request for OpenAI compatible services
+function build_api_request(
+    api_key,
+    url,
+    input_text,
+    system_instruction,
+    model,
+    temperature,
+    attach_file,
+)
     # Set headers
-    headers = ["Content-Type" => "application/json",
-                "Authorization" => "Bearer $api_key"]
+    headers = ["Content-Type" => "application/json", "Authorization" => "Bearer $api_key"]
 
     # User content
     text_data = Dict("type" => "text", "text" => input_text)
@@ -147,29 +144,81 @@ function call_llm(::OpenAILLM,
         "temperature" => temperature,
         "messages" => [
             Dict("role" => "system", "content" => system_instruction),
-            Dict("role" => "user", "content" => content)
-        ]
+            Dict("role" => "user", "content" => content),
+        ],
     )
 
+    # Send the request
     response = send_request(url, headers, data)
 
+    # Handle the response
     return handle_json_response(response, ["choices", 1, "message", "content"])
 end
 
+# Function to call OpenAI API
+function call_llm(
+    ::OpenAILLM,
+    input_text::String,
+    system_instruction::String = "",
+    model::String = DEFAULT_MODELS["openai"],
+    temperature::Float64 = DEFAULT_TEMPERATURE,
+    attach_file::String = "",
+)
+    # Set API key and URL
+    api_key = ENV["OPENAI_API_KEY"]
+    url = "https://api.openai.com/v1/chat/completions"
+    return build_api_request(
+        api_key,
+        url,
+        input_text,
+        system_instruction,
+        model,
+        temperature,
+        attach_file,
+    )
+end
+
+# Function to call OpenRouter API (example of another OpenAI compatible API)
+function call_llm(
+    ::OpenRouterLLM,
+    input_text::String,
+    system_instruction::String = "",
+    model::String = DEFAULT_MODELS["openrouter"],
+    temperature::Float64 = DEFAULT_TEMPERATURE,
+    attach_file::String = "",
+)
+    # Set API key and URL
+    api_key = ENV["OPENROUTER_API_KEY"]
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    return build_api_request(
+        api_key,
+        url,
+        input_text,
+        system_instruction,
+        model,
+        temperature,
+        attach_file,
+    )
+end
+
 # Function to call Anthropic API (Claude)
-function call_llm(::AnthropicLLM,
-        input_text::String,
-        system_instruction::String="", 
-        model::String=DEFAULT_MODELS["anthropic"],
-        temperature::Float64=DEFAULT_TEMPERATURE)
+function call_llm(
+    ::AnthropicLLM,
+    input_text::String,
+    system_instruction::String = "",
+    model::String = DEFAULT_MODELS["anthropic"],
+    temperature::Float64 = DEFAULT_TEMPERATURE,
+)
     # Set API key and URL
     api_key = ENV["ANTHROPIC_API_KEY"]
     url = "https://api.anthropic.com/v1/messages"
 
     # Set headers
-    headers = ["content-type" => "application/json",
-                "anthropic-version" => "2023-06-01",
-                "x-api-key" => "$api_key"]
+    headers = [
+        "content-type" => "application/json",
+        "anthropic-version" => "2023-06-01",
+        "x-api-key" => "$api_key",
+    ]
 
     # Prepare the request data
     data = Dict(
@@ -177,9 +226,7 @@ function call_llm(::AnthropicLLM,
         "max_tokens" => 1024,
         "temperature" => temperature,
         "system" => system_instruction,
-        "messages" => [
-            Dict("role" => "user", "content" => input_text)
-        ]
+        "messages" => [Dict("role" => "user", "content" => input_text)],
     )
     response = send_request(url, headers, data)
 
@@ -187,11 +234,13 @@ function call_llm(::AnthropicLLM,
 end
 
 # Function to call Google API
-function call_llm(::GoogleLLM,
-        input_text::String, 
-        system_instruction::String="",
-        model::String=DEFAULT_MODELS["google"],
-        temperature::Float64=DEFAULT_TEMPERATURE)
+function call_llm(
+    ::GoogleLLM,
+    input_text::String,
+    system_instruction::String = "",
+    model::String = DEFAULT_MODELS["google"],
+    temperature::Float64 = DEFAULT_TEMPERATURE,
+)
     # Set API key and URL
     api_key = ENV["GOOGLE_API_KEY"]
     url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$api_key"
@@ -201,15 +250,9 @@ function call_llm(::GoogleLLM,
 
     # Prepare the request data
     data = Dict(
-        "system_instruction" => Dict(
-            "parts" => Dict("text" => system_instruction)
-        ),
-        "generationConfig" => Dict(
-            "temperature" => temperature
-        ),
-        "contents" => Dict(
-            "parts" => Dict("text" => input_text)
-        )
+        "system_instruction" => Dict("parts" => Dict("text" => system_instruction)),
+        "generationConfig" => Dict("temperature" => temperature),
+        "contents" => Dict("parts" => Dict("text" => input_text)),
     )
 
     response = send_request(url, headers, data)
@@ -218,11 +261,13 @@ function call_llm(::GoogleLLM,
 end
 
 # Function to call Ollama API
-function call_llm(::OllamaLLM,
-        input_text::String,
-        system_instruction::String="",
-        model::String=DEFAULT_MODELS["ollama"],
-        temperature::Float64=DEFAULT_TEMPERATURE)
+function call_llm(
+    ::OllamaLLM,
+    input_text::String,
+    system_instruction::String = "",
+    model::String = DEFAULT_MODELS["ollama"],
+    temperature::Float64 = DEFAULT_TEMPERATURE,
+)
 
     # Set URL
     url = "http://127.0.0.1:11434/api/generate"
@@ -231,12 +276,13 @@ function call_llm(::OllamaLLM,
     headers = ["Content-Type" => "application/json"]
 
     # Prepare the request data
-    data = Dict("model" => model, 
-                "prompt" => input_text,
-                "stream" => false,
-                "system" => system_instruction,
-                "options" => Dict("temperature" => temperature)
-               )
+    data = Dict(
+        "model" => model,
+        "prompt" => input_text,
+        "stream" => false,
+        "system" => system_instruction,
+        "options" => Dict("temperature" => temperature),
+    )
 
     response = send_request(url, headers, data)
 
@@ -244,29 +290,34 @@ function call_llm(::OllamaLLM,
 end
 
 # Function to call Mistral API
-function call_llm(::MistralLLM,
-        input_text::String,
-        system_instruction::String="",
-        model::String=DEFAULT_MODELS["mistral"],
-        temperature::Float64=DEFAULT_TEMPERATURE)
+function call_llm(
+    ::MistralLLM,
+    input_text::String,
+    system_instruction::String = "",
+    model::String = DEFAULT_MODELS["mistral"],
+    temperature::Float64 = DEFAULT_TEMPERATURE,
+)
 
     # Set URL and API key
     url = "https://api.mistral.ai/v1/chat/completions"
     api_key = ENV["MISTRAL_API_KEY"]
 
     # Set headers
-    headers = ["Content-Type" => "application/json",
+    headers = [
+        "Content-Type" => "application/json",
         "Accept" => "application/json",
-        "Authorization" => "Bearer $api_key"]
+        "Authorization" => "Bearer $api_key",
+    ]
 
     # Prepare the request data
-    data = Dict("model" => model, 
-                "temperature" => temperature,
-                "messages" => [
-                    Dict("role" => "system", "content" => system_instruction),
-                    Dict("role" => "user", "content" => input_text)
-                ]
-               )
+    data = Dict(
+        "model" => model,
+        "temperature" => temperature,
+        "messages" => [
+            Dict("role" => "system", "content" => system_instruction),
+            Dict("role" => "user", "content" => input_text),
+        ],
+    )
 
     response = send_request(url, headers, data)
 
@@ -280,7 +331,8 @@ function get_llm_type(llm_name::String)
         "anthropic" => AnthropicLLM(),
         "google" => GoogleLLM(),
         "ollama" => OllamaLLM(),
-        "mistral" => MistralLLM()
+        "mistral" => MistralLLM(),
+        "openrouter" => OpenRouterLLM(),
     )
     get(llm_types, llm_name) do
         error("Unknown LLM: $llm_name")
@@ -288,19 +340,17 @@ function get_llm_type(llm_name::String)
 end
 
 # Function to select LLM and call corresponding model
-function call_llm(llm::String,
-        input_text::String,
-        system_instruction::String,
-        model::String="",
-        temperature::Float64=DEFAULT_TEMPERATURE)
+function call_llm(
+    llm::String,
+    input_text::String,
+    system_instruction::String,
+    model::String = "",
+    temperature::Float64 = DEFAULT_TEMPERATURE,
+)
     llm_type = get_llm_type(llm)
     model = (model == "" ? DEFAULT_MODELS[llm] : model)
-    
-    result = call_llm(llm_type,
-                      input_text, 
-                      system_instruction, 
-                      model, 
-                      temperature)
+
+    result = call_llm(llm_type, input_text, system_instruction, model, temperature)
     println(result)
 end
 
@@ -308,48 +358,49 @@ end
 function create_default_settings()
     return ArgParseSettings(
         description = "Process text using various LLM providers.",
-        add_version = true
+        add_version = true,
     )
 end
 
 # Parse command-line arguments
 function parse_commandline(
-        s::ArgParseSettings = create_default_settings(), 
-        default_llm::String="google",
-        default_model::String="",
-        require_input_text::Bool=true)
+    s::ArgParseSettings = create_default_settings(),
+    default_llm::String = "google",
+    default_model::String = "",
+    require_input_text::Bool = true,
+)
     @add_arg_table s begin
         "--llm", "-l"
-            help = "LLM provider to use (openai, anthropic, google, ollama, mistral)"
-            default = default_llm
+        help = "LLM provider to use (openai, anthropic, google, ollama, mistral, openrouter)"
+        default = default_llm
         "--model", "-m"
-            help = "Specific model to use (optional)"
-            default = ""
+        help = "Specific model to use (optional)"
+        default = ""
         "--file", "-f"
-            help = "Specific the path to the file to process (optional)"
-            default = ""
+        help = "Specific the path to the file to process (optional)"
+        default = ""
         "--attachment", "-a"
-            help = "Specific the path to the file to be attached to the request (optional)"
-            default = ""
+        help = "Specific the path to the file to be attached to the request (optional)"
+        default = ""
         "--temperature", "-t"
-            help = "Temperature for text generation"
-            arg_type = Float64
-            default = 0.7  # Assuming DEFAULT_TEMPERATURE is 0.7
+        help = "Temperature for text generation"
+        arg_type = Float64
+        default = 0.7  # Assuming DEFAULT_TEMPERATURE is 0.7
         "--debug", "-d"
-            help = "Enable debug mode"
-            action = :store_true
+        help = "Enable debug mode"
+        action = :store_true
         "input_text"
-            help = "Input text for the LLM (optional, reads from stdin if not provided)"
-            required = false
+        help = "Input text for the LLM (optional, reads from stdin if not provided)"
+        required = false
     end
-    
+
     args = parse_args(s)
 
     # If input_text is not provided, read from stdin
     if isnothing(args["input_text"]) && require_input_text
         args["input_text"] = read(stdin, String)
     end
-    
+
     # Set model if not provided
     if isempty(args["model"])
         args["model"] = DEFAULT_MODELS[args["llm"]]
