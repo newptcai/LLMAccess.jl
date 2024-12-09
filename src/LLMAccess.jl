@@ -66,7 +66,7 @@ function encode_file_to_base64(::GoogleLLM, file_path)
 
     # Construct the dictionary with the encoded string
     return Dict(
-        "inline_data" => Dict("mime_type":"$(mime_type)", "data":"$(base64_encoded)"),
+        "inline_data" => Dict("mime_type"=>"$(mime_type)", "data"=>"$(base64_encoded)"),
     )
 end
 
