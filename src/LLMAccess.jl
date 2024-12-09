@@ -51,7 +51,7 @@ function encode_file_to_base64(file_path)
     return (mime_type, base64_encoded)
 end
 
-function encode_file_to_base64(::OpenAICompatibleLLM, file_path)
+function encode_file_to_base64(::Union{OpenAICompatibleLLM,MistralLLM}, file_path)
     mime_type, base64_encoded = encode_file_to_base64(file_path)
 
     # Construct the dictionary with the encoded string
@@ -343,11 +343,12 @@ end
 
 # Function to call Mistral API
 function call_llm(
-    ::MistralLLM,
+    llm::MistralLLM,
     input_text::String,
     system_instruction::String = "",
     model::String = DEFAULT_MODELS["mistral"],
     temperature::Float64 = DEFAULT_TEMPERATURE,
+    attach_file::String = "",
 )
 
     # Set URL and API key
@@ -361,13 +362,22 @@ function call_llm(
         "Authorization" => "Bearer $api_key",
     ]
 
+    # Prepare content
+    text_data = Dict("type" => "text", "text" => input_text)
+    if attach_file != ""
+        image_data = encode_file_to_base64(llm, attach_file)
+        content = [text_data, image_data]
+    else
+        content = [text_data]
+    end
+
     # Prepare the request data
     data = Dict(
         "model" => model,
         "temperature" => temperature,
         "messages" => [
             Dict("role" => "system", "content" => system_instruction),
-            Dict("role" => "user", "content" => input_text),
+            Dict("role" => "user", "content" => content),
         ],
     )
 
