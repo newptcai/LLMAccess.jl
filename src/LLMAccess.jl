@@ -3,6 +3,8 @@ module LLMAccess
 using HTTP
 using JSON
 using ArgParse
+using Base64
+using MIMEs
 
 export call_llm, get_llm_type, parse_commandline
 
@@ -25,6 +27,30 @@ DEFAULT_MODELS = Dict(
     "mistral" => "mistral-small-latest"
 )
 const DEFAULT_TEMPERATURE = 0.7
+
+function encode_file_to_base64(file_path)
+    # Read the file content
+    file_content = read(file_path)
+
+    # Determine the MIME type based on file extension
+    file_extension = splitext(file_path)[2]
+    mime_type = mime_from_extension(file_extension)
+
+    # Create a base64-encoded string
+    io = IOBuffer()
+    iob64_encode = Base64EncodePipe(io)
+    write(iob64_encode, file_content)
+    close(iob64_encode)
+    base64_encoded = String(take!(io))
+
+    # Construct the dictionary with the encoded string
+    return Dict(
+        "type" => "image_url",
+        "image_url" => Dict(
+            "url" => "data:$(mime_type);base64,$base64_encoded"
+        )
+    )
+end
 
 # Function to send request and handle errors
 function send_request(url, headers, data)
@@ -95,7 +121,9 @@ function call_llm(::OpenAILLM,
         input_text::String, 
         system_instruction::String="",
         model::String=DEFAULT_MODELS["openai"],
-        temperature::Float64=DEFAULT_TEMPERATURE)
+        temperature::Float64=DEFAULT_TEMPERATURE,
+        attach_file::String=""
+    )
     # Set API key and URL
     api_key = ENV["OPENAI_API_KEY"]
     url = "https://api.openai.com/v1/chat/completions"
@@ -104,13 +132,22 @@ function call_llm(::OpenAILLM,
     headers = ["Content-Type" => "application/json",
                 "Authorization" => "Bearer $api_key"]
 
+    # User content
+    text_data = Dict("type" => "text", "text" => input_text)
+    if attach_file != ""
+        image_data = encode_file_to_base64(attach_file)
+        content = [text_data, image_data]
+    else
+        content = [text_data]
+    end
+
     # Prepare the request data
     data = Dict(
         "model" => model,
         "temperature" => temperature,
         "messages" => [
             Dict("role" => "system", "content" => system_instruction),
-            Dict("role" => "user", "content" => input_text)
+            Dict("role" => "user", "content" => content)
         ]
     )
 
@@ -290,6 +327,9 @@ function parse_commandline(
             default = ""
         "--file", "-f"
             help = "Specific the path to the file to process (optional)"
+            default = ""
+        "--attachment", "-a"
+            help = "Specific the path to the file to be attached to the request (optional)"
             default = ""
         "--temperature", "-t"
             help = "Temperature for text generation"
