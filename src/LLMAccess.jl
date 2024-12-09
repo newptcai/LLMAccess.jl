@@ -26,7 +26,7 @@ struct MistralLLM <: AbstractLLM end
 DEFAULT_MODELS = Dict(
     "openai" => "gpt-4o-mini",
     "openrouter" => "amazon/nova-micro-v1",
-    "anthropic" => "claude-3-haiku-20240307",
+    "anthropic" => "claude-3-5-haiku-latest",
     "google" => "gemini-1.5-flash-latest",
     "ollama" => "llama3.2",
     "mistral" => "mistral-small-latest",
@@ -67,6 +67,17 @@ function encode_file_to_base64(::GoogleLLM, file_path)
     # Construct the dictionary with the encoded string
     return Dict(
         "inline_data" => Dict("mime_type":"$(mime_type)", "data":"$(base64_encoded)"),
+    )
+end
+
+function encode_file_to_base64(::AnthropicLLM, file_path)
+    mime_type, base64_encoded = encode_file_to_base64(file_path)
+
+    # Construct the dictionary with the encoded string
+    return Dict(
+        "type" => "image",
+        "source" =>
+            Dict("type"=>"base64", "media_type"=>"$(mime_type)", "data"=>"$(base64_encoded)"),
     )
 end
 
@@ -148,7 +159,7 @@ function make_api_request(
     # Set headers
     headers = ["Content-Type" => "application/json", "Authorization" => "Bearer $api_key"]
 
-    # User content
+    # Prepare content
     text_data = Dict("type" => "text", "text" => input_text)
     if attach_file != ""
         image_data = encode_file_to_base64(llm, attach_file)
@@ -224,11 +235,12 @@ end
 
 # Function to call Anthropic API (Claude)
 function call_llm(
-    ::AnthropicLLM,
+    llm::AnthropicLLM,
     input_text::String,
     system_instruction::String = "",
     model::String = DEFAULT_MODELS["anthropic"],
     temperature::Float64 = DEFAULT_TEMPERATURE,
+    attach_file::String = "",
 )
     # Set API key and URL
     api_key = ENV["ANTHROPIC_API_KEY"]
@@ -241,13 +253,22 @@ function call_llm(
         "x-api-key" => "$api_key",
     ]
 
+    # Prepare content
+    text_data = Dict("type" => "text", "text" => input_text)
+    if attach_file != ""
+        image_data = encode_file_to_base64(llm, attach_file)
+        content = [text_data, image_data]
+    else
+        content = [text_data]
+    end
+
     # Prepare the request data
     data = Dict(
         "model" => model,
         "max_tokens" => 1024,
         "temperature" => temperature,
         "system" => system_instruction,
-        "messages" => [Dict("role" => "user", "content" => input_text)],
+        "messages" => [Dict("role" => "user", "content" => content)],
     )
     response = send_request(url, headers, data)
 
