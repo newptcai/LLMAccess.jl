@@ -8,23 +8,76 @@ using MIMEs
 
 export call_llm, get_llm_type, parse_commandline
 
-# Abstract type for all LLMs
+# Abstract Types
+
+"""
+    AbstractLLM
+
+An abstract type representing any Large Language Model (LLM).
+"""
 abstract type AbstractLLM end
 
-# Abstract type for OpenAI-compatible LLMs
+"""
+    OpenAICompatibleLLM
+
+An abstract type for LLMs that are compatible with OpenAI's API.
+"""
 abstract type OpenAICompatibleLLM <: AbstractLLM end
 
-# Concrete types for each LLM provider
+# Concrete Types
+
+"""
+    OpenAILLM
+
+Concrete type for OpenAI's LLM.
+"""
 struct OpenAILLM <: OpenAICompatibleLLM end
+
+"""
+    OpenRouterLLM
+
+Concrete type for OpenRouter's LLM.
+"""
 struct OpenRouterLLM <: OpenAICompatibleLLM end
+
+"""
+    GroqLLM
+
+Concrete type for Groq's LLM.
+"""
 struct GroqLLM <: OpenAICompatibleLLM end
+
+"""
+    AnthropicLLM
+
+Concrete type for Anthropic's LLM.
+"""
 struct AnthropicLLM <: AbstractLLM end
+
+"""
+    GoogleLLM
+
+Concrete type for Google's LLM.
+"""
 struct GoogleLLM <: AbstractLLM end
+
+"""
+    OllamaLLM
+
+Concrete type for Ollama's LLM.
+"""
 struct OllamaLLM <: AbstractLLM end
+
+"""
+    MistralLLM
+
+Concrete type for Mistral's LLM.
+"""
 struct MistralLLM <: AbstractLLM end
 
-# Default models and temperature
-DEFAULT_MODELS = Dict(
+# Constants
+
+const DEFAULT_MODELS = Dict(
     "openai" => "gpt-4o-mini",
     "openrouter" => "amazon/nova-micro-v1",
     "anthropic" => "claude-3-5-haiku-latest",
@@ -33,8 +86,22 @@ DEFAULT_MODELS = Dict(
     "mistral" => "mistral-small-latest",
     "groq" => "llama-3.3-70b-versatile",
 )
+
 const DEFAULT_TEMPERATURE = 0.7
 
+# Helper Functions
+
+"""
+    encode_file_to_base64(file_path)
+
+Encodes the content of a file to a Base64 string along with its MIME type.
+
+# Arguments
+- `file_path`: Path to the file to be encoded.
+
+# Returns
+A tuple containing the MIME type and the Base64-encoded string.
+"""
 function encode_file_to_base64(file_path)
     # Read the file content
     file_content = read(file_path)
@@ -53,10 +120,21 @@ function encode_file_to_base64(file_path)
     return (mime_type, base64_encoded)
 end
 
-function encode_file_to_base64(::Union{OpenAICompatibleLLM,MistralLLM}, file_path)
+"""
+    encode_file_to_base64(llm, file_path)
+
+Overloaded method to encode a file to Base64 based on the LLM type.
+
+# Arguments
+- `llm`: An instance of an LLM type.
+- `file_path`: Path to the file to be encoded.
+
+# Returns
+A dictionary with the encoded image data tailored to the specific LLM.
+"""
+function encode_file_to_base64(::Union{OpenAICompatibleLLM, MistralLLM}, file_path)
     mime_type, base64_encoded = encode_file_to_base64(file_path)
 
-    # Construct the dictionary with the encoded string
     return Dict(
         "type" => "image_url",
         "image_url" => Dict("url" => "data:$(mime_type);base64,$base64_encoded"),
@@ -66,33 +144,38 @@ end
 function encode_file_to_base64(::GoogleLLM, file_path)
     mime_type, base64_encoded = encode_file_to_base64(file_path)
 
-    # Construct the dictionary with the encoded string
     return Dict(
-        "inline_data" => Dict("mime_type"=>"$(mime_type)", "data"=>"$(base64_encoded)"),
+        "inline_data" => Dict("mime_type" => "$(mime_type)", "data" => "$(base64_encoded)"),
     )
 end
 
 function encode_file_to_base64(::AnthropicLLM, file_path)
     mime_type, base64_encoded = encode_file_to_base64(file_path)
 
-    # Construct the dictionary with the encoded string
     return Dict(
         "type" => "image",
-        "source" =>
-            Dict("type"=>"base64", "media_type"=>"$(mime_type)", "data"=>"$(base64_encoded)"),
+        "source" => Dict("type" => "base64", "media_type" => "$(mime_type)", "data" => "$(base64_encoded)"),
     )
 end
 
-# Function to send request and handle errors
-function send_request(url, headers, data)
+"""
+    send_request(url, headers, payload)
+
+Sends an HTTP POST request and handles potential errors.
+
+# Arguments
+- `url`: The endpoint URL.
+- `headers`: HTTP headers to include in the request.
+- `payload`: The JSON-serializable data to send in the request body.
+
+# Returns
+The HTTP response if successful; otherwise, `nothing`.
+"""
+function send_request(url, headers, payload)
     try
-        # Convert data to JSON
-        json_data = JSON.json(data)
+        json_payload = JSON.json(payload)
+        response = HTTP.request("POST", url, headers, json_payload, proxy=ENV["http_proxy"])
 
-        # Send the POST request to Google's API
-        response = HTTP.request("POST", url, headers, json_data, proxy = ENV["http_proxy"])
-
-        # Check if the request was successful
         if response.status == 200
             return response
         else
@@ -106,17 +189,24 @@ function send_request(url, headers, data)
     end
 end
 
-# Function to handle JSON responses
+"""
+    handle_json_response(response, extraction_path)
+
+Processes the JSON response and extracts the desired data.
+
+# Arguments
+- `response`: The HTTP response object.
+- `extraction_path`: An array representing the path to the desired data in the JSON structure.
+
+# Returns
+The extracted data if successful; otherwise, `nothing`.
+"""
 function handle_json_response(response, extraction_path)
     if response.status == 200
         try
-            # Parse the JSON response
             response_data = JSON.parse(String(response.body))
-
-            # Use the extraction path to get the output
-            output_text = get_nested(response_data, extraction_path)
-
-            return output_text
+            extracted_data = get_nested(response_data, extraction_path)
+            return extracted_data
         catch error
             if error isa KeyError
                 @error "Failed to extract data: $error"
@@ -132,7 +222,18 @@ function handle_json_response(response, extraction_path)
     end
 end
 
-# Helper function to navigate nested dictionaries
+"""
+    get_nested(data, path)
+
+Navigates a nested dictionary to retrieve a value.
+
+# Arguments
+- `data`: The nested dictionary.
+- `path`: An array of keys representing the path to the desired value.
+
+# Returns
+The value located at the specified path.
+"""
 function get_nested(data, path)
     for key in path
         data = data[key]
@@ -140,14 +241,46 @@ function get_nested(data, path)
     return data
 end
 
-# Generic call_llm function
+# LLM Interaction Functions
+
+"""
+    call_llm(llm, input_text, system_instruction, model, temperature, attach_file)
+
+Abstract method to call an LLM. Must be implemented for each concrete LLM type.
+
+# Arguments
+- `llm`: An instance of an LLM type.
+- `input_text`: The input text to send to the LLM.
+- `system_instruction`: System-level instructions for the LLM.
+- `model`: The specific model to use.
+- `temperature`: Sampling temperature for text generation.
+- `attach_file`: Path to a file to attach to the request.
+
+# Returns
+The response from the LLM.
+"""
 function call_llm(llm::AbstractLLM, args...)
     error("Not implemented for $(typeof(llm))")
 end
 
-# Specific implementations
+"""
+    make_api_request(llm, api_key, url, input_text, system_instruction, model, temperature, attach_file)
 
-# Function to make the API request for OpenAI compatible services
+Prepares and sends an API request for OpenAI-compatible LLMs.
+
+# Arguments
+- `llm`: An instance of an OpenAI-compatible LLM.
+- `api_key`: API key for authentication.
+- `url`: The API endpoint URL.
+- `input_text`: The input text to send.
+- `system_instruction`: System-level instructions.
+- `model`: The specific model to use.
+- `temperature`: Sampling temperature.
+- `attach_file`: Path to a file to attach.
+
+# Returns
+The response from the LLM.
+"""
 function make_api_request(
     llm::OpenAICompatibleLLM,
     api_key,
@@ -158,19 +291,11 @@ function make_api_request(
     temperature,
     attach_file,
 )
-    # Set headers
     headers = ["Content-Type" => "application/json", "Authorization" => "Bearer $api_key"]
 
-    # Prepare content
     text_data = Dict("type" => "text", "text" => input_text)
-    if attach_file != ""
-        image_data = encode_file_to_base64(llm, attach_file)
-        content = [text_data, image_data]
-    else
-        content = [text_data]
-    end
+    content = attach_file != "" ? [text_data, encode_file_to_base64(llm, attach_file)] : [text_data]
 
-    # Prepare the request data
     data = Dict(
         "model" => model,
         "temperature" => temperature,
@@ -180,14 +305,28 @@ function make_api_request(
         ],
     )
 
-    # Send the request
     response = send_request(url, headers, data)
-
-    # Handle the response
     return handle_json_response(response, ["choices", 1, "message", "content"])
 end
 
-# Function to call OpenAI API
+# Specific LLM Implementations
+
+"""
+    call_llm(llm::OpenAILLM, input_text, system_instruction, model, temperature, attach_file)
+
+Calls the OpenAI API with the provided parameters.
+
+# Arguments
+- `llm::OpenAILLM`: Instance of OpenAILLM.
+- `input_text`: The input text to send.
+- `system_instruction`: System-level instructions.
+- `model`: The specific model to use.
+- `temperature`: Sampling temperature.
+- `attach_file`: Path to a file to attach.
+
+# Returns
+The response from OpenAI's API.
+"""
 function call_llm(
     llm::OpenAILLM,
     input_text::String,
@@ -196,7 +335,6 @@ function call_llm(
     temperature::Float64 = DEFAULT_TEMPERATURE,
     attach_file::String = "",
 )
-    # Set API key and URL
     api_key = ENV["OPENAI_API_KEY"]
     url = "https://api.openai.com/v1/chat/completions"
     return make_api_request(
@@ -211,7 +349,22 @@ function call_llm(
     )
 end
 
-# Function to call OpenRouter API (example of another OpenAI compatible API)
+"""
+    call_llm(llm::OpenRouterLLM, input_text, system_instruction, model, temperature, attach_file)
+
+Calls the OpenRouter API with the provided parameters.
+
+# Arguments
+- `llm::OpenRouterLLM`: Instance of OpenRouterLLM.
+- `input_text`: The input text to send.
+- `system_instruction`: System-level instructions.
+- `model`: The specific model to use.
+- `temperature`: Sampling temperature.
+- `attach_file`: Path to a file to attach.
+
+# Returns
+The response from OpenRouter's API.
+"""
 function call_llm(
     llm::OpenRouterLLM,
     input_text::String,
@@ -220,7 +373,6 @@ function call_llm(
     temperature::Float64 = DEFAULT_TEMPERATURE,
     attach_file::String = "",
 )
-    # Set API key and URL
     api_key = ENV["OPENROUTER_API_KEY"]
     url = "https://openrouter.ai/api/v1/chat/completions"
     return make_api_request(
@@ -235,7 +387,22 @@ function call_llm(
     )
 end
 
-# Function to call Groq API
+"""
+    call_llm(llm::GroqLLM, input_text, system_instruction, model, temperature, attach_file)
+
+Calls the Groq API with the provided parameters.
+
+# Arguments
+- `llm::GroqLLM`: Instance of GroqLLM.
+- `input_text`: The input text to send.
+- `system_instruction`: System-level instructions.
+- `model`: The specific model to use.
+- `temperature`: Sampling temperature.
+- `attach_file`: Path to a file to attach.
+
+# Returns
+The response from Groq's API.
+"""
 function call_llm(
     llm::GroqLLM,
     input_text::String,
@@ -244,7 +411,6 @@ function call_llm(
     temperature::Float64 = DEFAULT_TEMPERATURE,
     attach_file::String = "",
 )
-    # Set API key and URL
     api_key = ENV["GROQ_API_KEY"]
     url = "https://api.groq.com/openai/v1/chat/completions"
     if api_key != ""
@@ -266,7 +432,22 @@ function call_llm(
     )
 end
 
-# Function to call Anthropic API (Claude)
+"""
+    call_llm(llm::AnthropicLLM, input_text, system_instruction, model, temperature, attach_file)
+
+Calls the Anthropic API (Claude) with the provided parameters.
+
+# Arguments
+- `llm::AnthropicLLM`: Instance of AnthropicLLM.
+- `input_text`: The input text to send.
+- `system_instruction`: System-level instructions.
+- `model`: The specific model to use.
+- `temperature`: Sampling temperature.
+- `attach_file`: Path to a file to attach.
+
+# Returns
+The response from Anthropic's API.
+"""
 function call_llm(
     llm::AnthropicLLM,
     input_text::String,
@@ -275,27 +456,18 @@ function call_llm(
     temperature::Float64 = DEFAULT_TEMPERATURE,
     attach_file::String = "",
 )
-    # Set API key and URL
     api_key = ENV["ANTHROPIC_API_KEY"]
     url = "https://api.anthropic.com/v1/messages"
 
-    # Set headers
     headers = [
         "content-type" => "application/json",
         "anthropic-version" => "2023-06-01",
         "x-api-key" => "$api_key",
     ]
 
-    # Prepare content
     text_data = Dict("type" => "text", "text" => input_text)
-    if attach_file != ""
-        image_data = encode_file_to_base64(llm, attach_file)
-        content = [text_data, image_data]
-    else
-        content = [text_data]
-    end
+    content = attach_file != "" ? [text_data, encode_file_to_base64(llm, attach_file)] : [text_data]
 
-    # Prepare the request data
     data = Dict(
         "model" => model,
         "max_tokens" => 1024,
@@ -308,7 +480,22 @@ function call_llm(
     return handle_json_response(response, ["content", 1, "text"])
 end
 
-# Function to call Google API
+"""
+    call_llm(llm::GoogleLLM, input_text, system_instruction, model, temperature, attach_file)
+
+Calls the Google API with the provided parameters.
+
+# Arguments
+- `llm::GoogleLLM`: Instance of GoogleLLM.
+- `input_text`: The input text to send.
+- `system_instruction`: System-level instructions.
+- `model`: The specific model to use.
+- `temperature`: Sampling temperature.
+- `attach_file`: Path to a file to attach.
+
+# Returns
+The response from Google's API.
+"""
 function call_llm(
     llm::GoogleLLM,
     input_text::String,
@@ -317,23 +504,14 @@ function call_llm(
     temperature::Float64 = DEFAULT_TEMPERATURE,
     attach_file::String = "",
 )
-    # Set API key and URL
     api_key = ENV["GOOGLE_API_KEY"]
     url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$api_key"
 
-    # Set headers
     headers = ["Content-Type" => "application/json"]
 
-    # Prepare parts
     text_data = Dict("text" => input_text)
-    if attach_file != ""
-        image_data = encode_file_to_base64(llm, attach_file)
-        parts = [text_data, image_data]
-    else
-        parts = [text_data]
-    end
+    parts = attach_file != "" ? [text_data, encode_file_to_base64(llm, attach_file)] : [text_data]
 
-    # Prepare the request data
     data = Dict(
         "system_instruction" => Dict("parts" => Dict("text" => system_instruction)),
         "generationConfig" => Dict("temperature" => temperature),
@@ -341,11 +519,24 @@ function call_llm(
     )
 
     response = send_request(url, headers, data)
-
     return handle_json_response(response, ["candidates", 1, "content", "parts", 1, "text"])
 end
 
-# Function to call Ollama API
+"""
+    call_llm(llm::OllamaLLM, input_text, system_instruction, model, temperature)
+
+Calls the Ollama API with the provided parameters.
+
+# Arguments
+- `llm::OllamaLLM`: Instance of OllamaLLM.
+- `input_text`: The input text to send.
+- `system_instruction`: System-level instructions.
+- `model`: The specific model to use.
+- `temperature`: Sampling temperature.
+
+# Returns
+The response from Ollama's API.
+"""
 function call_llm(
     ::OllamaLLM,
     input_text::String,
@@ -353,14 +544,10 @@ function call_llm(
     model::String = DEFAULT_MODELS["ollama"],
     temperature::Float64 = DEFAULT_TEMPERATURE,
 )
-
-    # Set URL
     url = "http://127.0.0.1:11434/api/generate"
 
-    # Set headers
     headers = ["Content-Type" => "application/json"]
 
-    # Prepare the request data
     data = Dict(
         "model" => model,
         "prompt" => input_text,
@@ -370,11 +557,25 @@ function call_llm(
     )
 
     response = send_request(url, headers, data)
-
     return handle_json_response(response, ["response"])
 end
 
-# Function to call Mistral API
+"""
+    call_llm(llm::MistralLLM, input_text, system_instruction, model, temperature, attach_file)
+
+Calls the Mistral API with the provided parameters.
+
+# Arguments
+- `llm::MistralLLM`: Instance of MistralLLM.
+- `input_text`: The input text to send.
+- `system_instruction`: System-level instructions.
+- `model`: The specific model to use.
+- `temperature`: Sampling temperature.
+- `attach_file`: Path to a file to attach.
+
+# Returns
+The response from Mistral's API.
+"""
 function call_llm(
     llm::MistralLLM,
     input_text::String,
@@ -383,28 +584,18 @@ function call_llm(
     temperature::Float64 = DEFAULT_TEMPERATURE,
     attach_file::String = "",
 )
-
-    # Set URL and API key
-    url = "https://api.mistral.ai/v1/chat/completions"
     api_key = ENV["MISTRAL_API_KEY"]
+    url = "https://api.mistral.ai/v1/chat/completions"
 
-    # Set headers
     headers = [
         "Content-Type" => "application/json",
         "Accept" => "application/json",
         "Authorization" => "Bearer $api_key",
     ]
 
-    # Prepare content
     text_data = Dict("type" => "text", "text" => input_text)
-    if attach_file != ""
-        image_data = encode_file_to_base64(llm, attach_file)
-        content = [text_data, image_data]
-    else
-        content = [text_data]
-    end
+    content = attach_file != "" ? [text_data, encode_file_to_base64(llm, attach_file)] : [text_data]
 
-    # Prepare the request data
     data = Dict(
         "model" => model,
         "temperature" => temperature,
@@ -415,11 +606,23 @@ function call_llm(
     )
 
     response = send_request(url, headers, data)
-
     return handle_json_response(response, ["choices", 1, "message", "content"])
 end
 
-# Function to get LLM type from string
+"""
+    get_llm_type(llm_name)
+
+Retrieves the LLM type based on a string identifier.
+
+# Arguments
+- `llm_name`: The name of the LLM provider.
+
+# Returns
+An instance of the corresponding LLM type.
+
+# Errors
+Throws an error if the `llm_name` is unknown.
+"""
 function get_llm_type(llm_name::String)
     llm_types = Dict(
         "openai" => OpenAILLM(),
@@ -435,22 +638,45 @@ function get_llm_type(llm_name::String)
     end
 end
 
-# Function to select LLM and call corresponding model
+"""
+    call_llm(llm_name, input_text, system_instruction, model, temperature)
+
+Selects the appropriate LLM based on the provider name and invokes it.
+
+# Arguments
+- `llm_name`: The name of the LLM provider.
+- `input_text`: The input text to send.
+- `system_instruction`: System-level instructions.
+- `model`: The specific model to use (optional).
+- `temperature`: Sampling temperature.
+
+# Returns
+The response from the selected LLM.
+"""
 function call_llm(
-    llm::String,
+    llm_name::String,
     input_text::String,
     system_instruction::String,
     model::String = "",
     temperature::Float64 = DEFAULT_TEMPERATURE,
 )
-    llm_type = get_llm_type(llm)
-    model = (model == "" ? DEFAULT_MODELS[llm] : model)
+    llm_type = get_llm_type(llm_name)
+    selected_model = isempty(model) ? DEFAULT_MODELS[llm_name] : model
 
-    result = call_llm(llm_type, input_text, system_instruction, model, temperature)
+    result = call_llm(llm_type, input_text, system_instruction, selected_model, temperature)
     println(result)
 end
 
-# Create default ArgParseSettings
+# Command-Line Parsing Functions
+
+"""
+    create_default_settings()
+
+Creates the default ArgParse settings for command-line argument parsing.
+
+# Returns
+An `ArgParseSettings` object with default configurations.
+"""
 function create_default_settings()
     return ArgParseSettings(
         description = "Process text using various LLM providers.",
@@ -458,42 +684,61 @@ function create_default_settings()
     )
 end
 
-# Parse command-line arguments
+"""
+    parse_commandline(settings, default_llm, default_model, require_input)
+
+Parses command-line arguments for the LLM script.
+
+# Arguments
+- `settings`: ArgParse settings (optional).
+- `default_llm`: The default LLM provider to use.
+- `default_model`: The default model to use (optional).
+- `require_input`: Whether input text is required.
+
+# Returns
+A dictionary of parsed arguments.
+"""
 function parse_commandline(
-    s::ArgParseSettings = create_default_settings(),
+    settings::ArgParseSettings = create_default_settings(),
     default_llm::String = "google",
     default_model::String = "",
-    require_input_text::Bool = true,
+    require_input::Bool = true,
 )
-    @add_arg_table s begin
+    @add_arg_table settings begin
         "--llm", "-l"
         help = "LLM provider to use (openai, anthropic, google, ollama, mistral, openrouter)"
         default = default_llm
+
         "--model", "-m"
         help = "Specific model to use (optional)"
         default = ""
+
         "--file", "-f"
-        help = "Specific the path to the file to process (optional)"
+        help = "Path to the file to process (optional)"
         default = ""
+
         "--attachment", "-a"
-        help = "Specific the path to the file to be attached to the request (optional)"
+        help = "Path to the file to attach to the request (optional)"
         default = ""
+
         "--temperature", "-t"
         help = "Temperature for text generation"
         arg_type = Float64
-        default = 0.7  # Assuming DEFAULT_TEMPERATURE is 0.7
+        default = DEFAULT_TEMPERATURE
+
         "--debug", "-d"
         help = "Enable debug mode"
         action = :store_true
+
         "input_text"
         help = "Input text for the LLM (optional, reads from stdin if not provided)"
         required = false
     end
 
-    args = parse_args(s)
+    args = parse_args(settings)
 
     # If input_text is not provided, read from stdin
-    if isnothing(args["input_text"]) && require_input_text
+    if isnothing(args["input_text"]) && require_input
         args["input_text"] = read(stdin, String)
     end
 
@@ -505,12 +750,12 @@ function parse_commandline(
     # Print args if debug mode is enabled
     if args["debug"]
         println("""
-                Calling LLM with:
-                -- llm: $(args["llm"])
-                -- input_text: $(args["input_text"])
-                -- model: $(args["model"])
-                -- temperature: $(args["temperature"])
-                """)
+            Calling LLM with:
+            -- LLM Provider: $(args["llm"])
+            -- Input Text: $(args["input_text"])
+            -- Model: $(args["model"])
+            -- Temperature: $(args["temperature"])
+        """)
     end
 
     return args
