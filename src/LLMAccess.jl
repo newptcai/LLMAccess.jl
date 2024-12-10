@@ -247,12 +247,19 @@ function call_llm(
     # Set API key and URL
     api_key = ENV["GROQ_API_KEY"]
     url = "https://api.groq.com/openai/v1/chat/completions"
+    if api_key != ""
+        # Groq does not allow attachment and system instructions to be in the
+        # same message
+        sys_instruction = ""
+    else
+        sys_instruction = system_instruction
+    end
     return make_api_request(
         llm,
         api_key,
         url,
         input_text,
-        system_instruction,
+        sys_instruction,
         model,
         temperature,
         attach_file,
