@@ -231,39 +231,8 @@ LLMAccess currently supports the following LLM providers:
 
 ## Contributing
 
-Contributions are welcome! If you'd like to contribute to LLMAccess, please follow these steps:
-
-1. **Fork the Repository**: Click the "Fork" button at the top-right corner of the repository page.
-2. **Clone Your Fork**:
-
-    ```bash
-    git clone https://github.com/your-username/LLMAccess.git
-    cd LLMAccess
-    ```
-
-3. **Create a New Branch**:
-
-    ```bash
-    git checkout -b feature/your-feature-name
-    ```
-
-4. **Make Your Changes**: Implement your feature or bug fix.
-
-5. **Commit Your Changes**:
-
-    ```bash
-    git commit -m "Description of your changes"
-    ```
-
-6. **Push to Your Fork**:
-
-    ```bash
-    git push origin feature/your-feature-name
-    ```
-
-7. **Create a Pull Request**: Navigate to the original repository and create a pull request from your fork.
-
-Please ensure your code follows the project's coding standards and includes appropriate tests.
+Contributions are welcome!
+If you'd like to contribute to LLMAccess, please fork and create a pull request.
 
 ## License
 
