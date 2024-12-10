@@ -296,13 +296,19 @@ function make_api_request(
     text_data = Dict("type" => "text", "text" => input_text)
     content = attach_file != "" ? [text_data, encode_file_to_base64(llm, attach_file)] : [text_data]
 
+    user_message = Dict("role" => "user", "content" => content)
+    system_message = Dict("role" => "system", "content" => system_instruction)
+
+    if system_instruction == ""
+        messages = [user_message]
+    else
+        messages = [system_message, user_message]
+    end
+
     data = Dict(
         "model" => model,
         "temperature" => temperature,
-        "messages" => [
-            Dict("role" => "system", "content" => system_instruction),
-            Dict("role" => "user", "content" => content),
-        ],
+        "messages" => messages,
     )
 
     response = send_request(url, headers, data)
@@ -413,13 +419,14 @@ function call_llm(
 )
     api_key = ENV["GROQ_API_KEY"]
     url = "https://api.groq.com/openai/v1/chat/completions"
-    if api_key != ""
+    if attach_file != ""
         # Groq does not allow attachment and system instructions to be in the
         # same message
         sys_instruction = ""
     else
         sys_instruction = system_instruction
     end
+
     return make_api_request(
         llm,
         api_key,
