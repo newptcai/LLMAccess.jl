@@ -1,7 +1,7 @@
 name = "LLMAccess"
 uuid = "1a9614b5-a00e-4537-a79a-85f37aa414d6"
 authors = ["Xing Shi Cai <newptcai@tutanota.com> and contributors"]
-version = "1.4.1-DEV"
+version = "1.4.2-DEV"
 
 [deps]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
