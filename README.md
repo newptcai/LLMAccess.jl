@@ -138,29 +138,60 @@ LLMAccess includes a `parse_commandline` function to facilitate command-line arg
 
 #### Example Script
 
-Create a Julia script named `llm_script.jl`:
+Create a Julia script named `ask.jl`:
 
 ```julia
 #!/usr/bin/env julia
 
 using LLMAccess
+using ArgParse
 
-# Parse command-line arguments
-args = parse_commandline()
+function main()
+    # Define the system prompt
+    system_instruction = """
+    Please answer user question as truthfuly as possible.
+    Be concise with your answer.
+    """
 
-# Extract arguments
-llm_name = args["llm"]
-input_text = args["input_text"]
-system_instruction = ""  # You can modify to accept system instructions if needed
-model = args["model"]
-temperature = args["temperature"]
-attach_file = args["attachment"]
+    custom_settings = ArgParseSettings(
+        description = "Use LLM to answer simple question.",
+        add_version = true,
+        version = "v1.0.0",
+    )
 
-# Call the specified LLM
-response = call_llm(llm_name, input_text, system_instruction, model, temperature, attach_file)
+    args = parse_commandline(custom_settings, "google")
 
-# Output the response
-println("LLM Response: ", response)
+    if args["debug"]
+        println("Ready to LLM ...")
+    end
+
+    llm_type = get_llm_type(args["llm"])
+    result = call_llm(
+        llm_type,
+        args["input_text"],
+        system_instruction,
+        args["model"],
+        args["temperature"],
+        args["attachment"],
+    )
+
+    if args["debug"]
+        println("LLM output: ...")
+    end
+
+    if result !== nothing
+        print(result)
+        if result[end] != "\n"
+            print("\n")
+        end
+        exit(0)
+    else
+        @error "Failed to get a valid response from the server."
+        exit(1)
+    end
+end
+
+main()
 ```
 
 #### Running the Script
@@ -168,13 +199,13 @@ println("LLM Response: ", response)
 Make the script executable:
 
 ```bash
-chmod +x llm_script.jl
+chmod +x ask.jl
 ```
 
 Execute the script with desired arguments:
 
 ```bash
-./llm_script.jl --llm openai --input_text "What's the weather today?" --model "gpt-4" --temperature 0.7
+./ask.jl --llm openai --model "gpt-4o-latest" --attachment ~/Downloads/example.webp "What's in this picture?" 
 ```
 
 **Available Command-Line Arguments:**
