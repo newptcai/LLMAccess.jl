@@ -711,14 +711,14 @@ function parse_commandline(
     default_model::String = "",
     require_input::Bool = true,
 )
-    @add_arg_table settings begin
+    @add_arg_table! settings begin
         "--llm", "-l"
         help = "LLM provider to use (openai, anthropic, google, ollama, mistral, openrouter)"
         default = default_llm
 
         "--model", "-m"
         help = "Specific model to use (optional)"
-        default = ""
+        default = default_model
 
         "--file", "-f"
         help = "Path to the file to process (optional)"
