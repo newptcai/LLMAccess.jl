@@ -711,6 +711,9 @@ function parse_commandline(
     default_model::String = "",
     require_input::Bool = true,
 )
+    if default_model == ""
+        default_model = DEFAULT_MODELS[default_llm]
+    end
     @add_arg_table! settings begin
         "--llm", "-l"
         help = "LLM provider to use (openai, anthropic, google, ollama, mistral, openrouter)"
