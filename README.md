@@ -217,6 +217,8 @@ Execute the script with desired arguments:
 - `--temperature`, `-t`: **(Optional)** Sampling temperature for text generation (default: `0.7`).
 - `--debug`, `-d`: **(Optional)** Enable debug mode to print detailed information.
 
+See [script](script) for more examples.
+
 ## Supported LLM Providers
 
 LLMAccess currently supports the following LLM providers:
