@@ -6,6 +6,7 @@ using ArgParse
 using Base64
 using MIMEs
 using Logging
+using Serialization
 
 export call_llm, get_llm_type, parse_commandline
 
@@ -183,6 +184,10 @@ The HTTP response if successful; otherwise, `nothing`.
 function send_request(url, headers, payload)
     try
         @debug "Payload" payload
+        temp = "/tmp/payload.jls"
+        @debug "Saving payload to $temp"
+        serialize(temp, payload)
+        @debug "Payload saved"
         json_payload = JSON.json(payload)
         @debug "JSON payload ready"
         response = HTTP.request("POST", url, headers, json_payload, proxy=ENV["http_proxy"])

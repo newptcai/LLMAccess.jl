@@ -1,7 +1,7 @@
 name = "LLMAccess"
 uuid = "1a9614b5-a00e-4537-a79a-85f37aa414d6"
 authors = ["Xing Shi Cai <newptcai@tutanota.com> and contributors"]
-version = "1.6.0-DEV"
+version = "1.6.1-DEV"
 
 [deps]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
@@ -10,11 +10,13 @@ HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 MIMEs = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
+Serialization = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 
 [compat]
 Base64 = "1.11.0"
 Logging = "1.11.0"
 MIMEs = "1.0.0"
+Serialization = "1.11.0"
 julia = "1.10"
 
 [extras]
