@@ -5,6 +5,7 @@ using JSON
 using ArgParse
 using Base64
 using MIMEs
+using Logging
 
 export call_llm, get_llm_type, parse_commandline
 
@@ -103,12 +104,18 @@ Encodes the content of a file to a Base64 string along with its MIME type.
 A tuple containing the MIME type and the Base64-encoded string.
 """
 function encode_file_to_base64(file_path)
+    @debug "Encoding $file_path to Base64"
+
     # Read the file content
     file_content = read(file_path)
+
+    @debug "File content read: $(length(file_content)) bytes"
 
     # Determine the MIME type based on file extension
     file_extension = splitext(file_path)[2]
     mime_type = mime_from_extension(file_extension)
+
+    @debug "MIME type: $mime_type"
 
     # Create a base64-encoded string
     io = IOBuffer()
@@ -116,6 +123,8 @@ function encode_file_to_base64(file_path)
     write(iob64_encode, file_content)
     close(iob64_encode)
     base64_encoded = String(take!(io))
+
+    @debug "Base64 encoded: $(length(base64_encoded)) bytes"
 
     return (mime_type, base64_encoded)
 end
@@ -173,7 +182,9 @@ The HTTP response if successful; otherwise, `nothing`.
 """
 function send_request(url, headers, payload)
     try
+        @debug "Payload" payload
         json_payload = JSON.json(payload)
+        @debug "JSON payload ready"
         response = HTTP.request("POST", url, headers, json_payload, proxy=ENV["http_proxy"])
 
         if response.status == 200
@@ -291,10 +302,14 @@ function make_api_request(
     temperature,
     attach_file,
 )
+    @debug "Making API request" llm, input_text, system_instruction, model, temperature, attach_file
+
     headers = ["Content-Type" => "application/json", "Authorization" => "Bearer $api_key"]
 
     text_data = Dict("type" => "text", "text" => input_text)
     content = attach_file != "" ? [text_data, encode_file_to_base64(llm, attach_file)] : [text_data]
+
+    @debug "API request content" content
 
     user_message = Dict("role" => "user", "content" => content)
     system_message = Dict("role" => "system", "content" => system_instruction)
@@ -310,6 +325,8 @@ function make_api_request(
         "temperature" => temperature,
         "messages" => messages,
     )
+
+    @debug "API request data" data
 
     response = send_request(url, headers, data)
     return handle_json_response(response, ["choices", 1, "message", "content"])
@@ -511,6 +528,8 @@ function call_llm(
     temperature::Float64 = DEFAULT_TEMPERATURE,
     attach_file::String = "",
 )
+    @debug "Making API request" llm input_text system_instruction model temperature attach_file
+
     api_key = ENV["GOOGLE_API_KEY"]
     url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$api_key"
 
@@ -551,6 +570,8 @@ function call_llm(
     model::String = DEFAULT_MODELS["ollama"],
     temperature::Float64 = DEFAULT_TEMPERATURE,
 )
+    @debug "Making API request" llm input_text system_instruction model temperature attach_file
+
     url = "http://127.0.0.1:11434/api/generate"
 
     headers = ["Content-Type" => "application/json"]
@@ -591,6 +612,8 @@ function call_llm(
     temperature::Float64 = DEFAULT_TEMPERATURE,
     attach_file::String = "",
 )
+    @debug "Making API request" llm input_text system_instruction model temperature attach_file
+
     api_key = ENV["MISTRAL_API_KEY"]
     url = "https://api.mistral.ai/v1/chat/completions"
 
@@ -757,15 +780,11 @@ function parse_commandline(
         args["model"] = DEFAULT_MODELS[args["llm"]]
     end
 
-    # Print args if debug mode is enabled
+    # Set debug mode if enabled
     if args["debug"]
-        println("""
-            Calling LLM with:
-            -- LLM Provider: $(args["llm"])
-            -- Input Text: $(args["input_text"])
-            -- Model: $(args["model"])
-            -- Temperature: $(args["temperature"])
-        """)
+        global_logger(ConsoleLogger(stderr, Logging.Debug))
+        #ENV["JULIA_DEBUG"] = LLMAccess,HTTP
+        @info "Debug mode enabled"
     end
 
     return args
