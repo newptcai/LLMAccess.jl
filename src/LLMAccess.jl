@@ -564,6 +564,7 @@ Calls the Ollama API with the provided parameters.
 - `system_instruction`: System-level instructions.
 - `model`: The specific model to use.
 - `temperature`: Sampling temperature.
+- `attach_file`: Path to a file to attach.
 
 # Returns
 The response from Ollama's API.
@@ -574,6 +575,7 @@ function call_llm(
     system_instruction::String = "",
     model::String = DEFAULT_MODELS["ollama"],
     temperature::Float64 = DEFAULT_TEMPERATURE,
+    attach_file::String = "",
 )
     @debug "Making API request" llm input_text system_instruction model temperature attach_file
 
