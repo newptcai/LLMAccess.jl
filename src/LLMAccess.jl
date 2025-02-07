@@ -1043,7 +1043,7 @@ A dictionary containing parsed command-line arguments:
 """
 function parse_commandline(
     settings = create_default_settings();
-    require_input = true
+    require_input::Bool = true
 )
     llm   = get_default_llm()
     model = get_default_model(llm)
@@ -1057,7 +1057,7 @@ Same as `parse_commandline(settings)` but uses an explicit default LLM name.
 """
 function parse_commandline(
     settings,
-    default_llm;
+    default_llm::String;
     require_input = true
 )
     default_model = get_default_model(default_llm)
@@ -1083,9 +1083,9 @@ If `require_input` is `true` and the user does not provide `input_text`, reads f
 """
 function parse_commandline(
     settings,
-    default_llm,
-    default_model;
-    require_input = true
+    default_llm::String,
+    default_model::String;
+    require_input::Bool = true
 )
     @add_arg_table! settings begin
         "--llm", "-l"
