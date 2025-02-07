@@ -90,8 +90,27 @@ const DEFAULT_MODELS = Dict(
 )
 
 const DEFAULT_TEMPERATURE = 0.7
+const DEFAULT_LLM = "google"
 
 # Helper Functions
+
+"""
+    get_default_llm()
+
+Returns the default LLM provider, determined by the environment variable DEFAULT_LLM or a hard-coded fallback of "$DEFAULT_LLM".
+"""
+function get_default_llm()
+    return get(ENV, "DEFAULT_LLM", DEFAULT_LLM)
+end
+
+"""
+    get_default_model(llm_name)
+
+Returns the default model for the given provider, determined by the environment variable <PROVIDER>_DEFAULT_MODEL (in uppercase) or a hard-coded fallback in DEFAULT_MODELS.
+"""
+function get_default_model(llm_name::String)
+    return get(ENV, "DEFAULT_"*uppercase(llm_name)*"_MODEL", DEFAULT_MODELS[llm_name])
+end
 
 """
     encode_file_to_base64(file_path)
@@ -359,7 +378,7 @@ function call_llm(
     llm::OpenAILLM,
     input_text::String,
     system_instruction::String = "",
-    model::String = DEFAULT_MODELS["openai"],
+    model::String = get(ENV, "OPENAI_DEFAULT_MODEL", DEFAULT_MODELS["openai"]),
     temperature::Float64 = DEFAULT_TEMPERATURE,
     attach_file::String = "",
 )
@@ -397,7 +416,7 @@ function call_llm(
     llm::OpenRouterLLM,
     input_text::String,
     system_instruction::String = "",
-    model::String = DEFAULT_MODELS["openrouter"],
+    model::String = get(ENV, "OPENROUTER_DEFAULT_MODEL", DEFAULT_MODELS["openrouter"]),
     temperature::Float64 = DEFAULT_TEMPERATURE,
     attach_file::String = "",
 )
@@ -435,7 +454,7 @@ function call_llm(
     llm::GroqLLM,
     input_text::String,
     system_instruction::String = "",
-    model::String = DEFAULT_MODELS["openai"],
+    model::String = get(ENV, "GROQ_DEFAULT_MODEL", DEFAULT_MODELS["groq"]),
     temperature::Float64 = DEFAULT_TEMPERATURE,
     attach_file::String = "",
 )
@@ -481,7 +500,7 @@ function call_llm(
     llm::AnthropicLLM,
     input_text::String,
     system_instruction::String = "",
-    model::String = DEFAULT_MODELS["anthropic"],
+    model::String = get(ENV, "ANTHROPIC_DEFAULT_MODEL", DEFAULT_MODELS["anthropic"]),
     temperature::Float64 = DEFAULT_TEMPERATURE,
     attach_file::String = "",
 )
@@ -529,7 +548,7 @@ function call_llm(
     llm::GoogleLLM,
     input_text::String,
     system_instruction::String = "",
-    model::String = DEFAULT_MODELS["google"],
+    model::String = get(ENV, "GOOGLE_DEFAULT_MODEL", DEFAULT_MODELS["google"]),
     temperature::Float64 = DEFAULT_TEMPERATURE,
     attach_file::String = "",
 )
@@ -570,10 +589,10 @@ Calls the Ollama API with the provided parameters.
 The response from Ollama's API.
 """
 function call_llm(
-    ::OllamaLLM,
+    llm::OllamaLLM,
     input_text::String,
     system_instruction::String = "",
-    model::String = DEFAULT_MODELS["ollama"],
+    model::String = get(ENV, "OLLAMA_DEFAULT_MODEL", DEFAULT_MODELS["ollama"]),
     temperature::Float64 = DEFAULT_TEMPERATURE,
     attach_file::String = "",
 )
@@ -615,7 +634,7 @@ function call_llm(
     llm::MistralLLM,
     input_text::String,
     system_instruction::String = "",
-    model::String = DEFAULT_MODELS["mistral"],
+    model::String = get(ENV, "MISTRAL_DEFAULT_MODEL", DEFAULT_MODELS["mistral"]),
     temperature::Float64 = DEFAULT_TEMPERATURE,
     attach_file::String = "",
 )
@@ -698,13 +717,11 @@ function call_llm(
     temperature::Float64 = DEFAULT_TEMPERATURE,
 )
     llm_type = get_llm_type(llm_name)
-    selected_model = isempty(model) ? DEFAULT_MODELS[llm_name] : model
+    selected_model = isempty(model) ? get(ENV, uppercase(llm_name)*"_DEFAULT_MODEL", DEFAULT_MODELS[llm_name]) : model
 
     result = call_llm(llm_type, input_text, system_instruction, selected_model, temperature)
     println(result)
 end
-
-# Command-Line Parsing Functions
 
 """
     create_default_settings()
@@ -722,75 +739,128 @@ function create_default_settings()
 end
 
 """
-    parse_commandline(settings, default_llm, default_model, require_input)
+    parse_commandline(settings; require_input=true)
 
-Parses command-line arguments for the LLM script.
+Parses command-line arguments for the LLM script with no explicit default LLM or model.
 
 # Arguments
-- `settings`: ArgParse settings (optional).
-- `default_llm`: The default LLM provider to use.
-- `default_model`: The default model to use (optional).
-- `require_input`: Whether input text is required.
+- `settings::ArgParseSettings`: The argument parsing settings.
+- `require_input::Bool`: Whether input text is required (default: `true`).
+
+# Behaviour
+- The default LLM provider is determined using `get_default_llm()`.
+- The default model is inferred using `get_default_model(llm)`.
+- Calls `parse_commandline(settings, llm, model; require_input=require_input)` internally.
 
 # Returns
-A dictionary of parsed arguments.
+A dictionary containing parsed command-line arguments.
 """
 function parse_commandline(
-    settings::ArgParseSettings = create_default_settings(),
-    default_llm::String = "google",
-    default_model::String = "",
-    require_input::Bool = true,
+    settings::ArgParseSettings = create_default_settings();
+    require_input::Bool = true
 )
-    if default_model == ""
-        default_model = DEFAULT_MODELS[default_llm]
-    end
+    llm   = get_default_llm()
+    model = get_default_model(llm)
+    return parse_commandline(settings, llm, model; require_input=require_input)
+end
+
+"""
+    parse_commandline(settings, default_llm; require_input=true)
+
+Parses command-line arguments for the LLM script when the default LLM provider is specified.
+
+# Arguments
+- `settings::ArgParseSettings`: The argument parsing settings.
+- `default_llm::String`: The default LLM provider to use.
+- `require_input::Bool`: Whether input text is required (default: `true`).
+
+# Behaviour
+- The default model is inferred using `get_default_model(default_llm)`.
+- Calls `parse_commandline(settings, default_llm, default_model; require_input=require_input)` internally.
+
+# Returns
+A dictionary containing parsed command-line arguments.
+"""
+function parse_commandline(
+    settings::ArgParseSettings,
+    default_llm::String;
+    require_input::Bool = true
+)
+    default_model = get_default_model(default_llm)
+    return parse_commandline(settings, default_llm, default_model; require_input=require_input)
+end
+
+"""
+    parse_commandline(settings, default_llm, default_model; require_input=true)
+
+Parses command-line arguments for the LLM script when both the default LLM provider and model are specified.
+
+# Arguments
+- `settings::ArgParseSettings`: The argument parsing settings.
+- `default_llm::String`: The default LLM provider to use.
+- `default_model::String`: The specific model to use.
+- `require_input::Bool`: Whether input text is required (default: `true`).
+
+# Behaviour
+- Uses `ArgParse` to define command-line arguments for selecting the LLM provider, model, input file, attachments, generation parameters, and debug mode.
+- If `require_input` is `true` and no input text is provided, it reads from `stdin`.
+- If LLM or model is not specified by the user, it defaults to `default_llm` and `default_model`.
+- Enables debug mode if `--debug` is passed.
+
+# Returns
+A dictionary containing parsed command-line arguments.
+"""
+function parse_commandline(
+    settings::ArgParseSettings,
+    default_llm::String,
+    default_model::String;
+    require_input::Bool = true
+)
     @add_arg_table! settings begin
         "--llm", "-l"
-        help = "LLM provider to use (openai, anthropic, google, ollama, mistral, openrouter)"
+        help = "LLM provider to use"
         default = default_llm
 
         "--model", "-m"
-        help = "Specific model to use (optional)"
+        help = "Specific model to use"
         default = default_model
 
         "--file", "-f"
-        help = "Path to the file to process (optional)"
+        help = "Path to the file to process"
         default = ""
 
         "--attachment", "-a"
-        help = "Path to the file to attach to the request (optional)"
+        help = "Path to the file to attach"
         default = ""
 
         "--temperature", "-t"
         help = "Temperature for text generation"
         arg_type = Float64
-        default = DEFAULT_TEMPERATURE
+        default = 0.7  # replace with your DEFAULT_TEMPERATURE
 
         "--debug", "-d"
         help = "Enable debug mode"
         action = :store_true
 
         "input_text"
-        help = "Input text for the LLM (optional, reads from stdin if not provided)"
+        help = "Input text for the LLM (reads from stdin if not provided)"
         required = false
     end
 
     args = parse_args(settings)
 
-    # If input_text is not provided, read from stdin
     if isnothing(args["input_text"]) && require_input
         args["input_text"] = read(stdin, String)
     end
 
-    # Set model if not provided
-    if isempty(args["model"])
-        args["model"] = DEFAULT_MODELS[args["llm"]]
+    # Check if llm is specified by the user but not model
+    # If so, use default model for the given llm
+    if args["llm"] != default_llm && args["model"] == default_model
+        args["model"] = get_default_model(args["llm"])
     end
 
-    # Set debug mode if enabled
     if args["debug"]
         global_logger(ConsoleLogger(stderr, Logging.Debug))
-        #ENV["JULIA_DEBUG"] = LLMAccess,HTTP
         @info "Debug mode enabled"
     end
 
