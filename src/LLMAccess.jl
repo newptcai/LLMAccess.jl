@@ -8,7 +8,7 @@ using MIMEs
 using Logging
 using Serialization
 
-export call_llm, get_llm_type, parse_commandline
+export call_llm, list_llm_models, get_llm_type, parse_commandline
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Abstract Types
@@ -210,7 +210,7 @@ function encode_file_to_base64(::AnthropicLLM, file_path)
 end
 
 """
-    send_request(url, headers, payload)
+    post_request(url, headers, payload)
 
 Sends an HTTP POST request and handles potential errors, returning the HTTP response
 or `nothing` on failure.
@@ -223,7 +223,7 @@ or `nothing` on failure.
 # Returns
 An `HTTP.Response` if successful; otherwise, `nothing`.
 """
-function send_request(url, headers, payload)
+function post_request(url, headers, payload)
     try
         @debug "Payload" payload
 
@@ -237,6 +237,40 @@ function send_request(url, headers, payload)
         @debug "JSON payload ready"
 
         response = HTTP.request("POST", url, headers, json_payload, proxy=ENV["http_proxy"])
+
+        if response.status == 200
+            return response
+        else
+            @error "Request failed with status: $(response.status)"
+            println(String(response.body))
+            return nothing
+        end
+    catch http_error
+        @error "HTTP request error: $http_error"
+        return nothing
+    end
+end
+
+"""
+    get_request(url, headers)
+
+Sends an HTTP GET request to the specified URL and handles potential errors, 
+returning the HTTP response or `nothing` on failure.
+
+# Arguments
+- `url`: The endpoint URL to send the GET request to. This should be a string 
+  representing the full URL, including the protocol (e.g., `https://example.com`).
+- `headers`: HTTP headers to include in the request.
+
+# Returns
+An `HTTP.Response` if the request is successful (status code 200); 
+otherwise, `nothing` in case of an error or if the request fails with a non-200 status code.
+"""
+function get_request(url, header=Dict())
+    try
+        @debug "Sending GET request to $url"
+
+        response = HTTP.request("GET", url, header, proxy=ENV["http_proxy"])
 
         if response.status == 200
             return response
@@ -373,8 +407,8 @@ function make_api_request(
 
     @debug "API request data" data
 
-    response = send_request(url, headers, data)
-    return handle_json_response(response, ["choices", 1, "message", "content"])
+    response = post_request(url, headers, data)
+    return response
 end
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -535,7 +569,7 @@ function call_llm(
         "messages"    => [ Dict("role" => "user", "content" => content) ],
     )
 
-    response = send_request(url, headers, data)
+    response = post_request(url, headers, data)
     return handle_json_response(response, ["content", 1, "text"])
 end
 
@@ -573,7 +607,7 @@ function call_llm(
         "contents"           => Dict("parts" => parts),
     )
 
-    response = send_request(url, headers, data)
+    response = post_request(url, headers, data)
     return handle_json_response(response, ["candidates", 1, "content", "parts", 1, "text"])
 end
 
@@ -608,7 +642,7 @@ function call_llm(
         "options" => Dict("temperature" => temperature),
     )
 
-    response = send_request(url, headers, data)
+    response = post_request(url, headers, data)
     return handle_json_response(response, ["response"])
 end
 
@@ -653,7 +687,7 @@ function call_llm(
         ],
     )
 
-    response = send_request(url, headers, data)
+    response = post_request(url, headers, data)
     return handle_json_response(response, ["choices", 1, "message", "content"])
 end
 
@@ -759,6 +793,216 @@ function call_llm(system_instruction, args::Dict)
         temperature,
         attach_file
     )
+end
+
+#-----------------------------------------------------------------------------------
+# List LLM Models
+#-----------------------------------------------------------------------------------------------
+
+"""
+    list_llm_models(llm::GoogleLLM)
+
+Lists the available models from Google's Generative Language API.
+
+# Arguments
+- `llm::GoogleLLM`: Instance of `GoogleLLM`.
+- `api_key`: API key for authentication.
+
+# Returns
+A list of models.
+"""
+function list_llm_models(llm::GoogleLLM)
+    @debug "Listing LLM Models" llm
+
+    api_key = ENV["GOOGLE_API_KEY"]
+    url = "https://generativelanguage.googleapis.com/v1beta/models?key=$api_key"
+
+    response = get_request(url)
+    model_list = handle_json_response(response, ["models"])
+
+    # Extract the "name" field into a vector of strings
+    model_names = [replace(model["name"], "models/" => "") for model in model_list]
+
+    return model_names
+end
+
+"""
+    list_llm_models(llm::AnthropicLLM)
+
+Lists the available models from Anthropic's Generative Language API.
+
+# Arguments
+- `llm::AnthropicLLM`: Instance of `AnthropicLLM`.
+- `api_key`: API key for authentication.
+
+# Returns
+A list of models.
+"""
+function list_llm_models(llm::AnthropicLLM)
+    @debug "Listing LLM Models" llm
+
+    api_key = ENV["ANTHROPIC_API_KEY"]
+    headers = [
+        "content-type"       => "application/json",
+        "anthropic-version"  => "2023-06-01",
+        "x-api-key"          => "$api_key",
+    ]
+
+    url     = "https://api.anthropic.com/v1/models"
+
+    response = get_request(url, headers)
+    model_list = handle_json_response(response, ["data"])
+
+    # Extract the "name" field into a vector of strings
+    model_names = [model["id"] for model in model_list]
+
+    return model_names
+end
+
+"""
+    list_llm_models(llm::OpenRouterLLM)
+
+Lists the available models from OpenRouter's Generative Language API.
+
+# Arguments
+- `llm::OpenRouterLLM`: Instance of `OpenRouterLLM`.
+- `api_key`: API key for authentication.
+
+# Returns
+A list of models.
+"""
+function list_llm_models(llm::OpenRouterLLM)
+    @debug "Listing LLM Models" llm
+
+    url     = "https://openrouter.ai/api/v1/models"
+
+    response = get_request(url)
+    model_list = handle_json_response(response, ["data"])
+
+    # Extract the "name" field into a vector of strings
+    model_names = [model["id"] for model in model_list]
+
+    return model_names
+end
+
+"""
+    list_llm_models(llm::GroqLLM)
+
+Lists the available models from Groq's Generative Language API.
+
+# Arguments
+- `llm::GroqLLM`: Instance of `GroqLLM`.
+- `api_key`: API key for authentication.
+
+# Returns
+A list of models.
+"""
+function list_llm_models(llm::GroqLLM)
+    @debug "Listing LLM Models" llm
+
+    api_key = ENV["GROQ_API_KEY"]
+    headers = [
+        "Content-Type" => "application/json",
+        "Authorization" => "Bearer $api_key",
+    ]
+
+    url     = "https://api.groq.com/openai/v1/models"
+
+    response = get_request(url, headers)
+    model_list = handle_json_response(response, ["data"])
+
+    # Extract the "name" field into a vector of strings
+    model_names = [model["id"] for model in model_list]
+
+    return model_names
+end
+
+"""
+    list_llm_models(llm::OpenAILLM)
+
+Lists the available models from OpenAI's Generative Language API.
+
+# Arguments
+- `llm::OpenAILLM`: Instance of `OpenAILLM`.
+- `api_key`: API key for authentication.
+
+# Returns
+A list of models.
+"""
+function list_llm_models(llm::OpenAILLM)
+    @debug "Listing LLM Models" llm
+
+    api_key = ENV["OPENAI_API_KEY"]
+    headers = [
+        "Authorization" => "Bearer $api_key",
+    ]
+
+    url     = "https://api.openai.com/v1/models"
+
+    response = get_request(url, headers)
+    model_list = handle_json_response(response, ["data"])
+
+    # Extract the "name" field into a vector of strings
+    model_names = [model["id"] for model in model_list]
+
+    return model_names
+end
+
+"""
+    list_llm_models(llm::MistralLLM)
+
+Lists the available models from Mistral's Generative Language API.
+
+# Arguments
+- `llm::MistralLLM`: Instance of `MistralLLM`.
+- `api_key`: API key for authentication.
+
+# Returns
+A list of models.
+"""
+function list_llm_models(llm::MistralLLM)
+    @debug "Listing LLM Models" llm
+
+    api_key = ENV["MISTRAL_API_KEY"]
+    headers = [
+        "Authorization" => "Bearer $api_key",
+    ]
+
+    url     = "https://api.mistral.ai/v1/models"
+
+    response = get_request(url, headers)
+    model_list = handle_json_response(response, ["data"])
+
+    # Extract the "name" field into a vector of strings
+    model_names = [model["id"] for model in model_list]
+
+    return model_names
+end
+
+"""
+    list_llm_models(llm::OllamaLLM)
+
+Lists the available models from Ollama's Generative Language API.
+
+# Arguments
+- `llm::OllamaLLM`: Instance of `OllamaLLM`.
+- `api_key`: API key for authentication.
+
+# Returns
+A list of models.
+"""
+function list_llm_models(llm::OllamaLLM)
+    @debug "Listing LLM Models" llm
+
+    url     = "http://127.0.0.1:11434/api/tags"
+
+    response = get_request(url)
+    model_list = handle_json_response(response, ["models"])
+
+    # Extract the "name" field into a vector of strings
+    model_names = [model["model"] for model in model_list]
+
+    return model_names
 end
 
 # ─────────────────────────────────────────────────────────────────────────────
