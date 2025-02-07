@@ -308,14 +308,14 @@ end
 # ─────────────────────────────────────────────────────────────────────────────
 
 """
-    call_llm(llm::AbstractLLM, system_instruction, input_text, ...)
+    call_llm(llm::AbstractLLM; kwargs...)
 
 Abstract method to call an LLM. Must be implemented for each concrete LLM type.
 
 By default, this method raises an error indicating it is not implemented
 for a given LLM subtype.
 """
-function call_llm(llm::AbstractLLM, system_instruction, input_text::String; kwargs...)
+function call_llm(llm::AbstractLLM; kwargs...)
     error("Not implemented for $(typeof(llm))")
 end
 

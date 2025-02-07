@@ -11,7 +11,7 @@ using Test
     text = "Hello, World! This is a funny test."
 
     function test_llm(llm)
-        @test LLMAccess.call_llm(llm, text, system_instruction) |> rstrip == text
+        @test LLMAccess.call_llm(llm, system_instruction, text) |> rstrip == text
     end
     
     test_llm(get_llm_type("google"))
@@ -19,4 +19,6 @@ using Test
     test_llm(get_llm_type("anthropic"))
     test_llm(get_llm_type("mistral"))
     test_llm(get_llm_type("ollama"))
+    test_llm(get_llm_type("openrouter"))
+    test_llm(get_llm_type("groq"))
 end
