@@ -1,10 +1,6 @@
 # LLMAccess
 
-LLMAccess is a Julia package designed to simplify interactions with various
-Large Language Model (LLM) APIs. Whether you're leveraging OpenAI, Anthropic,
-Google, Ollama, Mistral, OpenRouter, or Groq, LLMAccess provides a unified and
-straightforward interface to integrate these models into your Julia
-scripts seamlessly.
+LLMAccess is a Julia package designed to simplify interactions with multiple Large Language Model (LLM) APIs. It provides a unified interface to integrate models from providers such as OpenAI, Anthropic, Google, Ollama, Mistral, OpenRouter, and Groq into your Julia scripts seamlessly.
 
 ## Table of Contents
 
@@ -23,15 +19,15 @@ scripts seamlessly.
 
 ## Features
 
-- **Multi-Provider Support**: Interact with multiple LLM providers through a consistent interface.
-- **File Attachments**: Easily attach files to your API requests.
+- **Multi-Provider Support**: Seamlessly interact with multiple LLM providers through a single interface.
+- **File Attachments**: Easily attach files to API requests.
 - **Command-Line Integration**: Parse command-line arguments for flexible script execution.
-- **Extensible Design**: Add support for new LLM providers with minimal effort.
-- **Error Handling**: Robust error handling to manage API request failures gracefully.
+- **Extensibility**: Add support for new LLM providers with minimal effort.
+- **Error Handling**: Manage API request failures gracefully with robust error handling.
 
 ## Installation
 
-To install LLMAccess, use Julia's package manager. Open your Julia REPL and execute:
+To install LLMAccess, use Julia's package manager. In your Julia REPL, run:
 
 ```julia
 using Pkg
@@ -40,7 +36,7 @@ Pkg.add("git@gitlab.com:newptcai/llmaccess.jl.git")
 
 ## Configuration
 
-Before using LLMAccess, ensure you have the necessary API keys for the LLM providers you intend to use. Set these keys as environment variables in your system:
+Before using LLMAccess, set the necessary API keys for the LLM providers you want to use. Set these as environment variables:
 
 - `OPENAI_API_KEY` for OpenAI
 - `OPENROUTER_API_KEY` for OpenRouter
@@ -53,7 +49,7 @@ Before using LLMAccess, ensure you have the necessary API keys for the LLM provi
 
 **On Unix/Linux/macOS:**
 
-Add the following lines to your `.bashrc`, `.zshrc`, or equivalent shell configuration file:
+Add the following lines to your shell configuration file (e.g., `.bashrc`, `.zshrc`):
 
 ```bash
 export OPENAI_API_KEY="your_openai_api_key"
@@ -64,7 +60,20 @@ export GOOGLE_API_KEY="your_google_api_key"
 export MISTRAL_API_KEY="your_mistral_api_key"
 ```
 
-After adding, reload your shell configuration:
+To set the default LLM provider and models, add the following lines:
+
+```bash
+export DEFAULT_LLM="ollama"
+export DEFAULT_OPENAI_MODEL="gpt-4o-mini"
+export DEFAULT_OPENROUTER_MODEL="amazon/nova-micro-v1"
+export DEFAULT_ANTHROPIC_MODEL="claude-3-5-haiku-latest"
+export DEFAULT_GOOGLE_MODEL="gemini-2.0-flash"
+export DEFAULT_OLLAMA_MODEL="llama3.2"
+export DEFAULT_MISTRAL_MODEL="mistral-small-latest"
+export DEFAULT_GROQ_MODEL="llama-3.3-70b-versatile"
+```
+
+After adding the variables, reload your shell configuration:
 
 ```bash
 source ~/.bashrc
@@ -86,7 +95,7 @@ Set environment variables through the System Properties:
 
 ### Importing the Module
 
-Begin by importing the LLMAccess module in your Julia script:
+Start by importing the LLMAccess module in your Julia script:
 
 ```julia
 using LLMAccess
@@ -94,7 +103,9 @@ using LLMAccess
 
 ### Calling an LLM
 
-LLMAccess provides a flexible `call_llm` function that interacts with the specified LLM provider. You can instantiate the desired LLM type and invoke the function with the required parameters.
+The `call_llm` function interacts with the specified LLM provider.
+You can create an instance of the desired LLM type and invoke the function with the
+necessary parameters.
 
 #### Example: OpenAI
 
@@ -109,7 +120,7 @@ input_text = "Hello, how are you?"
 system_instruction = "You are a helpful assistant."
 
 # Call the OpenAI LLM
-response = call_llm(openai_llm, input_text, system_instruction)
+response = call_llm(openai_llm, system_instruction, input_text)
 
 println("OpenAI Response: ", response)
 ```
@@ -127,18 +138,18 @@ input_text = "Translate this text to French."
 system_instruction = "You are a translation assistant."
 
 # Call the Google LLM
-response = call_llm(google_llm, input_text, system_instruction)
+response = call_llm(google_llm, system_instruction, input_text)
 
 println("Google Response: ", response)
 ```
 
 ### Using with Command-Line
 
-LLMAccess includes a `parse_commandline` function to facilitate command-line argument parsing, making it easy to integrate into scripts and automation workflows.
+LLMAccess includes a `parse_commandline` function to parse command-line arguments, allowing you to integrate it into scripts and automation workflows.
 
 #### Example Script
 
-Create a Julia script named `ask.jl`:
+Create a Julia script called `ask.jl`:
 
 ```julia
 #!/usr/bin/env julia
@@ -149,30 +160,21 @@ using ArgParse
 function main()
     # Define the system prompt
     system_instruction = """
-    Please answer user question as truthfuly as possible.
+    Please answer the user's question as truthfully as possible.
     Be concise with your answer.
     """
 
     custom_settings = ArgParseSettings(
-        description = "Use LLM to answer simple question.",
+        description = "Use LLM to answer a simple question.",
         add_version = true,
         version = "v1.0.0",
     )
 
-    args = parse_commandline(custom_settings, "google")
+    args = parse_commandline(custom_settings)
 
-    if args["debug"]
-        println("Ready to LLM ...")
-    end
-
-    llm_type = get_llm_type(args["llm"])
     result = call_llm(
-        llm_type,
-        args["input_text"],
         system_instruction,
-        args["model"],
-        args["temperature"],
-        args["attachment"],
+        args
     )
 
     if args["debug"]
@@ -202,7 +204,7 @@ Make the script executable:
 chmod +x ask.jl
 ```
 
-Execute the script with desired arguments:
+Run the script with the desired arguments:
 
 ```bash
 ./ask.jl --llm openai --model "gpt-4o-latest" --attachment ~/Downloads/example.webp "What's in this picture?" 
@@ -210,14 +212,14 @@ Execute the script with desired arguments:
 
 **Available Command-Line Arguments:**
 
-- `--llm`, `-l`: **(Required)** LLM provider to use (e.g., `openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `groq`).
+- `--llm`, `-l`: **(Required)** LLM provider (e.g., `openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `groq`).
 - `--input_text`, `-i`: **(Optional)** Input text for the LLM. If not provided, the script will read from `stdin`.
-- `--model`, `-m`: **(Optional)** Specific model to use. If omitted, the default model for the specified LLM will be used.
+- `--model`, `-m`: **(Optional)** Specific model to use. If omitted, the default model for the LLM provider will be used.
 - `--attachment`, `-a`: **(Optional)** Path to a file to attach to the request.
 - `--temperature`, `-t`: **(Optional)** Sampling temperature for text generation (default: `0.7`).
 - `--debug`, `-d`: **(Optional)** Enable debug mode to print detailed information.
 
-See [script](script) for more examples.
+See the [script](script) for more examples.
 
 ## Supported LLM Providers
 
@@ -233,8 +235,7 @@ LLMAccess currently supports the following LLM providers:
 
 ## Contributing
 
-Contributions are welcome!
-If you'd like to contribute to LLMAccess, please fork and create a pull request.
+Contributions are welcome! If you'd like to contribute to LLMAccess, please fork the repository and create a pull request.
 
 ## License
 
