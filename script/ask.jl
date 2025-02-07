@@ -16,20 +16,11 @@ function main()
         version = "v1.0.0",
     )
 
-    args = parse_commandline(custom_settings, "google")
+    args = parse_commandline(custom_settings)
 
-    if args["debug"]
-        println("Ready to LLM ...")
-    end
-
-    llm_type = get_llm_type(args["llm"])
     result = call_llm(
-        llm_type,
-        args["input_text"],
         system_instruction,
-        args["model"],
-        args["temperature"],
-        args["attachment"],
+        args
     )
 
     if args["debug"]
