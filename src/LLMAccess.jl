@@ -8,7 +8,7 @@ using MIMEs
 using Logging
 using Serialization
 
-export call_llm, list_llm_models, get_llm_type, parse_commandline
+export call_llm, list_llm_models, get_llm_type, parse_commandline, jina_reader
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Abstract Types
@@ -1137,6 +1137,28 @@ function parse_commandline(
     end
 
     return args
+end
+
+#-----------------------------------------------------------------------------------------------
+# Jina
+# ---------------------------------------------------------------------------------------------
+"""
+    jina_reader(url)
+
+Convert web page to markdown with a Jina reader.
+
+# Arguments
+- `url`: URL of the web page to convert.
+
+# Returns
+A string containing the converted markdown.
+"""
+function jina_reader(url)
+    request_url = "https://r.jina.ai/$url"
+    api_key = ENV["JINA_API_KEY"]
+    headers = ["Authorization" => "Bearer $api_key"]
+    response = HTTP.request("GET", request_url, headers, proxy = ENV["http_proxy"])
+    return String(response.body)
 end
 
 end # module LLMAccess
