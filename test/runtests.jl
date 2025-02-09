@@ -11,7 +11,10 @@ using Test
     text = "Hello, World! This is a funny test."
 
     function test_llm(llm)
-        @test LLMAccess.call_llm(llm, system_instruction, text) |> rstrip == text
+        println("Testing LLM $(llm)")
+        response = LLMAccess.call_llm(llm, system_instruction, text)
+        @show response
+        @test response |> rstrip == text
     end
     
     test_llm(get_llm_type("google"))

@@ -408,7 +408,7 @@ function make_api_request(
     @debug "API request data" data
 
     response = post_request(url, headers, data)
-    return response
+    return handle_json_response(response, ["choices", 1, "message", "content"])
 end
 
 # ─────────────────────────────────────────────────────────────────────────────
