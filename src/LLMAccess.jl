@@ -7,8 +7,14 @@ using Base64
 using MIMEs
 using Logging
 using Serialization
+using Pandoc
 
-export call_llm, list_llm_models, get_llm_type, parse_commandline, jina_reader
+export call_llm, 
+    list_llm_models,
+    get_llm_type,
+    parse_commandline,
+    jina_reader,
+    pandoc_reader
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Abstract Types
@@ -1161,4 +1167,32 @@ function jina_reader(url)
     return String(response.body)
 end
 
+#-----------------------------------------------------------------------------------------------
+# Pandoc
+# ---------------------------------------------------------------------------------------------
+"""
+   pandoc_reader(url)
+
+Fetches the content from a given URL,
+converts it from HTML to Markdown using pandoc.
+
+# Arguments
+- `url`: The URL from which to fetch the content.
+
+# Returns
+A string containing the converted markdown.
+"""
+function pandoc_reader(url::String)
+    # Fetch the content from the URL
+    response = HTTP.get(url)
+    content = String(response.body)
+
+    # Convert the fetched content to markdown using Pandoc
+    c = Pandoc.Converter(input = content)
+    c.from = "html"  # assuming the content from URL is HTML
+    c.to = "markdown"  # converting to markdown
+
+    # Run the conversion
+    return String(run(c))
+end
 end # module LLMAccess
