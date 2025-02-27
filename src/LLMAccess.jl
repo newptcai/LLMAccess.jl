@@ -12,6 +12,7 @@ using Pandoc
 export call_llm, 
     list_llm_models,
     get_llm_type,
+    get_llm_list,
     parse_commandline,
     jina_reader,
     pandoc_reader
@@ -116,6 +117,15 @@ Returns the default LLM provider, determined by the environment variable
 """
 function get_default_llm()
     return get(ENV, "DEFAULT_LLM", DEFAULT_LLM)
+end
+
+"""
+    get_llm_list()
+
+Returns the list of LLM provider.
+"""
+function get_llm_list()
+    return keys(DEFAULT_MODELS)
 end
 
 """
