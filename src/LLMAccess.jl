@@ -8,6 +8,7 @@ using MIMEs
 using Logging
 using Serialization
 using Pandoc
+using InteractiveUtils
 
 export call_llm, 
     list_llm_models,
@@ -757,6 +758,7 @@ Selects the appropriate LLM based on the provider name and invokes it.
 - `model`: (Optional) A specific model to use. If empty, falls back to an environment
   variable or a default in `DEFAULT_MODELS`.
 - `temperature::Float64`: (Optional) Sampling temperature.
+- `copy::Bool`: (Optional) Whether to copy the response to the clipboard.
 
 # Returns
 The response from the selected LLM as `String` or `nothing` if the request fails.
@@ -766,13 +768,19 @@ function call_llm(
     system_instruction="",
     input_text="";
     model = "",
-    temperature::Float64 = DEFAULT_TEMPERATURE
+    temperature::Float64 = DEFAULT_TEMPERATURE,
+    copy = false
 )
     llm_type = get_llm_type(llm_name)
     selected_model = isempty(model) ? get_default_model(llm_name) : model
 
     result = call_llm(llm_type, system_instruction, input_text, selected_model, temperature)
-    println(result)
+
+    if !isempty(result) && copy
+        clipboard(result)
+    end
+
+    return result
 end
 
 """
@@ -800,8 +808,9 @@ function call_llm(system_instruction, args::Dict)
     model       = args["model"]
     temperature = args["temperature"]
     attach_file = haskey(args, "attachment") ? args["attachment"] : ""
+    copy = args["copy"]
 
-    return call_llm(
+    result= call_llm(
         llm_type,
         system_instruction,
         input_text,
@@ -809,6 +818,12 @@ function call_llm(system_instruction, args::Dict)
         temperature,
         attach_file
     )
+
+    if !isempty(result) && copy
+        clipboard(result)
+    end
+
+    return result
 end
 
 #-----------------------------------------------------------------------------------
@@ -1127,6 +1142,10 @@ function parse_commandline(
 
         "--debug", "-d"
         help = "Enable debug mode"
+        action = :store_true
+
+        "--copy", "-c"
+        help = "Copy the response to the clipboard"
         action = :store_true
 
         "input_text"
