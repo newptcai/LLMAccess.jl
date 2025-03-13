@@ -414,7 +414,11 @@ function make_api_request(
     user_message   = Dict("role" => "user", "content" => content)
     system_message = Dict("role" => "system", "content" => system_instruction)
 
-    messages = system_instruction == "" ? [user_message] : [system_message, user_message]
+    messages = [user_message]
+    if !isempty(system_instruction)
+        @debug "Adding system message" system_message
+        push!(messages, system_message)
+    end
 
     data = Dict(
         "model" => model,
@@ -619,10 +623,14 @@ function call_llm(
     parts     = attach_file != "" ? [text_data, encode_file_to_base64(llm, attach_file)] : [text_data]
 
     data = Dict(
-        "system_instruction" => Dict("parts" => Dict("text" => system_instruction)),
         "generationConfig"   => Dict("temperature" => temperature),
         "contents"           => Dict("parts" => parts),
     )
+
+    if !isempty(system_instruction)
+        @debug "Adding system instruction" system_instruction
+        data["system_instruction"] = Dict("parts" => Dict("text" => system_instruction))
+    end
 
     response = post_request(url, headers, data)
     return handle_json_response(response, ["candidates", 1, "content", "parts", 1, "text"])
