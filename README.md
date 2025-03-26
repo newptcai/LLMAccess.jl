@@ -169,7 +169,7 @@ function main()
     custom_settings = ArgParseSettings(
         description = "Use LLM to answer a simple question.",
         add_version = true,
-        version = "v1.0.0",
+        version = "v1.1.0",
     )
 
     args = parse_commandline(custom_settings)
