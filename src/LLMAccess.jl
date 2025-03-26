@@ -89,6 +89,13 @@ Concrete type for Mistral's LLM.
 """
 struct MistralLLM <: AbstractLLM end
 
+"""
+    DeepSeekLLM
+
+Concrete type for DeepSeek's LLM (OpenAI-compatible API).
+"""
+struct DeepSeekLLM <: OpenAICompatibleLLM end
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Constants
 # ─────────────────────────────────────────────────────────────────────────────
