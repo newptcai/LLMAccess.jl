@@ -101,6 +101,7 @@ const DEFAULT_MODELS = Dict(
     "ollama"      => "llama3.2",
     "mistral"     => "mistral-small-latest",
     "groq"        => "llama-3.3-70b-versatile",
+    "deepseek"    => "deepseek-chat",
 )
 
 const DEFAULT_TEMPERATURE = 0.7
@@ -437,6 +438,40 @@ end
 # ─────────────────────────────────────────────────────────────────────────────
 
 """
+"""
+    call_llm(llm::DeepSeekLLM,
+             system_instruction="",
+             input_text="",
+             model,
+             temperature::Float64,
+             attach_file)
+
+Calls the DeepSeek API with the provided parameters.
+"""
+function call_llm(
+    llm::DeepSeekLLM,
+    system_instruction="",
+    input_text="",
+    model = get_default_model("deepseek"),
+    temperature::Float64 = DEFAULT_TEMPERATURE,
+    attach_file = ""
+)
+    api_key = ENV["DEEPSEEK_API_KEY"]
+    url     = "https://api.deepseek.com/v1/chat/completions"
+
+    return make_api_request(
+        llm,
+        api_key,
+        url,
+        system_instruction,
+        input_text,
+        model,
+        temperature,
+        attach_file
+    )
+end
+
+"""
     call_llm(llm::OpenAILLM,
              system_instruction,
              input_text,
@@ -743,6 +778,7 @@ function get_llm_type(llm_name)
         "mistral"     => MistralLLM(),
         "openrouter"  => OpenRouterLLM(),
         "groq"        => GroqLLM(),
+        "deepseek"    => DeepSeekLLM(),
     )
     get(llm_types, llm_name) do
         error("Unknown LLM: $llm_name")
@@ -1008,6 +1044,31 @@ function list_llm_models(llm::MistralLLM)
     ]
 
     url     = "https://api.mistral.ai/v1/models"
+
+    response = get_request(url, headers)
+    model_list = handle_json_response(response, ["data"])
+
+    # Extract the "name" field into a vector of strings
+    model_names = [model["id"] for model in model_list]
+
+    return model_names
+end
+
+"""
+"""
+    list_llm_models(llm::DeepSeekLLM)
+
+Lists the available models from DeepSeek's API.
+"""
+function list_llm_models(llm::DeepSeekLLM)
+    @debug "Listing LLM Models" llm
+
+    api_key = ENV["DEEPSEEK_API_KEY"]
+    headers = [
+        "Authorization" => "Bearer $api_key",
+    ]
+
+    url     = "https://api.deepseek.com/v1/models"
 
     response = get_request(url, headers)
     model_list = handle_json_response(response, ["data"])
