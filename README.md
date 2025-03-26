@@ -1,6 +1,6 @@
 # LLMAccess
 
-LLMAccess is a Julia package designed to simplify interactions with multiple Large Language Model (LLM) APIs. It provides a unified interface to integrate models from providers such as OpenAI, Anthropic, Google, Ollama, Mistral, OpenRouter, and Groq into your Julia scripts seamlessly.
+LLMAccess is a Julia package designed to simplify interactions with multiple Large Language Model (LLM) APIs. It provides a unified interface to integrate models from providers such as OpenAI, Anthropic, Google, Ollama, Mistral, OpenRouter, Groq, and DeepSeek into your Julia scripts seamlessly.
 
 ## Table of Contents
 
@@ -44,6 +44,7 @@ Before using LLMAccess, set the necessary API keys for the LLM providers you wan
 - `ANTHROPIC_API_KEY` for Anthropic
 - `GOOGLE_API_KEY` for Google
 - `MISTRAL_API_KEY` for Mistral
+- `DEEPSEEK_API_KEY` for DeepSeek
 
 ### Setting Environment Variables
 
@@ -68,9 +69,10 @@ export DEFAULT_OPENAI_MODEL="gpt-4o-mini"
 export DEFAULT_OPENROUTER_MODEL="amazon/nova-micro-v1"
 export DEFAULT_ANTHROPIC_MODEL="claude-3-5-haiku-latest"
 export DEFAULT_GOOGLE_MODEL="gemini-2.0-flash"
-export DEFAULT_OLLAMA_MODEL="llama3.2"
+export DEFAULT_OLLAMA_MODEL="gemma3:4b"
 export DEFAULT_MISTRAL_MODEL="mistral-small-latest"
 export DEFAULT_GROQ_MODEL="llama-3.3-70b-versatile"
+export DEFAULT_DEEPSEEK_MODEL="deepseek-chat"
 ```
 
 After adding the variables, reload your shell configuration:
@@ -228,6 +230,7 @@ LLMAccess currently supports the following LLM providers:
 - **OpenAI**: Access to models like GPT-4, GPT-3.5, etc.
 - **OpenRouter**: Compatible with OpenAI's API endpoints.
 - **Groq**: Integrates with Groq's LLM services.
+- **DeepSeek**: OpenAI-compatible API access to DeepSeek's models.
 - **Anthropic**: Utilizes Anthropic's Claude models.
 - **Google**: Connects to Google's generative language models.
 - **Ollama**: Interfaces with Ollama's local LLM deployments.
