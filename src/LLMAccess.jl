@@ -446,14 +446,20 @@ end
 
 """
 """
-    call_llm(llm::DeepSeekLLM,
-             system_instruction="",
-             input_text="",
-             model,
-             temperature::Float64,
-             attach_file)
+    call_llm(llm::DeepSeekLLM, system_instruction, input_text, model, temperature, attach_file)
 
 Calls the DeepSeek API with the provided parameters.
+
+# Arguments
+- `llm::DeepSeekLLM`: Instance of DeepSeekLLM
+- `system_instruction`: System prompt/context
+- `input_text`: User input text
+- `model`: Model name from DeepSeek's offerings
+- `temperature::Float64`: Sampling temperature
+- `attach_file`: Optional file attachment path
+
+# Returns
+LLM response as String or nothing
 """
 function call_llm(
     llm::DeepSeekLLM,
@@ -489,12 +495,12 @@ end
 Calls the OpenAI API with the provided parameters.
 
 # Arguments
-- `llm::OpenAILLM`: Instance of `OpenAILLM`.
-- `system_instruction`: System-level instructions or context.
-- `input_text`: The main user text query/prompt.
-- `model`: Model name (defaults to the ENV var `OPENAI_DEFAULT_MODEL` or the fallback in `DEFAULT_MODELS`).
-- `temperature::Float64`: Sampling temperature.
-- `attach_file`: Path to a file to attach.
+- `llm::OpenAILLM`: Instance of OpenAILLM
+- `system_instruction`: System-level instructions/context
+- `input_text`: Main user text query/prompt
+- `model`: Model name (default: ENV var or DEFAULT_MODELS)
+- `temperature::Float64`: Sampling temperature
+- `attach_file`: Path to file attachment
 
 # Returns
 LLM-generated response text as a `String`, or `nothing` if the request fails.
@@ -566,7 +572,7 @@ end
 Calls the Groq API with the provided parameters.
 
 If a file is attached, Groq disallows mixing system instructions in the same message.
-Therefore, the `system_instruction` is blanked out when `attach_file` is not empty.
+Therefore, the system_instruction is blanked out when attach_file is not empty
 """
 function call_llm(
     llm::GroqLLM,
@@ -1065,7 +1071,13 @@ end
 """
     list_llm_models(llm::DeepSeekLLM)
 
-Lists the available models from DeepSeek's API.
+Lists available models from DeepSeek's API.
+
+# Arguments
+- `llm::DeepSeekLLM`: Instance of DeepSeekLLM
+
+# Returns
+Vector of available model names
 """
 function list_llm_models(llm::DeepSeekLLM)
     @debug "Listing LLM Models" llm
@@ -1092,8 +1104,7 @@ end
 Lists the available models from Ollama's Generative Language API.
 
 # Arguments
-- `llm::OllamaLLM`: Instance of `OllamaLLM`.
-- `api_key`: API key for authentication.
+- `llm::OllamaLLM`: Instance of OllamaLLM
 
 # Returns
 A list of models.
@@ -1146,7 +1157,7 @@ A dictionary containing parsed command-line arguments:
 - `"attachment"`: Path to a file to attach (if any).
 - `"temperature"`: Sampling temperature.
 - `"debug"`: Whether debug mode is enabled.
-- `"input_text"`: The user-supplied text.
+- `"input_text"`: The user-supplied text
 """
 function parse_commandline(
     settings = create_default_settings();
@@ -1178,13 +1189,13 @@ Parses command-line arguments for the LLM script when both the default LLM provi
 are specified.
 
 The returned dictionary includes:
-- `"llm"`: LLM provider (string).
+- `"llm"`: LLM provider (string)
 - `"model"`: Model name (string).
 - `"file"`: Path to the file to process (if any).
 - `"attachment"`: File to attach (if any).
 - `"temperature"`: Sampling temperature (float).
 - `"debug"`: Boolean flag for debug mode.
-- `"input_text"`: Input text or prompt (string).
+- `"input_text"`: Input text or prompt (string)
 
 If `require_input` is `true` and the user does not provide `input_text`, reads from `stdin`.
 """
@@ -1204,28 +1215,28 @@ function parse_commandline(
         default = default_model
 
         "--file", "-f"
-        help = "Path to the file to process"
+        help = "Path to input file to process"
         default = ""
 
-        "--attachment", "-a"
-        help = "Path to the file to attach"
+        "--attachment", "-a" 
+        help = "Path to file attachment"
         default = ""
 
         "--temperature", "-t"
-        help = "Temperature for text generation"
+        help = "Sampling temperature (0.0-2.0)"
         arg_type = Float64
-        default = 0.7  # fallback to your DEFAULT_TEMPERATURE if desired
+        default = 0.7  # Uses DEFAULT_TEMPERATURE if not set
 
         "--debug", "-d"
-        help = "Enable debug mode"
+        help = "Enable debug logging"
         action = :store_true
 
         "--copy", "-c"
-        help = "Copy the response to the clipboard"
+        help = "Copy response to clipboard"
         action = :store_true
 
         "input_text"
-        help = "Input text for the LLM (reads from stdin if not provided)"
+        help = "Input text/prompt (reads from stdin if empty)"
         required = false
     end
 
@@ -1233,7 +1244,7 @@ function parse_commandline(
 
     # If no input_text was provided and we require it, read from stdin
     if isnothing(args["input_text"]) && require_input
-        args["input_text"] = read(stdin, String)
+        args["input_text"] = chomp(read(stdin, String))
     end
 
     # If the user changed the LLM but not the model, use that LLM's default model
