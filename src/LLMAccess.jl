@@ -445,7 +445,6 @@ end
 # ─────────────────────────────────────────────────────────────────────────────
 
 """
-"""
     call_llm(llm::DeepSeekLLM, system_instruction, input_text, model, temperature, attach_file)
 
 Calls the DeepSeek API with the provided parameters.
@@ -1067,7 +1066,6 @@ function list_llm_models(llm::MistralLLM)
     return model_names
 end
 
-"""
 """
     list_llm_models(llm::DeepSeekLLM)
 
