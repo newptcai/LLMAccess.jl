@@ -24,4 +24,5 @@ using Test
     test_llm(get_llm_type("ollama"))
     test_llm(get_llm_type("openrouter"))
     test_llm(get_llm_type("groq"))
+    test_llm(get_llm_type("deepseek"))
 end
