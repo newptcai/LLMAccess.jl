@@ -123,7 +123,6 @@ const MODEL_ALIASES = Dict(
     "haiku" => "claude-3-5-haiku-latest",
     "r1" => "deepseek-reasoner",
     "v3" => "deepseek-chat",
-    "flash" => "gemini-2.0-flash",
     "4o" => "gpt-4o",
     "4o-mini" => "gpt-4o-mini",
     "3.5" => "gpt-3.5-turbo",
