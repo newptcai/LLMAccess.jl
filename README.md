@@ -12,6 +12,7 @@ LLMAccess is a Julia package designed to simplify interactions with multiple Lar
   - [Calling an LLM](#calling-an-llm)
     - [Example: OpenAI](#example-openai)
     - [Example: Google](#example-google)
+  - [Model Aliases](#model-aliases)
   - [Using with Command-Line](#using-with-command-line)
 - [Supported LLM Providers](#supported-llm-providers)
 - [Contributing](#contributing)
@@ -22,6 +23,7 @@ LLMAccess is a Julia package designed to simplify interactions with multiple Lar
 - **Multi-Provider Support**: Seamlessly interact with multiple LLM providers through a single interface.
 - **File Attachments**: Easily attach files to API requests.
 - **Command-Line Integration**: Parse command-line arguments for flexible script execution.
+- **Model Aliases**: Use convenient shorthand names for popular models (e.g. `4o` for GPT-4o, `haiku` for Claude 3 Haiku)
 - **Extensibility**: Add support for new LLM providers with minimal effort.
 - **Error Handling**: Manage API request failures gracefully with robust error handling.
 
@@ -145,6 +147,30 @@ response = call_llm(google_llm, system_instruction, input_text)
 println("Google Response: ", response)
 ```
 
+### Model Aliases
+
+LLMAccess supports shorthand names for common models. Here are some key aliases:
+
+| Alias    | Full Model Name                          |
+|----------|------------------------------------------|
+| `4o`     | `gpt-4o`                                 |
+| `haiku`  | `claude-3-5-haiku-latest`                |
+| `sonnet` | `claude-3-7-sonnet-20250219`             |
+| `mistral`| `mistral-large-latest`                   |
+| `gemini` | `gemini-2.5-pro-exp-03-25`               |
+| `flash`  | `gemini-2.0-flash`                       |
+| `gemma`  | `gemma3:4b`                              |
+| `r1`     | `deepseek-reasoner`                      |
+
+Use these aliases anywhere you would specify a model name. For example:
+
+```julia
+# Using alias instead of full model name
+response = call_llm("openai", "You are helpful", "Hello", model="4o")
+```
+
+Full list of aliases can be found in the [source code](src/LLMAccess.jl).
+
 ### Using with Command-Line
 
 LLMAccess includes a `parse_commandline` function to parse command-line arguments, allowing you to integrate it into scripts and automation workflows.
@@ -209,7 +235,7 @@ chmod +x ask.jl
 Run the script with the desired arguments:
 
 ```bash
-./ask.jl --llm openai --model "gpt-4o-latest" --attachment ~/Downloads/example.webp "What's in this picture?" 
+./ask.jl --llm openai --model 4o --attachment ~/Downloads/example.webp "What's in this picture?" 
 ```
 
 **Available Command-Line Arguments:**
