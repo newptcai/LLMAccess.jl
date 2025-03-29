@@ -114,6 +114,28 @@ const DEFAULT_MODELS = Dict(
 const DEFAULT_TEMPERATURE = 0.7
 const DEFAULT_LLM = "google"
 
+const MODEL_ALIASES = Dict(
+    # User-specified aliases
+    "mistral" => "mistral-large-latest",
+    "gemini" => "gemini-2.5-pro-exp-03-25",
+    "sonnet" => "claude-3-7-sonnet-20250219",
+    "r1" => "deepseek-reasoner",
+    "haiku" => "claude-3-5-haiku-latest",
+    "flash" => "gemini-2.0-flash",
+    "4o" => "gpt-4o",
+    
+    # Additional common aliases
+    "gpt4" => "gpt-4",
+    "gpt3" => "gpt-3.5-turbo",
+    "davinci" => "text-davinci-003",
+    "claude2" => "claude-2.1",
+    "opus" => "claude-3-opus-20240229",
+    "llama3" => "meta-llama/llama-3-70b-instruct",
+    "codellama" => "codellama/CodeLlama-70b-Instruct-hf",
+    "mixtral" => "mistralai/mixtral-8x7b-instruct",
+    "gemma" => "google/gemma-7b-it",
+)
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Helper Functions
 # ─────────────────────────────────────────────────────────────────────────────
@@ -146,6 +168,16 @@ in `DEFAULT_MODELS`.
 """
 function get_default_model(llm_name)
     return get(ENV, "DEFAULT_"*uppercase(llm_name)*"_MODEL", DEFAULT_MODELS[llm_name])
+end
+
+"""
+    resolve_model_alias(model_name)
+
+Returns the full model name if the given `model_name` is a known alias; 
+otherwise returns `model_name` unchanged.
+"""
+function resolve_model_alias(model_name)
+    return get(MODEL_ALIASES, model_name, model_name)
 end
 
 """
@@ -828,7 +860,9 @@ function call_llm(
     copy = false
 )
     llm_type = get_llm_type(llm_name)
-    selected_model = isempty(model) ? get_default_model(llm_name) : model
+    selected_model = resolve_model_alias(
+        isempty(model) ? get_default_model(llm_name) : model
+    )
 
     result = call_llm(llm_type, system_instruction, input_text, selected_model, temperature)
 
@@ -861,7 +895,7 @@ The LLM response as a `String`, or `nothing` if the request fails.
 function call_llm(system_instruction, args::Dict)
     llm_type    = get_llm_type(args["llm"])
     input_text  = args["input_text"]
-    model       = args["model"]
+    model       = resolve_model_alias(args["model"])
     temperature = args["temperature"]
     attach_file = haskey(args, "attachment") ? args["attachment"] : ""
     copy = args["copy"]
