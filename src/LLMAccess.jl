@@ -115,25 +115,18 @@ const DEFAULT_TEMPERATURE = 0.7
 const DEFAULT_LLM = "google"
 
 const MODEL_ALIASES = Dict(
-    # User-specified aliases
     "mistral" => "mistral-large-latest",
     "gemini" => "gemini-2.5-pro-exp-03-25",
+    "flash" => "gemini-2.0-flash",
+    "gemma" => "gemma3:4b",
     "sonnet" => "claude-3-7-sonnet-20250219",
-    "r1" => "deepseek-reasoner",
     "haiku" => "claude-3-5-haiku-latest",
+    "r1" => "deepseek-reasoner",
+    "v3" => "deepseek-chat",
     "flash" => "gemini-2.0-flash",
     "4o" => "gpt-4o",
-    
-    # Additional common aliases
-    "gpt4" => "gpt-4",
-    "gpt3" => "gpt-3.5-turbo",
-    "davinci" => "text-davinci-003",
-    "claude2" => "claude-2.1",
-    "opus" => "claude-3-opus-20240229",
-    "llama3" => "meta-llama/llama-3-70b-instruct",
-    "codellama" => "codellama/CodeLlama-70b-Instruct-hf",
-    "mixtral" => "mistralai/mixtral-8x7b-instruct",
-    "gemma" => "google/gemma-7b-it",
+    "4o-mini" => "gpt-4o-mini",
+    "3.5" => "gpt-3.5-turbo",
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
