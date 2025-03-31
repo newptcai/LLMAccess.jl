@@ -261,8 +261,7 @@ end
 """
     post_request(url, headers, payload)
 
-Sends an HTTP POST request and handles potential errors, returning the HTTP response
-or `nothing` on failure.
+Sends an HTTP POST request and handles potential errors, throwing exceptions on failure.
 
 # Arguments
 - `url`: The endpoint URL.
@@ -270,7 +269,11 @@ or `nothing` on failure.
 - `payload`: The JSON-serializable data to send in the request body.
 
 # Returns
-An `HTTP.Response` if successful; otherwise, `nothing`.
+An `HTTP.Response` if successful.
+
+# Throws
+- `ErrorException`: If the request fails with a non-200 status code.
+- Any exceptions from the HTTP request itself.
 """
 function post_request(url, headers, payload)
     try
@@ -290,13 +293,13 @@ function post_request(url, headers, payload)
         if response.status == 200
             return response
         else
-            @error "Request failed with status: $(response.status)"
-            println(String(response.body))
-            return nothing
+            error_msg = "HTTP request failed with status $(response.status): $(String(response.body))"
+            @error error_msg
+            throw(ErrorException(error_msg))
         end
     catch http_error
-        @error "HTTP request error: $http_error"
-        return nothing
+        @error "HTTP request error occurred"
+        rethrow(http_error)  # Preserve original exception stacktrace
     end
 end
 
