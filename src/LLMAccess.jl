@@ -344,29 +344,33 @@ Processes the JSON response and extracts the desired data from nested keys.
 
 # Arguments
 - `response::HTTP.Response`: The HTTP response object.
-- `extraction_path::Vector{String}`: An array representing the path to the desired data in the JSON structure.
+- `extraction_path::Vector{String}`: Array representing the path to the desired data.
 
 # Returns
-The extracted data if successful; otherwise, `nothing`.
+The extracted data if successful.
+
+# Throws
+- `ErrorException`: For non-200 status codes or JSON parsing/extraction failures
 """
 function handle_json_response(response, extraction_path)
-    if response.status == 200
-        try
-            response_data = JSON.parse(String(response.body))
-            extracted_data = get_nested(response_data, extraction_path)
-            return extracted_data
-        catch error
-            if error isa KeyError
-                @error "Failed to extract data: $error"
-            else
-                @error "Failed to parse JSON response: $error"
-            end
-            return nothing
+    if response.status != 200
+        error_msg = "HTTP request failed with status $(response.status): $(String(response.body))"
+        @error error_msg
+        throw(ErrorException(error_msg))
+    end
+
+    try
+        response_data = JSON.parse(String(response.body))
+        extracted_data = get_nested(response_data, extraction_path)
+        return extracted_data
+    catch error
+        if error isa KeyError
+            @error "Failed to extract data at path $extraction_path: $error"
+            throw(ErrorException("Missing key in JSON response: $(error.key)"))
+        else
+            @error "Failed to parse JSON response: $error"
+            throw(ErrorException("Invalid JSON response: $(String(response.body))"))
         end
-    else
-        @error "Request failed with status: $(response.status)"
-        println(String(response.body))
-        return nothing
     end
 end
 
