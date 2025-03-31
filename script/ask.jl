@@ -16,19 +16,19 @@ function main(_)
 
     args = parse_commandline(custom_settings)
 
-    result = call_llm(
-        system_instruction,
-        args
-    )
+    try
+        result = call_llm(
+            system_instruction,
+            args
+        )
 
-    if result !== nothing
         print(result)
         if result[end] != '\n'
             print("\n")
         end
         exit(0)
-    else
-        @error "Failed to get a valid response from the server."
+    catch err
+        @error "Operation failed" exception=(err, catch_backtrace())
         exit(1)
     end
 end
