@@ -4,7 +4,7 @@ using LLMAccess
 using ArgParse
 using InteractiveUtils: clipboard
 
-function main()
+function main(_)
     # Define the system prompt
     system_instruction = """
     You are an assistant designed to generate Linux bash commands.
@@ -28,6 +28,7 @@ function main()
     """
 
     custom_settings = ArgParseSettings(
+        prog = "cmd.jl",
         description = "Use LLM to generate command line.",
         add_version = true,
         version = "v1.0.0"
@@ -39,10 +40,6 @@ function main()
         system_instruction,
         args
     )
-
-    if args["debug"]
-        println("LLM output: ...")
-    end
 
     # Use regex to remove trailing whitespace on each line (with multiline mode)
     trimmed_text = replace(result, r"\s+$"m => "")
@@ -57,4 +54,4 @@ function main()
     end
 end
 
-main()
+@main

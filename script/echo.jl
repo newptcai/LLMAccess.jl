@@ -3,7 +3,7 @@
 using LLMAccess
 using ArgParse
 
-function main()
+function main(_)
     # Write your tests here.
     system_instruction = """
     Please repeat what ever the input text is.
@@ -11,15 +11,10 @@ function main()
     """
 
     custom_settings = ArgParseSettings(
+        prog = "echo.jl",
         description = "My awesome LLM echo chamber",
         add_version = true,
         version = "v1.0.0"
-    )
-
-    custom_settings = ArgParseSettings(
-        description = "Use LLM to answer simple question.",
-        add_version = true,
-        version = "v1.0.0",
     )
 
     args = parse_commandline(custom_settings)
@@ -37,4 +32,4 @@ function main()
             """)
 end
 
-main()
+@main
