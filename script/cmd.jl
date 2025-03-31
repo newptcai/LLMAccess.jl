@@ -36,20 +36,19 @@ function main(_)
 
     args = parse_commandline(custom_settings)
 
-    result = call_llm(
-        system_instruction,
-        args
-    )
+    try
+        result = call_llm(
+            system_instruction,
+            args
+        )
 
-    # Use regex to remove trailing whitespace on each line (with multiline mode)
-    trimmed_text = replace(result, r"\s+$"m => "")
-
-    if trimmed_text !== nothing
+        # Use regex to remove trailing whitespace on each line (with multiline mode)
+        trimmed_text = replace(result, r"\s+$"m => "")
         println(trimmed_text)
         clipboard(trimmed_text)
         exit(0)
-    else
-        @error "Failed to get a valid response from the server."
+    catch err
+        @error "Command generation failed" exception=(err, catch_backtrace())
         exit(1)
     end
 end

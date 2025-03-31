@@ -19,17 +19,23 @@ function main(_)
 
     args = parse_commandline(custom_settings)
 
-    result = call_llm(
-        system_instruction,
-        args
-    )
+    try
+        result = call_llm(
+            system_instruction,
+            args
+        )
 
-    @assert rstrip(result)==rstrip(args["input_text"])
-    println("""
-            LLM returned:
+        @assert rstrip(result)==rstrip(args["input_text"])
+        println("""
+                LLM returned:
 
-            $(result)
-            """)
+                $(result)
+                """)
+        exit(0)
+    catch err
+        @error "Echo test failed" exception=(err, catch_backtrace())
+        exit(1)
+    end
 end
 
 @main
