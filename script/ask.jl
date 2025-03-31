@@ -3,14 +3,12 @@
 using LLMAccess
 using ArgParse
 
-function main()
+function main(_)
     # Define the system prompt
-    system_instruction = """
-    Please answer user question as truthfuly as possible.
-    Be concise with your answer.
-    """
+    system_instruction = ""
 
     custom_settings = ArgParseSettings(
+        prog = "ask.jl",
         description = "Use LLM to answer simple question.",
         add_version = true,
         version = "v1.0.0",
@@ -23,13 +21,9 @@ function main()
         args
     )
 
-    if args["debug"]
-        println("LLM output: ...")
-    end
-
     if result !== nothing
         print(result)
-        if result[end] != "\n"
+        if result[end] != '\n'
             print("\n")
         end
         exit(0)
@@ -39,4 +33,4 @@ function main()
     end
 end
 
-main()
+@main
