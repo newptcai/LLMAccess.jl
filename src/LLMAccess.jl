@@ -707,11 +707,10 @@ function call_llm(
     text_data = Dict("text" => input_text)
     parts     = attach_file != "" ? [text_data, encode_file_to_base64(llm, attach_file)] : [text_data]
 
-    generation_config = Dict("temperature" => temperature)
-    if thinking_budget > 0
-        @debug "Adding thinking budget to generation config" thinking_budget
-        generation_config["thinkingConfig"] = Dict("thinkingBudget" => thinking_budget)
-    end
+    generation_config = Dict{String, Any}()
+    generation_config["temperature"] = temperature
+    @debug "Adding thinking budget to generation config" thinking_budget
+    generation_config["thinkingConfig"] = Dict("thinkingBudget" => thinking_budget)
 
     data = Dict(
         "generationConfig"   => generation_config,
@@ -1296,7 +1295,7 @@ function parse_commandline(
         help = "Copy response to clipboard"
         action = :store_true
 
-        "--thinking-budget", "-B"
+        "--thinking_budget", "-B"
         help = "Thinking budget for compatible models (e.g., Gemini)"
         arg_type = Int
         default = 0
