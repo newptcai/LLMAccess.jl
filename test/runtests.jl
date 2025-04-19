@@ -30,9 +30,10 @@ using Test
     println("Testing Google model gemini-2.5-flash-preview-04-17")
     google_flash_response = LLMAccess.call_llm(
         "google", 
-        system_instruction, 
-        text, 
-        model="gemini-2.5-flash-preview-04-17"
+        system_instruction,
+        text,
+        model="gemini-2.5-flash-preview-04-17",
+        thinking_budget=0 # Explicitly set thinking_budget for the test
     )
     @show google_flash_response
     @test google_flash_response |> rstrip == text
