@@ -246,7 +246,7 @@ Run the script with the desired arguments:
 - `--attachment`, `-a`: **(Optional)** Path to a file to attach to the request.
 - `--temperature`, `-t`: **(Optional)** Sampling temperature for text generation (default: `0.7`).
 - `--debug`, `-d`: **(Optional)** Enable debug mode to print detailed information.
-- `--thinking-budget`, `-B`: **(Optional)** Thinking budget for compatible models (e.g., Gemini). Default is 0.
+- `--thinking-budget`, `-B`: **(Optional)** Thinking budget (in tokens) for compatible models (e.g., Google Gemini 2.5, Anthropic Claude 3.7 Sonnet). Default is 0. When used with Anthropic `claude-3-7-sonnet` models, `temperature` is automatically set to 1.0 and `max_tokens` is set based on the budget.
 
 See the [script](script) for more examples.
 
