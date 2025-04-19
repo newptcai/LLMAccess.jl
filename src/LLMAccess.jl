@@ -653,6 +653,9 @@ function call_llm(
     attach_file = "";
     kwargs...
 )
+    thinking_budget = get(kwargs, :thinking_budget, 0) # Extract thinking budget
+    @debug "Making API request" llm system_instruction input_text model temperature attach_file thinking_budget
+
     api_key = ENV["ANTHROPIC_API_KEY"]
     url     = "https://api.anthropic.com/v1/messages"
 
