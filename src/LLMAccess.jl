@@ -683,9 +683,10 @@ function call_llm(
             "type" => "enabled",
             "budget_tokens" => thinking_budget
         )
-        # Anthropic docs suggest removing max_tokens when using thinking
-        delete!(data, "max_tokens")
-        @debug "Removed max_tokens due to thinking budget"
+        # Set max_tokens based on thinking_budget as per requirement
+        calculated_max_tokens = ceil(Int, thinking_budget * 1.25)
+        data["max_tokens"] = calculated_max_tokens
+        @debug "Set max_tokens based on thinking budget" calculated_max_tokens
     end
 
     response = post_request(url, headers, data)
