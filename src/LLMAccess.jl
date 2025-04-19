@@ -687,6 +687,10 @@ function call_llm(
         calculated_max_tokens = ceil(Int, thinking_budget * 1.25)
         data["max_tokens"] = calculated_max_tokens
         @debug "Set max_tokens based on thinking budget" calculated_max_tokens
+
+        # Set temperature to 1.0 when thinking is enabled
+        data["temperature"] = 1.0
+        @debug "Set temperature to 1.0 due to thinking budget"
     end
 
     response = post_request(url, headers, data)
