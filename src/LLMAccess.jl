@@ -694,7 +694,37 @@ function call_llm(
     end
 
     response = post_request(url, headers, data)
-    return handle_json_response(response, ["content", 1, "text"])
+
+    # Manually parse response to find the 'text' content, as 'thinking' might be the first element
+    if response.status == 200
+        try
+            response_data = JSON.parse(String(response.body))
+            content_array = get(response_data, "content", []) # Use get for safety
+
+            # Find the first element with type "text"
+            text_element_index = findfirst(item -> get(item, "type", "") == "text", content_array)
+
+            if !isnothing(text_element_index)
+                return get(content_array[text_element_index], "text", "") # Use get for safety
+            else
+                @error "No 'text' type found in Anthropic response content" response_data=response_data
+                # Attempt to return the first element's text if available, as a fallback for non-thinking responses
+                if !isempty(content_array) && haskey(content_array[1], "text")
+                    @warn "Falling back to first content element's text"
+                    return content_array[1]["text"]
+                end
+                throw(ErrorException("No text content found in Anthropic response"))
+            end
+        catch error
+            @error "Failed to parse or process Anthropic JSON response" error=error body=String(response.body)
+            throw(ErrorException("Invalid or unexpected JSON response format from Anthropic: $(String(response.body))"))
+        end
+    else
+        # Reuse existing error handling logic from handle_json_response if status is not 200
+        error_msg = "HTTP request failed with status $(response.status): $(String(response.body))"
+        @error error_msg
+        throw(ErrorException(error_msg))
+    end
 end
 
 """
