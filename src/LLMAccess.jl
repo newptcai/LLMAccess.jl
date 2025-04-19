@@ -673,6 +673,18 @@ function call_llm(
         "messages"    => [ Dict("role" => "user", "content" => content) ],
     )
 
+    # Add thinking config if applicable for claude-3-7-sonnet models
+    if startswith(model, "claude-3-7-sonnet") && thinking_budget > 0
+        @debug "Adding thinking budget to Anthropic request" thinking_budget
+        data["thinking"] = Dict(
+            "type" => "enabled",
+            "budget_tokens" => thinking_budget
+        )
+        # Anthropic docs suggest removing max_tokens when using thinking
+        delete!(data, "max_tokens")
+        @debug "Removed max_tokens due to thinking budget"
+    end
+
     response = post_request(url, headers, data)
     return handle_json_response(response, ["content", 1, "text"])
 end
