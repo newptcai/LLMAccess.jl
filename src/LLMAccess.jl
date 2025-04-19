@@ -497,7 +497,8 @@ function call_llm(
     input_text="",
     model = get_default_model("deepseek"),
     temperature::Float64 = DEFAULT_TEMPERATURE,
-    attach_file = ""
+    attach_file = "";
+    kwargs...
 )
     api_key = ENV["DEEPSEEK_API_KEY"]
     url     = "https://api.deepseek.com/v1/chat/completions"
@@ -541,7 +542,8 @@ function call_llm(
     input_text="",
     model = get_default_model("openai"),
     temperature::Float64 = DEFAULT_TEMPERATURE,
-    attach_file = ""
+    attach_file = "";
+    kwargs...
 )
     api_key = ENV["OPENAI_API_KEY"]
     url     = "https://api.openai.com/v1/chat/completions"
@@ -574,7 +576,8 @@ function call_llm(
     input_text="",
     model = get_default_model("openrouter"),
     temperature::Float64 = DEFAULT_TEMPERATURE,
-    attach_file = ""
+    attach_file = "";
+    kwargs...
 )
     api_key = ENV["OPENROUTER_API_KEY"]
     url     = "https://openrouter.ai/api/v1/chat/completions"
@@ -610,7 +613,8 @@ function call_llm(
     input_text="",
     model = get_default_model("groq"),
     temperature::Float64 = DEFAULT_TEMPERATURE,
-    attach_file = ""
+    attach_file = "";
+    kwargs...
 )
     api_key = ENV["GROQ_API_KEY"]
     url     = "https://api.groq.com/openai/v1/chat/completions"
@@ -646,7 +650,8 @@ function call_llm(
     input_text="",
     model = get_default_model("anthropic"),
     temperature::Float64 = DEFAULT_TEMPERATURE,
-    attach_file = ""
+    attach_file = "";
+    kwargs...
 )
     api_key = ENV["ANTHROPIC_API_KEY"]
     url     = "https://api.anthropic.com/v1/messages"
@@ -688,9 +693,11 @@ function call_llm(
     input_text="",
     model = get_default_model("google"),
     temperature::Float64 = DEFAULT_TEMPERATURE,
-    attach_file = ""
+    attach_file = "";
+    kwargs...
 )
-    @debug "Making API request" llm system_instruction input_text model temperature attach_file
+    thinking_budget = get(kwargs, :thinking_budget, 0)
+    @debug "Making API request" llm system_instruction input_text model temperature attach_file thinking_budget
 
     api_key = ENV["GOOGLE_API_KEY"]
     url     = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$api_key"
@@ -700,8 +707,14 @@ function call_llm(
     text_data = Dict("text" => input_text)
     parts     = attach_file != "" ? [text_data, encode_file_to_base64(llm, attach_file)] : [text_data]
 
+    generation_config = Dict("temperature" => temperature)
+    if thinking_budget > 0
+        @debug "Adding thinking budget to generation config" thinking_budget
+        generation_config["thinkingConfig"] = Dict("thinkingBudget" => thinking_budget)
+    end
+
     data = Dict(
-        "generationConfig"   => Dict("temperature" => temperature),
+        "generationConfig"   => generation_config,
         "contents"           => Dict("parts" => parts),
     )
 
@@ -730,7 +743,8 @@ function call_llm(
     input_text="",
     model = get_default_model("ollama"),
     temperature::Float64 = DEFAULT_TEMPERATURE,
-    attach_file = ""
+    attach_file = "";
+    kwargs...
 )
     @debug "Making API request" llm system_instruction input_text model temperature attach_file
 
@@ -765,7 +779,8 @@ function call_llm(
     input_text="",
     model = get_default_model("mistral"),
     temperature::Float64 = DEFAULT_TEMPERATURE,
-    attach_file = ""
+    attach_file = "";
+    kwargs...
 )
     @debug "Making API request" llm system_instruction input_text model temperature attach_file
 
@@ -856,14 +871,21 @@ function call_llm(
     input_text="";
     model = "",
     temperature::Float64 = DEFAULT_TEMPERATURE,
-    copy = false
+    copy = false,
+    thinking_budget::Int = 0 # Added thinking_budget
 )
     llm_type = get_llm_type(llm_name)
     selected_model = resolve_model_alias(
         isempty(model) ? get_default_model(llm_name) : model
     )
 
-    result = call_llm(llm_type, system_instruction, input_text, selected_model, temperature)
+    # Prepare kwargs for specific call_llm
+    kwargs = Dict{Symbol, Any}()
+    if thinking_budget > 0
+        kwargs[:thinking_budget] = thinking_budget
+    end
+
+    result = call_llm(llm_type, system_instruction, input_text, selected_model, temperature; kwargs...)
 
     if !isempty(result) && copy
         clipboard(result)
@@ -893,19 +915,27 @@ The LLM response as a `String`, or `nothing` if the request fails.
 """
 function call_llm(system_instruction, args::Dict)
     llm_type    = get_llm_type(args["llm"])
-    input_text  = args["input_text"]
-    model       = resolve_model_alias(args["model"])
-    temperature = args["temperature"]
-    attach_file = haskey(args, "attachment") ? args["attachment"] : ""
-    copy = args["copy"]
+    input_text      = args["input_text"]
+    model           = resolve_model_alias(args["model"])
+    temperature     = args["temperature"]
+    attach_file     = haskey(args, "attachment") ? args["attachment"] : ""
+    copy            = args["copy"]
+    thinking_budget = args["thinking_budget"] # Extract thinking_budget
 
-    result= call_llm(
+    # Prepare kwargs for specific call_llm
+    kwargs = Dict{Symbol, Any}()
+    if thinking_budget > 0
+        kwargs[:thinking_budget] = thinking_budget
+    end
+
+    result = call_llm(
         llm_type,
         system_instruction,
         input_text,
         model,
         temperature,
-        attach_file
+        attach_file;
+        kwargs... # Pass kwargs
     )
 
     if !isempty(result) && copy
@@ -1265,6 +1295,11 @@ function parse_commandline(
         "--copy", "-c"
         help = "Copy response to clipboard"
         action = :store_true
+
+        "--thinking-budget", "-B"
+        help = "Thinking budget for compatible models (e.g., Gemini)"
+        arg_type = Int
+        default = 0
 
         "input_text"
         help = "Input text/prompt (reads from stdin if empty)"
