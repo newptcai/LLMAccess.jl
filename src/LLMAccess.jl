@@ -288,18 +288,36 @@ function post_request(url, headers, payload)
         json_payload = JSON.json(payload)
         @debug "JSON payload ready"
 
-        response = HTTP.request("POST", url, headers, json_payload, proxy=ENV["http_proxy"])
+        response = HTTP.request("POST", url, headers, json_payload; proxy=ENV["http_proxy"], status_exception=false) # Don't throw on status error initially
 
-        if response.status == 200
+        if response.status >= 200 && response.status < 300
             return response
         else
-            error_msg = "HTTP request failed with status $(response.status): $(String(response.body))"
+            # Attempt to parse error details from the body
+            api_error_message = ""
+            try
+                error_data = JSON.parse(String(response.body))
+                # Common error structures (adjust as needed based on APIs)
+                if haskey(error_data, "error") && haskey(error_data["error"], "message")
+                    api_error_message = error_data["error"]["message"]
+                elseif haskey(error_data, "message")
+                    api_error_message = error_data["message"]
+                elseif haskey(error_data, "detail")
+                     api_error_message = error_data["detail"]
+                else
+                    api_error_message = String(response.body) # Fallback to raw body
+                end
+            catch parse_err
+                @debug "Could not parse error response body as JSON" parse_err
+                api_error_message = String(response.body) # Fallback to raw body
+            end
+            error_msg = "HTTP request failed with status $(response.status): $(api_error_message)"
             @error error_msg
             throw(ErrorException(error_msg))
         end
-    catch http_error
-        @error "HTTP request error occurred"
-        rethrow(http_error)  # Preserve original exception stacktrace
+    catch http_error # Catch other HTTP errors (network, etc.)
+        @error "HTTP request error occurred" exception=(http_error, catch_backtrace())
+        throw(ErrorException("HTTP request failed: $(http_error)"))
     end
 end
 
@@ -322,18 +340,36 @@ function get_request(url, header=Dict())
     try
         @debug "Sending GET request to $url"
 
-        response = HTTP.request("GET", url, header, proxy=ENV["http_proxy"])
+        response = HTTP.request("GET", url, header; proxy=ENV["http_proxy"], status_exception=false) # Don't throw on status error initially
 
-        if response.status == 200
+        if response.status >= 200 && response.status < 300
             return response
         else
-            @error "Request failed with status: $(response.status)"
-            println(String(response.body))
-            return nothing
+             # Attempt to parse error details from the body
+            api_error_message = ""
+            try
+                error_data = JSON.parse(String(response.body))
+                 # Common error structures (adjust as needed based on APIs)
+                if haskey(error_data, "error") && haskey(error_data["error"], "message")
+                    api_error_message = error_data["error"]["message"]
+                elseif haskey(error_data, "message")
+                    api_error_message = error_data["message"]
+                elseif haskey(error_data, "detail")
+                     api_error_message = error_data["detail"]
+                else
+                    api_error_message = String(response.body) # Fallback to raw body
+                end
+            catch parse_err
+                @debug "Could not parse error response body as JSON" parse_err
+                api_error_message = String(response.body) # Fallback to raw body
+            end
+            error_msg = "HTTP GET request failed with status $(response.status): $(api_error_message)"
+            @error error_msg
+            throw(ErrorException(error_msg))
         end
-    catch http_error
-        @error "HTTP request error: $http_error"
-        return nothing
+    catch http_error # Catch other HTTP errors (network, etc.)
+        @error "HTTP GET request error occurred" exception=(http_error, catch_backtrace())
+        throw(ErrorException("HTTP GET request failed: $(http_error)"))
     end
 end
 
@@ -350,14 +386,10 @@ Processes the JSON response and extracts the desired data from nested keys.
 The extracted data if successful.
 
 # Throws
-- `ErrorException`: For non-200 status codes or JSON parsing/extraction failures
+- `ErrorException`: For JSON parsing or data extraction failures. HTTP status errors should be handled before calling this.
 """
 function handle_json_response(response, extraction_path)
-    if response.status != 200
-        error_msg = "HTTP request failed with status $(response.status): $(String(response.body))"
-        @error error_msg
-        throw(ErrorException(error_msg))
-    end
+    # Status check removed - should be handled by post_request/get_request
 
     try
         response_data = JSON.parse(String(response.body))
