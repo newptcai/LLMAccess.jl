@@ -37,4 +37,23 @@ using Test
     )
     @show google_flash_response
     @test google_flash_response |> rstrip == text
+
+    # Test error handling for non-existent model (Mistral example)
+    println("Testing Mistral with non-existent model")
+    non_existent_model = "non-existent-model-abcxyz"
+    @test_throws ErrorException LLMAccess.call_llm(
+        "mistral",
+        system_instruction,
+        text,
+        model=non_existent_model
+    )
+    try
+        LLMAccess.call_llm("mistral", system_instruction, text, model=non_existent_model)
+    catch e
+        @test e isa ErrorException
+        # Check if the error message contains the model name and status code (often 404 or 400)
+        @test occursin(non_existent_model, e.msg)
+        @test occursin(r"status (404|400)", e.msg)
+        @info "Correctly caught error for non-existent Mistral model:" exception=e
+    end
 end
