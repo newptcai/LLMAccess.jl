@@ -116,7 +116,7 @@ const DEFAULT_LLM = "google"
 
 const MODEL_ALIASES = Dict(
     "mistral" => "mistral-large-latest",
-    "gemini" => "gemini-2.5-pro-preview-05-06",
+    "gemini" => "gemini-2.5-pro-preview-06-05",
     "flash" => "gemini-2.5-flash-preview-04-17",
     "gemma" => "gemma3:4b",
     "sonnet" => "claude-3-7-sonnet-20250219",
