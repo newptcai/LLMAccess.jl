@@ -116,7 +116,7 @@ const DEFAULT_LLM = "google"
 
 const MODEL_ALIASES = Dict(
     "mistral" => "mistral-large-latest",
-    "gemini" => "gemini-2.5-pro-preview-05-06",
+    "gemini" => "gemini-2.5-pro-preview-06-05",
     "flash" => "gemini-2.5-flash-preview-04-17",
     "gemma" => "gemma3:4b",
     "sonnet" => "claude-3-7-sonnet-20250219",
@@ -169,7 +169,13 @@ Returns the full model name if the given `model_name` is a known alias;
 otherwise returns `model_name` unchanged.
 """
 function resolve_model_alias(model_name)
-    return get(MODEL_ALIASES, model_name, model_name)
+    resolved_name = get(MODEL_ALIASES, model_name, model_name)
+    if resolved_name != model_name
+        @debug "Resolved model alias: '$model_name' -> '$resolved_name'"
+    else
+        @debug "Model name '$model_name' is not an alias or not found in MODEL_ALIASES."
+    end
+    return resolved_name
 end
 
 """
@@ -960,9 +966,15 @@ function call_llm(
     thinking_budget::Int = 0 # Added thinking_budget
 )
     llm_type = get_llm_type(llm_name)
-    selected_model = resolve_model_alias(
-        isempty(model) ? get_default_model(llm_name) : model
-    )
+    @debug "call_llm (by name): received model parameter: '$model' for LLM '$llm_name'"
+    
+    default_model_for_llm = get_default_model(llm_name)
+    @debug "call_llm (by name): default model for '$llm_name' is '$default_model_for_llm'"
+    
+    model_to_resolve = isempty(model) ? default_model_for_llm : model
+    @debug "call_llm (by name): model name before alias resolution: '$model_to_resolve'"
+    selected_model = resolve_model_alias(model_to_resolve)
+    @debug "call_llm (by name): selected_model after alias resolution: '$selected_model'"
 
     # Prepare kwargs for specific call_llm
     kwargs = Dict{Symbol, Any}()
@@ -1001,7 +1013,12 @@ The LLM response as a `String`, or `nothing` if the request fails.
 function call_llm(system_instruction, args::Dict)
     llm_type    = get_llm_type(args["llm"])
     input_text      = args["input_text"]
-    model           = resolve_model_alias(args["model"])
+    
+    raw_model_from_args = args["model"]
+    @debug "call_llm (by Dict): received model from args: '$raw_model_from_args' for LLM '$(args["llm"])'"
+    model = resolve_model_alias(raw_model_from_args)
+    @debug "call_llm (by Dict): model after alias resolution: '$model'"
+    
     temperature     = args["temperature"]
     attach_file     = haskey(args, "attachment") ? args["attachment"] : ""
     copy            = args["copy"]
@@ -1311,6 +1328,7 @@ function parse_commandline(
 )
     llm   = get_default_llm()
     model = get_default_model(llm)
+    @debug "parse_commandline: Initial default_llm='$llm', initial default_model='$model' (before parsing args)"
     return parse_commandline(settings, llm, model; require_input=require_input)
 end
 
@@ -1325,6 +1343,7 @@ function parse_commandline(
     require_input = true
 )
     default_model = get_default_model(default_llm)
+    @debug "parse_commandline: Using provided default_llm='$default_llm', derived default_model='$default_model' (before parsing args)"
     return parse_commandline(settings, default_llm, default_model; require_input=require_input)
 end
 
@@ -1392,6 +1411,7 @@ function parse_commandline(
     end
 
     args = parse_args(settings)
+    @debug "parse_commandline: Args after parse_args: llm='$(args["llm"])', model='$(args["model"])'"
 
     # If no input_text was provided and we require it, read from stdin
     if isnothing(args["input_text"]) && require_input
@@ -1399,14 +1419,24 @@ function parse_commandline(
     end
 
     # If the user changed the LLM but not the model, use that LLM's default model
+    # This check uses default_model (the default for default_llm)
     if args["llm"] != default_llm && args["model"] == default_model
+        original_model_before_llm_switch_default = args["model"]
         args["model"] = get_default_model(args["llm"])
+        @debug "parse_commandline: LLM changed from '$default_llm' to '$(args["llm"])' and model was the original default ('$original_model_before_llm_switch_default'). Switched model to default for new LLM: '$(args["model"])'."
     end
+    @debug "parse_commandline: Final model name from parse_commandline (before alias resolution in call_llm): '$(args["model"])'"
 
     # Enable debug logging if requested
     if args["debug"]
-        global_logger(ConsoleLogger(stderr, Logging.Debug))
-        @info "Debug mode enabled"
+        # Check if logger is already a ConsoleLogger at Debug level to avoid re-setting
+        current_logger = global_logger()
+        if !(isa(current_logger, ConsoleLogger) && current_logger.min_level == Logging.Debug)
+            global_logger(ConsoleLogger(stderr, Logging.Debug))
+            @info "Debug mode enabled by command line flag."
+        else
+            @debug "Debug mode was already enabled."
+        end
     end
 
     return args
