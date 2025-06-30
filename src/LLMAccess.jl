@@ -288,7 +288,7 @@ function post_request(url, headers, payload)
         json_payload = JSON.json(payload)
         @debug "JSON payload ready"
 
-        response = HTTP.request("POST", url, headers, json_payload; proxy=ENV["http_proxy"], status_exception=false) # Don't throw on status error initially
+        response = HTTP.request("POST", url, headers, json_payload; proxy=get(ENV, "http_proxy", ""), status_exception=false) # Don't throw on status error initially
 
         if response.status >= 200 && response.status < 300
             return response
@@ -340,7 +340,7 @@ function get_request(url, header=Dict())
     try
         @debug "Sending GET request to $url"
 
-        response = HTTP.request("GET", url, header; proxy=ENV["http_proxy"], status_exception=false) # Don't throw on status error initially
+        response = HTTP.request("GET", url, header; proxy=get(ENV, "http_proxy", ""), status_exception=false) # Don't throw on status error initially
 
         if response.status >= 200 && response.status < 300
             return response
@@ -1430,7 +1430,7 @@ function jina_reader(url)
     request_url = "https://r.jina.ai/$url"
     api_key = ENV["JINA_API_KEY"]
     headers = ["Authorization" => "Bearer $api_key"]
-    response = HTTP.request("GET", request_url, headers, proxy = ENV["http_proxy"])
+    response = HTTP.request("GET", request_url, headers, proxy = get(ENV, "http_proxy", ""))
     return String(response.body)
 end
 
