@@ -27,12 +27,12 @@ using Test
     test_llm(get_llm_type("deepseek"))
 
     # Test specific Google model
-    println("Testing Google model gemini-2.5-flash-preview-04-17")
+    println("Testing Google model flash")
     google_flash_response = LLMAccess.call_llm(
         "google", 
         system_instruction,
         text,
-        model="gemini-2.5-flash-preview-04-17",
+        model="flash",
         thinking_budget=0 # Explicitly set thinking_budget for the test
     )
     @show google_flash_response
