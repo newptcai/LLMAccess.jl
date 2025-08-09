@@ -111,7 +111,7 @@ const DEFAULT_MODELS = Dict(
     "deepseek"    => "deepseek-chat",
 )
 
-const DEFAULT_TEMPERATURE = 0.7
+const DEFAULT_TEMPERATURE = 1.0
 const DEFAULT_LLM = "google"
 
 const MODEL_ALIASES = Dict(
@@ -141,6 +141,16 @@ Returns the default LLM provider, determined by the environment variable
 """
 function get_default_llm()
     return get(ENV, "DEFAULT_LLM", DEFAULT_LLM)
+end
+
+"""
+    get_default_temperature()
+
+Returns the default temperature, determined by the environment variable
+`DEFAULT_TEMPERATURE` or a hard-coded fallback (`"$(DEFAULT_TEMPERATURE)"`).
+"""
+function get_default_temperature()
+    return parse(Float64, get(ENV, "DEFAULT_TEMPERATURE", string(DEFAULT_TEMPERATURE)))
 end
 
 """
@@ -535,7 +545,7 @@ function call_llm(
     system_instruction="",
     input_text="",
     model = get_default_model("deepseek"),
-    temperature::Float64 = DEFAULT_TEMPERATURE,
+    temperature::Float64 = get_default_temperature(),
     attach_file = "";
     kwargs...
 )
@@ -580,7 +590,7 @@ function call_llm(
     system_instruction="",
     input_text="",
     model = get_default_model("openai"),
-    temperature::Float64 = DEFAULT_TEMPERATURE,
+    temperature::Float64 = get_default_temperature(),
     attach_file = "";
     kwargs...
 )
@@ -614,7 +624,7 @@ function call_llm(
     system_instruction="",
     input_text="",
     model = get_default_model("openrouter"),
-    temperature::Float64 = DEFAULT_TEMPERATURE,
+    temperature::Float64 = get_default_temperature(),
     attach_file = "";
     kwargs...
 )
@@ -651,7 +661,7 @@ function call_llm(
     system_instruction="",
     input_text="",
     model = get_default_model("groq"),
-    temperature::Float64 = DEFAULT_TEMPERATURE,
+    temperature::Float64 = get_default_temperature(),
     attach_file = "";
     kwargs...
 )
@@ -688,7 +698,7 @@ function call_llm(
     system_instruction="",
     input_text="",
     model = get_default_model("anthropic"),
-    temperature::Float64 = DEFAULT_TEMPERATURE,
+    temperature::Float64 = get_default_temperature(),
     attach_file = "";
     kwargs...
 )
@@ -781,7 +791,7 @@ function call_llm(
     system_instruction="",
     input_text="",
     model = get_default_model("google"),
-    temperature::Float64 = DEFAULT_TEMPERATURE,
+    temperature::Float64 = get_default_temperature(),
     attach_file = "";
     kwargs...
 )
@@ -834,7 +844,7 @@ function call_llm(
     system_instruction="",
     input_text="",
     model = get_default_model("ollama"),
-    temperature::Float64 = DEFAULT_TEMPERATURE,
+    temperature::Float64 = get_default_temperature(),
     attach_file = "";
     kwargs...
 )
@@ -870,7 +880,7 @@ function call_llm(
     system_instruction="",
     input_text="",
     model = get_default_model("mistral"),
-    temperature::Float64 = DEFAULT_TEMPERATURE,
+    temperature::Float64 = get_default_temperature(),
     attach_file = "";
     kwargs...
 )
@@ -962,7 +972,7 @@ function call_llm(
     system_instruction="",
     input_text="";
     model = "",
-    temperature::Float64 = DEFAULT_TEMPERATURE,
+    temperature::Float64 = get_default_temperature(),
     copy = false,
     thinking_budget::Int = 0 # Added thinking_budget
 )
@@ -1391,7 +1401,7 @@ function parse_commandline(
         "--temperature", "-t"
         help = "Sampling temperature (0.0-2.0)"
         arg_type = Float64
-        default = 0.7  # Uses DEFAULT_TEMPERATURE if not set
+        default = get_default_temperature()
 
         "--debug", "-d"
         help = "Enable debug logging"
