@@ -895,16 +895,23 @@ function call_llm(
         "Authorization" => "Bearer $api_key",
     ]
 
-    text_data = Dict("type" => "text", "text" => input_text)
-    content   = attach_file != "" ? [text_data, encode_file_to_base64(llm, attach_file)] : [text_data]
+    user_content = if isempty(attach_file)
+        input_text
+    else
+        text_data = Dict("type" => "text", "text" => input_text)
+        [text_data, encode_file_to_base64(llm, attach_file)]
+    end
+
+    messages = []
+    if !isempty(system_instruction)
+        push!(messages, Dict("role" => "system", "content" => system_instruction))
+    end
+    push!(messages, Dict("role" => "user", "content" => user_content))
 
     data = Dict(
         "model"       => model,
         "temperature" => temperature,
-        "messages"    => [
-            Dict("role" => "system", "content" => system_instruction),
-            Dict("role" => "user",   "content" => content),
-        ],
+        "messages"    => messages,
     )
 
     response = post_request(url, headers, data)
