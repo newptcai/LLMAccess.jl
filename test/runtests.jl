@@ -42,13 +42,18 @@ using Test
     println("Testing Mistral with non-existent model")
     non_existent_model = "non-existent-model-abcxyz"
     @test_logs (:error, r"HTTP request failed") begin
-        err = @test_throws ErrorException LLMAccess.call_llm(
-            "mistral",
-            system_instruction,
-            text,
-            model=non_existent_model
-        )
-        @test occursin(non_existent_model, err.msg)
-        @test occursin(r"status (404|400)", err.msg)
+        try
+            LLMAccess.call_llm(
+                "mistral",
+                system_instruction,
+                text,
+                model=non_existent_model
+            )
+            @test false # Should not be reached
+        catch err
+            @test err isa ErrorException
+            @test occursin(non_existent_model, err.msg)
+            @test occursin(r"status (404|400)", err.msg)
+        end
     end
 end

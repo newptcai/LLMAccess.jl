@@ -293,6 +293,7 @@ An `HTTP.Response` if successful.
 - Any exceptions from the HTTP request itself.
 """
 function post_request(url, headers, payload)
+    response = nothing
     try
         @debug "Payload" payload
 
@@ -306,35 +307,35 @@ function post_request(url, headers, payload)
         @debug "JSON payload ready"
 
         response = HTTP.request("POST", url, headers, json_payload; proxy=get(ENV, "http_proxy", ""), status_exception=false) # Don't throw on status error initially
-
-        if response.status >= 200 && response.status < 300
-            return response
-        else
-            # Attempt to parse error details from the body
-            api_error_message = ""
-            try
-                error_data = JSON.parse(String(response.body))
-                # Common error structures (adjust as needed based on APIs)
-                if haskey(error_data, "error") && haskey(error_data["error"], "message")
-                    api_error_message = error_data["error"]["message"]
-                elseif haskey(error_data, "message")
-                    api_error_message = error_data["message"]
-                elseif haskey(error_data, "detail")
-                     api_error_message = error_data["detail"]
-                else
-                    api_error_message = String(response.body) # Fallback to raw body
-                end
-            catch parse_err
-                @debug "Could not parse error response body as JSON" parse_err
-                api_error_message = String(response.body) # Fallback to raw body
-            end
-            error_msg = "HTTP request failed with status $(response.status): $(api_error_message)"
-            @error error_msg
-            throw(ErrorException(error_msg))
-        end
     catch http_error # Catch other HTTP errors (network, etc.)
         @error "HTTP request error occurred" exception=(http_error, catch_backtrace())
         throw(ErrorException("HTTP request failed: $(http_error)"))
+    end
+
+    if response.status >= 200 && response.status < 300
+        return response
+    else
+        # Attempt to parse error details from the body
+        api_error_message = ""
+        try
+            error_data = JSON.parse(String(response.body))
+            # Common error structures (adjust as needed based on APIs)
+            if haskey(error_data, "error") && haskey(error_data["error"], "message")
+                api_error_message = error_data["error"]["message"]
+            elseif haskey(error_data, "message")
+                api_error_message = error_data["message"]
+            elseif haskey(error_data, "detail")
+                 api_error_message = error_data["detail"]
+            else
+                api_error_message = String(response.body) # Fallback to raw body
+            end
+        catch parse_err
+            @debug "Could not parse error response body as JSON" parse_err
+            api_error_message = String(response.body) # Fallback to raw body
+        end
+        error_msg = "HTTP request failed with status $(response.status): $(api_error_message)"
+        @error error_msg
+        throw(ErrorException(error_msg))
     end
 end
 
@@ -354,39 +355,40 @@ An `HTTP.Response` if the request is successful (status code 200);
 otherwise, `nothing` in case of an error or if the request fails with a non-200 status code.
 """
 function get_request(url, header=Dict())
+    response = nothing
     try
         @debug "Sending GET request to $url"
 
         response = HTTP.request("GET", url, header; proxy=get(ENV, "http_proxy", ""), status_exception=false) # Don't throw on status error initially
-
-        if response.status >= 200 && response.status < 300
-            return response
-        else
-             # Attempt to parse error details from the body
-            api_error_message = ""
-            try
-                error_data = JSON.parse(String(response.body))
-                 # Common error structures (adjust as needed based on APIs)
-                if haskey(error_data, "error") && haskey(error_data["error"], "message")
-                    api_error_message = error_data["error"]["message"]
-                elseif haskey(error_data, "message")
-                    api_error_message = error_data["message"]
-                elseif haskey(error_data, "detail")
-                     api_error_message = error_data["detail"]
-                else
-                    api_error_message = String(response.body) # Fallback to raw body
-                end
-            catch parse_err
-                @debug "Could not parse error response body as JSON" parse_err
-                api_error_message = String(response.body) # Fallback to raw body
-            end
-            error_msg = "HTTP GET request failed with status $(response.status): $(api_error_message)"
-            @error error_msg
-            throw(ErrorException(error_msg))
-        end
     catch http_error # Catch other HTTP errors (network, etc.)
         @error "HTTP GET request error occurred" exception=(http_error, catch_backtrace())
         throw(ErrorException("HTTP GET request failed: $(http_error)"))
+    end
+
+    if response.status >= 200 && response.status < 300
+        return response
+    else
+         # Attempt to parse error details from the body
+        api_error_message = ""
+        try
+            error_data = JSON.parse(String(response.body))
+             # Common error structures (adjust as needed based on APIs)
+            if haskey(error_data, "error") && haskey(error_data["error"], "message")
+                api_error_message = error_data["error"]["message"]
+            elseif haskey(error_data, "message")
+                api_error_message = error_data["message"]
+            elseif haskey(error_data, "detail")
+                 api_error_message = error_data["detail"]
+            else
+                api_error_message = String(response.body) # Fallback to raw body
+            end
+        catch parse_err
+            @debug "Could not parse error response body as JSON" parse_err
+            api_error_message = String(response.body) # Fallback to raw body
+        end
+        error_msg = "HTTP GET request failed with status $(response.status): $(api_error_message)"
+        @error error_msg
+        throw(ErrorException(error_msg))
     end
 end
 
