@@ -78,4 +78,48 @@ using Test
             @test occursin(r"status (404|400)", err.msg)
         end
     end
+
+    @testset "Command-line parsing for --think/-k" begin                                                                                                                                        
+        original_ARGS = copy(ARGS)                                                                                                                                                              
+        try                                                                                                                                                                                     
+            # Test case 1: No --think/-k flag, should default to 0                                                                                                                              
+            empty!(ARGS)                                                                                                                                                                        
+            settings = LLMAccess.create_default_settings()                                                                                                                                      
+            # We must not require input, otherwise it will try to read from stdin and hang                                                                                                      
+            parsed_args = LLMAccess.parse_commandline(settings, require_input=false)                                                                                                            
+            @test parsed_args["think"] == 0                                                                                                                                                     
+                                                                                                                                                                                                
+            # Test case 2: -k with value                                                                                                                                                        
+            empty!(ARGS)                                                                                                                                                                        
+            push!(ARGS, "-k", "1500")                                                                                                                                                           
+            settings = LLMAccess.create_default_settings()                                                                                                                                      
+            parsed_args = LLMAccess.parse_commandline(settings, require_input=false)                                                                                                            
+            @test parsed_args["think"] == 1500                                                                                                                                                  
+                                                                                                                                                                                                
+            # Test case 3: --think with value                                                                                                                                                   
+            empty!(ARGS)                                                                                                                                                                        
+            push!(ARGS, "--think", "500")                                                                                                                                                       
+            settings = LLMAccess.create_default_settings()                                                                                                                                      
+            parsed_args = LLMAccess.parse_commandline(settings, require_input=false)                                                                                                            
+            @test parsed_args["think"] == 500                                                                                                                                                   
+                                                                                                                                                                                                
+            # Test case 4: -k with negative value                                                                                                                                                   
+            empty!(ARGS)                                                                                                                                                                        
+            push!(ARGS, "-k", "-1")                                                                                                                                                       
+            settings = LLMAccess.create_default_settings()                                                                                                                                      
+            parsed_args = LLMAccess.parse_commandline(settings, require_input=false)                                                                                                            
+            @test parsed_args["think"] == -1
+                                                                                                                                                                                                
+            # Test case 5: Positional argument should still be parsed                                                                                                                           
+            empty!(ARGS)                                                                                                                                                                        
+            push!(ARGS, "--think", "750", "my prompt")                                                                                                                                          
+            settings = LLMAccess.create_default_settings()                                                                                                                                      
+            parsed_args = LLMAccess.parse_commandline(settings, require_input=false)                                                                                                            
+            @test parsed_args["think"] == 750                                                                                                                                                   
+            @test parsed_args["input_text"] == "my prompt"                                                                                                                                      
+        finally                                                                                                                                                                                 
+            empty!(ARGS)                                                                                                                                                                        
+            append!(ARGS, original_ARGS)                                                                                                                                                        
+        end                                                                                                                                                                                     
+    end  
 end
