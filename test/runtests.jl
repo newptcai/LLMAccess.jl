@@ -2,7 +2,29 @@ using LLMAccess
 using Test
 
 @testset "LLMAccess.jl" begin
-    # Write your tests here.
+    @testset "is_anthropic_thinking_model" begin
+        # Opus models - should be true for versions >= 4.0
+        @test LLMAccess.is_anthropic_thinking_model("claude-opus-4-20250514") == true
+        @test LLMAccess.is_anthropic_thinking_model("claude-opus-4.0-20250514") == true
+        @test LLMAccess.is_anthropic_thinking_model("claude-opus-4-1-20250805") == true
+        @test LLMAccess.is_anthropic_thinking_model("claude-4-opus-20250514") == true
+        @test LLMAccess.is_anthropic_thinking_model("claude-3.0-opus-20240229") == false
+        @test LLMAccess.is_anthropic_thinking_model("claude-opus-3-9") == false
+
+        # Sonnet models - should be true for versions >= 3.7
+        @test LLMAccess.is_anthropic_thinking_model("claude-sonnet-3-7-20250219") == true
+        @test LLMAccess.is_anthropic_thinking_model("claude-3-7-sonnet-20250219") == true
+        @test LLMAccess.is_anthropic_thinking_model("claude-sonnet-4-20250514") == true
+        @test LLMAccess.is_anthropic_thinking_model("claude-3.5-sonnet-20240620") == false
+        @test LLMAccess.is_anthropic_thinking_model("claude-sonnet-3-5-20240620") == false
+
+        # Other models - should be false
+        @test LLMAccess.is_anthropic_thinking_model("claude-3-haiku-20240307") == false
+        @test LLMAccess.is_anthropic_thinking_model("gpt-4o") == false
+        @test LLMAccess.is_anthropic_thinking_model("gemini-1.5-pro") == false
+    end
+
+    # Integration tests (can be commented out to avoid API calls)
     system_instruction = """
     Please repeat what ever the input text is.
     Do not return anything else.
@@ -33,7 +55,7 @@ using Test
         system_instruction,
         text,
         model="flash",
-        thinking_budget=0 # Explicitly set thinking_budget for the test
+        think=0 # Explicitly set think for the test
     )
     @show google_flash_response
     @test google_flash_response |> rstrip == text

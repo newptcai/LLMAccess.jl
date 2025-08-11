@@ -10,7 +10,7 @@ using Serialization
 using Pandoc
 using InteractiveUtils
 
-export call_llm, 
+export call_llm,
     list_llm_models,
     get_llm_type,
     get_llm_list,
@@ -189,6 +189,49 @@ function resolve_model_alias(model_name)
     end
     return resolved_name
 end
+
+"""
+    is_anthropic_thinking_model(model_name::String)
+
+Checks if an Anthropic model supports the 'thinking' feature based on its name and version.
+Handles version numbers with '.' or '-' (e.g., '3.7' or '3-7').
+"""
+function is_anthropic_thinking_model(model_name::String)
+    # Pattern 1: claude-<type>-<version>... (e.g., claude-sonnet-4-20250514)
+    m1 = match(r"claude-(sonnet|opus)-([0-9]+(?:[\.\-][0-9]+)?)-", model_name)
+    if m1 !== nothing
+        type = m1.captures[1]
+        version_str = replace(m1.captures[2], "-" => ".")
+        version = tryparse(Float64, version_str)
+        if version !== nothing
+            if type == "sonnet" && version >= 3.7
+                return true
+            end
+            if type == "opus" && version >= 4
+                return true
+            end
+        end
+    end
+
+    # Pattern 2: claude-<version>-<type>... (e.g., claude-3-7-sonnet-20250219)
+    m2 = match(r"claude-([0-9]+(?:[\.\-][0-9]+)?)-(sonnet|opus)-", model_name)
+    if m2 !== nothing
+        version_str = replace(m2.captures[1], "-" => ".")
+        type = m2.captures[2]
+        version = tryparse(Float64, version_str)
+        if version !== nothing
+            if type == "sonnet" && version >= 3.7
+                return true
+            end
+            if type == "opus" && version >= 4
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
 
 """
     encode_file_to_base64(file_path)
@@ -705,8 +748,8 @@ function call_llm(
     attach_file = "";
     kwargs...
 )
-    thinking_budget = get(kwargs, :thinking_budget, 0) # Extract thinking budget
-    @debug "Making API request" llm system_instruction input_text model temperature attach_file thinking_budget
+    think = get(kwargs, :think, 0) # Extract think value
+    @debug "Making API request" llm system_instruction input_text model temperature attach_file think
 
     api_key = ENV["ANTHROPIC_API_KEY"]
     url     = "https://api.anthropic.com/v1/messages"
@@ -722,14 +765,15 @@ function call_llm(
 
     data = Dict(
         "model"       => model,
-        "max_tokens"  => 1024,
+        "max_tokens"  => 4096,
         "temperature" => temperature,
         "system"      => system_instruction,
         "messages"    => [ Dict("role" => "user", "content" => content) ],
     )
 
-    # Add thinking config if applicable for claude-3-7-sonnet models
-    if startswith(model, "claude-3-7-sonnet") && thinking_budget > 0
+    # Add thinking config if applicable
+    if is_anthropic_thinking_model(model) && think != 0
+        thinking_budget = think == -1 ? 2048 : think # Default budget if -k is used without a value
         @debug "Adding thinking budget to Anthropic request" thinking_budget
         data["thinking"] = Dict(
             "type" => "enabled",
@@ -798,8 +842,8 @@ function call_llm(
     attach_file = "";
     kwargs...
 )
-    thinking_budget = get(kwargs, :thinking_budget, 0)
-    @debug "Making API request" llm system_instruction input_text model temperature attach_file thinking_budget
+    think = get(kwargs, :think, 0)
+    @debug "Making API request" llm system_instruction input_text model temperature attach_file think
 
     api_key = ENV["GOOGLE_API_KEY"]
     url     = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$api_key"
@@ -813,9 +857,9 @@ function call_llm(
     generation_config["temperature"] = temperature
 
     # Only add thinkingConfig if the model is gemini-2.5 and budget > 0
-    if startswith(model, "gemini-2.5") && thinking_budget > 0
-        @debug "Adding thinking budget to generation config" thinking_budget
-        generation_config["thinkingConfig"] = Dict("thinkingBudget" => thinking_budget)
+    if startswith(model, "gemini-2.5") && think != 0
+        @debug "Adding thinking budget to generation config" think
+        generation_config["thinkingConfig"] = Dict("thinkingBudget" => think)
     end
 
     data = Dict(
@@ -851,7 +895,7 @@ function call_llm(
     attach_file = "";
     kwargs...
 )
-    think = get(kwargs, :think, false)
+    think = get(kwargs, :think, 0)
     @debug "Making API request" llm system_instruction input_text model temperature attach_file think
 
     url     = "http://127.0.0.1:11434/api/generate"
@@ -865,7 +909,7 @@ function call_llm(
         "options" => Dict("temperature" => temperature),
     )
 
-    if think
+    if think != 0
         data["think"] = true
     end
 
@@ -989,8 +1033,7 @@ function call_llm(
     model = "",
     temperature::Float64 = get_default_temperature(),
     copy = false,
-    thinking_budget::Int = 0, # Added thinking_budget
-    think::Bool = false
+    think::Int = 0
 )
     llm_type = get_llm_type(llm_name)
     @debug "call_llm (by name): received model parameter: '$model' for LLM '$llm_name'"
@@ -1005,10 +1048,7 @@ function call_llm(
 
     # Prepare kwargs for specific call_llm
     kwargs = Dict{Symbol, Any}()
-    if thinking_budget > 0
-        kwargs[:thinking_budget] = thinking_budget
-    end
-    if think
+    if think != 0
         kwargs[:think] = think
     end
 
@@ -1052,15 +1092,11 @@ function call_llm(system_instruction, args::Dict)
     temperature     = args["temperature"]
     attach_file     = haskey(args, "attachment") ? args["attachment"] : ""
     copy            = args["copy"]
-    thinking_budget = args["thinking_budget"] # Extract thinking_budget
     think           = args["think"]
 
     # Prepare kwargs for specific call_llm
     kwargs = Dict{Symbol, Any}()
-    if thinking_budget > 0
-        kwargs[:thinking_budget] = thinking_budget
-    end
-    if think
+    if think != 0
         kwargs[:think] = think
     end
 
@@ -1417,7 +1453,7 @@ function parse_commandline(
         help = "Path to input file to process"
         default = ""
 
-        "--attachment", "-a" 
+        "--attachment", "-a"
         help = "Path to file attachment"
         default = ""
 
@@ -1434,14 +1470,13 @@ function parse_commandline(
         help = "Copy response to clipboard"
         action = :store_true
 
-        "--thinking_budget", "-B"
-        help = "Thinking budget for compatible models (e.g., Gemini)"
-        arg_type = Int
-        default = 0
-
         "--think", "-k"
-        help = "Enable think parameter for Ollama"
-        action = :store_true
+        help = "Enable thinking with an optional budget (e.g., -k 1000). No value enables default thinking."
+        arg_type = Int
+        nargs = '?'
+        action = :store_const
+        default = 0
+        constant = -1
 
         "input_text"
         help = "Input text/prompt (reads from stdin if empty)"
