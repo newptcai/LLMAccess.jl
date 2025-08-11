@@ -117,9 +117,9 @@ const DEFAULT_LLM = "google"
 const MODEL_ALIASES = Dict(
     "mistral" => "mistral-large-latest",
     "gemini" => "gemini-2.5-pro-preview-06-05",
-    "flash" => "gemini-2.5-flash",
-    "gemma" => "gemma3:4b",
-    "sonnet" => "claude-3-7-sonnet-20250219",
+    "flash" => "gemini-2.5-flash-preview-05-20",
+    "sonnet" => "claude-sonnet-4-20250514",
+    "opus" => "claude-opus-4-1-20250805",
     "haiku" => "claude-3-5-haiku-latest",
     "r1" => "deepseek-reasoner",
     "v3" => "deepseek-chat",
@@ -127,6 +127,7 @@ const MODEL_ALIASES = Dict(
     "4o-mini" => "gpt-4o-mini",
     "3.5" => "gpt-3.5-turbo",
     "5" => "gpt-5",
+    "5-mini" => "gpt-5-mini",
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
