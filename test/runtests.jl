@@ -12,9 +12,9 @@ using Test
 
     function test_llm(llm)
         println("Testing LLM $(llm)")
-        response = LLMAccess.call_llm(llm, system_instruction, text)
+        response = LLMAccess.call_llm(llm, system_instruction, text) |> rstrip
         @show response
-        @test response |> rstrip == text
+        @test response == text
     end
     
     test_llm(get_llm_type("google"))
