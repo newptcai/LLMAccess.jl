@@ -1471,12 +1471,9 @@ function parse_commandline(
         action = :store_true
 
         "--think", "-k"
-        help = "Enable thinking with an optional budget (e.g., -k 1000). No value enables default thinking."
+        help = "Enable thinking with a given budget (e.g., -k 1000)."
         arg_type = Int
-        nargs = '?'
-        action = :store_const
         default = 0
-        constant = -1
 
         "input_text"
         help = "Input text/prompt (reads from stdin if empty)"
