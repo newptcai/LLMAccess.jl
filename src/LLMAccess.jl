@@ -773,7 +773,7 @@ function call_llm(
 
     # Add thinking config if applicable
     if is_anthropic_thinking_model(model) && think != 0
-        thinking_budget = think == -1 ? 2048 : think # Default budget if -k is used without a value
+        thinking_budget = think <= 1024 ? 1024 : think
         @debug "Adding thinking budget to Anthropic request" thinking_budget
         data["thinking"] = Dict(
             "type" => "enabled",
