@@ -899,7 +899,7 @@ function call_llm(
     url     = "http://127.0.0.1:11434/api/generate"
     headers = ["Content-Type" => "application/json"]
 
-    data = Dict(
+    data = Dict{String, Any}(
         "model"  => model,
         "prompt" => input_text,
         "stream" => false,
@@ -909,6 +909,14 @@ function call_llm(
 
     if think != 0
         data["think"] = true
+    else
+        data["think"] = false
+    end
+
+    if attach_file != ""
+        @debug "Attaching file to Ollama request" attach_file
+        _ , base64_encoded = encode_file_to_base64(attach_file)
+        data["images"] = [base64_encoded]
     end
 
     response = post_request(url, headers, data)
