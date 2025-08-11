@@ -151,16 +151,21 @@ println("Google Response: ", response)
 
 LLMAccess supports shorthand names for common models. Here are some key aliases:
 
-| Alias    | Full Model Name                          |
-|----------|------------------------------------------|
-| `4o`     | `gpt-4o`                                 |
-| `haiku`  | `claude-3-5-haiku-latest`                |
-| `sonnet` | `claude-3-7-sonnet-20250219`             |
-| `mistral`| `mistral-large-latest`                   |
-| `gemini` | `gemini-2.5-pro-exp-03-25`               |
-| `flash`  | `gemini-2.0-flash`                       |
-| `gemma`  | `gemma3:4b`                              |
-| `r1`     | `deepseek-reasoner`                      |
+| Alias | Full Model Name |
+|---|---|
+| `3.5` | `gpt-3.5-turbo` |
+| `4o` | `gpt-4o` |
+| `4o-mini` | `gpt-4o-mini` |
+| `5` | `gpt-5` |
+| `5-mini` | `gpt-5-mini` |
+| `flash` | `gemini-2.5-flash-preview-05-20` |
+| `gemini` | `gemini-2.5-pro-preview-06-05` |
+| `haiku` | `claude-3.5-haiku-latest` |
+| `mistral` | `mistral-large-latest` |
+| `opus` | `claude-opus-4-1-20250805` |
+| `r1` | `deepseek-reasoner` |
+| `sonnet` | `claude-sonnet-4-20250514` |
+| `v3` | `deepseek-chat` |
 
 Use these aliases anywhere you would specify a model name. For example:
 
@@ -240,13 +245,14 @@ Run the script with the desired arguments:
 
 **Available Command-Line Arguments:**
 
-- `--llm`, `-l`: **(Required)** LLM provider (e.g., `openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `groq`).
-- `--input_text`, `-i`: **(Optional)** Input text for the LLM. If not provided, the script will read from `stdin`.
+- `--llm`, `-l`: **(Required)** LLM provider (e.g., `openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `groq`, `deepseek`).
+- `input_text`: **(Optional)** Input text for the LLM. If not provided, the script reads from `stdin`. This is a positional argument.
 - `--model`, `-m`: **(Optional)** Specific model to use. If omitted, the default model for the LLM provider will be used.
 - `--attachment`, `-a`: **(Optional)** Path to a file to attach to the request.
-- `--temperature`, `-t`: **(Optional)** Sampling temperature for text generation (default: `0.7`).
+- `--temperature`, `-t`: **(Optional)** Sampling temperature for text generation (default: `1.0`).
 - `--debug`, `-d`: **(Optional)** Enable debug mode to print detailed information.
-- `--thinking-budget`, `-B`: **(Optional)** Thinking budget (in tokens) for compatible models (e.g., Google Gemini 2.5, Anthropic Claude 3.7 Sonnet). Default is 0. When used with Anthropic `claude-3-7-sonnet` models, `temperature` is automatically set to 1.0 and `max_tokens` is set based on the budget.
+- `--copy`, `-c`: **(Optional)** Copy response to clipboard.
+- `--think`, `-k`: **(Optional)** Enable thinking for compatible models (e.g., Google Gemini, Anthropic Claude, and Ollama). For Google and Anthropic, this is a budget in tokens (e.g., `-k 1000`). For Ollama, any non-zero value enables thinking. Default is 0 (disabled). When used with certain Anthropic models, `temperature` is automatically set to 1.0 and `max_tokens` is adjusted based on the budget.
 
 See the [script](script) for more examples.
 
