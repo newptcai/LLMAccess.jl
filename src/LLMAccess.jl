@@ -848,7 +848,8 @@ function call_llm(
     attach_file = "";
     kwargs...
 )
-    @debug "Making API request" llm system_instruction input_text model temperature attach_file
+    think = get(kwargs, :think, false)
+    @debug "Making API request" llm system_instruction input_text model temperature attach_file think
 
     url     = "http://127.0.0.1:11434/api/generate"
     headers = ["Content-Type" => "application/json"]
@@ -860,6 +861,10 @@ function call_llm(
         "system" => system_instruction,
         "options" => Dict("temperature" => temperature),
     )
+
+    if think
+        data["think"] = true
+    end
 
     response = post_request(url, headers, data)
     return handle_json_response(response, ["response"])
@@ -981,7 +986,8 @@ function call_llm(
     model = "",
     temperature::Float64 = get_default_temperature(),
     copy = false,
-    thinking_budget::Int = 0 # Added thinking_budget
+    thinking_budget::Int = 0, # Added thinking_budget
+    think::Bool = false
 )
     llm_type = get_llm_type(llm_name)
     @debug "call_llm (by name): received model parameter: '$model' for LLM '$llm_name'"
@@ -998,6 +1004,9 @@ function call_llm(
     kwargs = Dict{Symbol, Any}()
     if thinking_budget > 0
         kwargs[:thinking_budget] = thinking_budget
+    end
+    if think
+        kwargs[:think] = think
     end
 
     result = call_llm(llm_type, system_instruction, input_text, selected_model, temperature; kwargs...)
@@ -1041,11 +1050,15 @@ function call_llm(system_instruction, args::Dict)
     attach_file     = haskey(args, "attachment") ? args["attachment"] : ""
     copy            = args["copy"]
     thinking_budget = args["thinking_budget"] # Extract thinking_budget
+    think           = args["think"]
 
     # Prepare kwargs for specific call_llm
     kwargs = Dict{Symbol, Any}()
     if thinking_budget > 0
         kwargs[:thinking_budget] = thinking_budget
+    end
+    if think
+        kwargs[:think] = think
     end
 
     result = call_llm(
@@ -1422,6 +1435,10 @@ function parse_commandline(
         help = "Thinking budget for compatible models (e.g., Gemini)"
         arg_type = Int
         default = 0
+
+        "--think", "-k"
+        help = "Enable think parameter for Ollama"
+        action = :store_true
 
         "input_text"
         help = "Input text/prompt (reads from stdin if empty)"
