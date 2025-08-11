@@ -856,11 +856,9 @@ function call_llm(
     generation_config = Dict{String, Any}()
     generation_config["temperature"] = temperature
 
-    # Only add thinkingConfig if the model is gemini-2.5 and budget > 0
-    if startswith(model, "gemini-2.5") && think != 0
-        @debug "Adding thinking budget to generation config" think
-        generation_config["thinkingConfig"] = Dict("thinkingBudget" => think)
-    end
+    # Add thinkingConfig
+    @debug "Adding thinking budget to generation config" think
+    generation_config["thinkingConfig"] = Dict("thinkingBudget" => think)
 
     data = Dict(
         "generationConfig"   => generation_config,
