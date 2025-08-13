@@ -115,9 +115,9 @@ const DEFAULT_TEMPERATURE = 1.0
 const DEFAULT_LLM = "google"
 
 const MODEL_ALIASES = Dict(
-    "mistral" => "mistral-large-latest",
-    "gemini" => "gemini-2.5-pro-preview-06-05",
-    "flash" => "gemini-2.5-flash-preview-05-20",
+    "mistral" => "mistral-medium-latest",
+    "gemini" => "gemini-2.5-pro",
+    "flash" => "gemini-2.5-flash",
     "sonnet" => "claude-sonnet-4-20250514",
     "opus" => "claude-opus-4-1-20250805",
     "haiku" => "claude-3-5-haiku-latest",
