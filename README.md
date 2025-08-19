@@ -47,6 +47,7 @@ Before using LLMAccess, set the necessary API keys for the LLM providers you wan
 - `GOOGLE_API_KEY` for Google
 - `MISTRAL_API_KEY` for Mistral
 - `DEEPSEEK_API_KEY` for DeepSeek
+- `DEEPSEEK_API_KEY` for DeepSeek
 
 ### Setting Environment Variables
 
@@ -74,6 +75,7 @@ export DEFAULT_GOOGLE_MODEL="gemini-2.0-flash"
 export DEFAULT_OLLAMA_MODEL="gemma3:4b"
 export DEFAULT_MISTRAL_MODEL="mistral-small-latest"
 export DEFAULT_GROQ_MODEL="llama-3.3-70b-versatile"
+export DEFAULT_DEEPSEEK_MODEL="deepseek-chat"
 export DEFAULT_DEEPSEEK_MODEL="deepseek-chat"
 ```
 
@@ -153,19 +155,21 @@ LLMAccess supports shorthand names for common models. Here are some key aliases:
 
 | Alias | Full Model Name |
 |---|---|
-| `3.5` | `gpt-3.5-turbo` |
+| `small` | `mistral-small-latest` |
+| `medium` | `mistral-medium-latest` |
+| `large` | `mistral-large-latest` |
+| `gemini` | `gemini-2.5-pro` |
+| `flash` | `gemini-2.5-flash` |
+| `sonnet` | `claude-sonnet-4-20250514` |
+| `opus` | `claude-opus-4-1-20250805` |
+| `haiku` | `claude-3-5-haiku-latest` |
+| `r1` | `deepseek-reasoner` |
+| `v3` | `deepseek-chat` |
 | `4o` | `gpt-4o` |
 | `4o-mini` | `gpt-4o-mini` |
+| `3.5` | `gpt-3.5-turbo` |
 | `5` | `gpt-5` |
 | `5-mini` | `gpt-5-mini` |
-| `flash` | `gemini-2.5-flash-preview-05-20` |
-| `gemini` | `gemini-2.5-pro-preview-06-05` |
-| `haiku` | `claude-3.5-haiku-latest` |
-| `mistral` | `mistral-large-latest` |
-| `opus` | `claude-opus-4-1-20250805` |
-| `r1` | `deepseek-reasoner` |
-| `sonnet` | `claude-sonnet-4-20250514` |
-| `v3` | `deepseek-chat` |
 
 Use these aliases anywhere you would specify a model name. For example:
 
@@ -200,7 +204,7 @@ function main()
     custom_settings = ArgParseSettings(
         description = "Use LLM to answer a simple question.",
         add_version = true,
-        version = "v1.16.0", # Updated version
+        version = "v1.17.0", # Updated version
     )
 
     args = parse_commandline(custom_settings)
