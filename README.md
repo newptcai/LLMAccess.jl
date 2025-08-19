@@ -189,12 +189,12 @@ LLMAccess includes a `parse_commandline` function to parse command-line argument
 Create a Julia script called `ask.jl`:
 
 ```julia
-#!/usr/bin/env julia
+#!/usr/bin/env -S julia -O 0 --compile=min --project="${SRC_DIR}/bin/"
 
 using LLMAccess
 using ArgParse
 
-function main()
+function main(_)
     # Define the system prompt
     system_instruction = """
     Please answer the user's question as truthfully as possible.
@@ -202,35 +202,32 @@ function main()
     """
 
     custom_settings = ArgParseSettings(
-        description = "Use LLM to answer a simple question.",
+        prog = "ask.jl",
+        description = "Use LLM to answer simple question.",
         add_version = true,
-        version = "v1.17.0", # Updated version
+        version = "v1.17.0",
     )
 
     args = parse_commandline(custom_settings)
 
-    result = call_llm(
-        system_instruction,
-        args
-    )
+    try
+        result = call_llm(
+            system_instruction,
+            args
+        )
 
-    if args["debug"]
-        println("LLM output: ...")
-    end
-
-    if result !== nothing
         print(result)
-        if result[end] != "\n"
+        if result[end] != '\n'
             print("\n")
         end
         exit(0)
-    else
-        @error "Failed to get a valid response from the server."
+    catch err
+        @error "Operation failed" exception=(err, catch_backtrace())
         exit(1)
     end
 end
 
-main()
+@main
 ```
 
 #### Running the Script
