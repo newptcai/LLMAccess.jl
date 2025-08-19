@@ -47,7 +47,6 @@ Before using LLMAccess, set the necessary API keys for the LLM providers you wan
 - `GOOGLE_API_KEY` for Google
 - `MISTRAL_API_KEY` for Mistral
 - `DEEPSEEK_API_KEY` for DeepSeek
-- `DEEPSEEK_API_KEY` for DeepSeek
 
 ### Setting Environment Variables
 
@@ -75,7 +74,6 @@ export DEFAULT_GOOGLE_MODEL="gemini-2.0-flash"
 export DEFAULT_OLLAMA_MODEL="gemma3:4b"
 export DEFAULT_MISTRAL_MODEL="mistral-small-latest"
 export DEFAULT_GROQ_MODEL="llama-3.3-70b-versatile"
-export DEFAULT_DEEPSEEK_MODEL="deepseek-chat"
 export DEFAULT_DEEPSEEK_MODEL="deepseek-chat"
 ```
 
@@ -205,7 +203,7 @@ function main(_)
         prog = "ask.jl",
         description = "Use LLM to answer simple question.",
         add_version = true,
-        version = "v1.17.0",
+        version = "v1.0.0",
     )
 
     args = parse_commandline(custom_settings)
