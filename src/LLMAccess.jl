@@ -15,6 +15,7 @@ export call_llm,
     get_llm_type,
     get_llm_list,
     parse_commandline,
+    run_cli,
     jina_reader,
     pandoc_reader
 
@@ -356,7 +357,7 @@ function post_request(url, headers, payload)
 
         response = HTTP.request("POST", url, headers, json_payload; proxy=get(ENV, "http_proxy", ""), status_exception=false) # Don't throw on status error initially
     catch http_error # Catch other HTTP errors (network, etc.)
-        @error "HTTP request error occurred" exception=(http_error, catch_backtrace())
+        @debug "HTTP request error occurred" exception=(http_error, catch_backtrace())
         throw(ErrorException("HTTP request failed: $(http_error)"))
     end
 
@@ -382,7 +383,7 @@ function post_request(url, headers, payload)
             api_error_message = String(response.body) # Fallback to raw body
         end
         error_msg = "HTTP request failed with status $(response.status): $(api_error_message)"
-        @error error_msg
+        @debug error_msg
         throw(ErrorException(error_msg))
     end
 end
@@ -409,7 +410,7 @@ function get_request(url, header=Dict())
 
         response = HTTP.request("GET", url, header; proxy=get(ENV, "http_proxy", ""), status_exception=false) # Don't throw on status error initially
     catch http_error # Catch other HTTP errors (network, etc.)
-        @error "HTTP GET request error occurred" exception=(http_error, catch_backtrace())
+        @debug "HTTP GET request error occurred" exception=(http_error, catch_backtrace())
         throw(ErrorException("HTTP GET request failed: $(http_error)"))
     end
 
@@ -435,7 +436,7 @@ function get_request(url, header=Dict())
             api_error_message = String(response.body) # Fallback to raw body
         end
         error_msg = "HTTP GET request failed with status $(response.status): $(api_error_message)"
-        @error error_msg
+        @debug error_msg
         throw(ErrorException(error_msg))
     end
 end
@@ -466,10 +467,10 @@ function handle_json_response(response, extraction_path)
         return extracted_data
     catch error
         if error isa KeyError
-            @error "Failed to extract data at path $extraction_path: $error"
+            @debug "Failed to extract data at path $extraction_path: $error"
             throw(ErrorException("Missing key in JSON response: $(error.key)"))
         else
-            @error "Failed to parse JSON response: $error"
+            @debug "Failed to parse JSON response: $error"
             throw(ErrorException("Invalid JSON response: $(String(response.body))"))
         end
     end
@@ -808,7 +809,7 @@ function call_llm(
         if !isnothing(text_element_index)
             return get(content_array[text_element_index], "text", "") # Use get for safety
         else
-            @error "No 'text' type found in Anthropic response content" response_data=response_data
+            @debug "No 'text' type found in Anthropic response content" response_data=response_data
             # Attempt to return the first element's text if available, as a fallback for non-thinking responses
             if !isempty(content_array) && haskey(content_array[1], "text")
                 @warn "Falling back to first content element's text"
@@ -817,7 +818,7 @@ function call_llm(
             throw(ErrorException("No text content found in Anthropic response"))
         end
     catch error
-        @error "Failed to parse or process Anthropic JSON response" error=error body=String(response.body)
+        @debug "Failed to parse or process Anthropic JSON response" error=error body=String(response.body)
         throw(ErrorException("Invalid or unexpected JSON response format from Anthropic: $(String(response.body))"))
     end
 end
@@ -1520,6 +1521,94 @@ function parse_commandline(
     end
 
     return args
+end
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CLI Error Handling
+# ─────────────────────────────────────────────────────────────────────────────
+
+"""
+    run_cli(f; settings=nothing, debug_getter=() -> false)
+
+Run a CLI entrypoint function `f()` and handle common errors gracefully with
+consistent messaging and exit codes. On success, returns whatever `f()` returns
+and does not exit explicitly.
+
+Behavior:
+- InterruptException: prints "Cancelled." and exits 130.
+- ArgParse errors: prints a concise message, shows help if `settings` provided,
+  exits 2.
+- KeyError (e.g., missing ENV vars): prints which key is missing and a hint; exits 1.
+- All other errors: prints a concise message; if `debug_getter()` returns true,
+  prints stack trace; otherwise suggests running with `--debug`; exits 1.
+
+# Arguments
+- `f::Function`: The main body to execute.
+- `settings`: Optional `ArgParseSettings` used to print help on usage errors.
+- `debug_getter::Function`: A zero-arg function returning a `Bool` to indicate
+  whether to include stack traces in error output (e.g., read from parsed args).
+"""
+function run_cli(f::Function; settings=nothing, debug_getter::Function=() -> false)
+    try
+        return f()
+    catch err
+        bt = catch_backtrace()
+
+        # Determine debug mode lazily from the provided getter
+        debug_mode::Bool = false
+        try
+            debug_mode = debug_getter()
+        catch
+            debug_mode = false
+        end
+
+        if err isa InterruptException
+            println(stderr, "Cancelled.")
+            exit(130)
+        elseif err isa ArgParse.ArgParseError
+            # Argument parsing / usage error
+            println(stderr, "Invalid arguments: ", sprint(showerror, err))
+            if settings !== nothing
+                # Best-effort show help without exiting
+                try
+                    ArgParse.show_help(settings; exit_after=false)
+                catch
+                    try
+                        ArgParse.show_help(settings)
+                    catch
+                    end
+                end
+            end
+            exit(2)
+        elseif err isa KeyError
+            # Common for missing ENV["..._API_KEY"] and similar
+            missing_key = try
+                string(err.key)
+            catch
+                "<unknown>"
+            end
+            if occursin("_API_KEY", missing_key)
+                println(stderr, "Missing API key: $(missing_key). Set it and retry. See README.")
+            else
+                println(stderr, "Missing required key: $(missing_key).")
+            end
+            if debug_mode
+                showerror(stderr, err, bt); println(stderr)
+            else
+                println(stderr, "Run with --debug for stack trace.")
+            end
+            exit(1)
+        else
+            # Provider/HTTP/network/other errors
+            println(stderr, "Error: ", sprint(showerror, err))
+            if debug_mode
+                showerror(stderr, err, bt); println(stderr)
+            else
+                println(stderr, "Run with --debug for stack trace.")
+            end
+            exit(1)
+        end
+    end
 end
 
 #-----------------------------------------------------------------------------------------------
