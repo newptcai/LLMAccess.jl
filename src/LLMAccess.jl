@@ -477,6 +477,53 @@ function handle_json_response(response, extraction_path)
 end
 
 """
+    extract_google_text(response::HTTP.Response)
+
+Extracts the first text segment from a Google Generative Language API response.
+
+Provides a clearer error if no `parts` are returned (e.g., due to filtering or
+unexpected response shape), including finish reason and raw body for debugging.
+"""
+function extract_google_text(response::HTTP.Response)
+    try
+        payload = JSON.parse(String(response.body))
+
+        # Candidates array is expected
+        candidates = get(payload, "candidates", Any[])
+        if isempty(candidates)
+            throw(ErrorException("Google API returned no candidates: $(String(response.body))"))
+        end
+
+        candidate = candidates[1]
+        content = get(candidate, "content", Dict{String,Any}())
+        parts = get(content, "parts", Any[])
+
+        # Find first part with text
+        for part in parts
+            if haskey(part, "text") && !isempty(String(part["text"]))
+                return String(part["text"])
+            end
+        end
+
+        # If we get here, there were no text parts; enrich the error
+        finish_reason = get(candidate, "finishReason", "UNKNOWN")
+        prompt_fb = get(payload, "promptFeedback", nothing)
+        if prompt_fb !== nothing
+            block_reason = get(prompt_fb, "blockReason", "")
+            throw(ErrorException("Google API did not return text (finishReason=$(finish_reason), blockReason=$(block_reason))"))
+        end
+        throw(ErrorException("Google API did not return text parts (finishReason=$(finish_reason)). Body: $(String(response.body))"))
+    catch err
+        if err isa ErrorException
+            rethrow()
+        else
+            @debug "Failed to parse Google JSON response" error=err body=String(response.body)
+            throw(ErrorException("Invalid or unexpected JSON response format from Google: $(String(response.body))"))
+        end
+    end
+end
+
+"""
     get_nested(data, path)
 
 Navigates a nested dictionary to retrieve a value.
@@ -863,20 +910,23 @@ function call_llm(
         generation_config["thinkingConfig"] = Dict("thinkingBudget" => think)
     end
 
-    # Google expects contents as an array of objects
+    # Google expects contents as an array of objects with explicit roles
     data = Dict(
         "generationConfig" => generation_config,
-        "contents" => [Dict("parts" => parts)],
+        "contents" => [Dict("role" => "user", "parts" => parts)],
     )
 
     if !isempty(system_instruction)
         @debug "Adding system instruction" system_instruction
-        # system_instruction.parts must be an array
-        data["system_instruction"] = Dict("parts" => [Dict("text" => system_instruction)])
+        # system_instruction.parts must be an array; include role for clarity
+        data["system_instruction"] = Dict(
+            "role" => "system",
+            "parts" => [Dict("text" => system_instruction)],
+        )
     end
 
     response = post_request(url, headers, data)
-    return handle_json_response(response, ["candidates", 1, "content", "parts", 1, "text"])
+    return extract_google_text(response)
 end
 
 """
