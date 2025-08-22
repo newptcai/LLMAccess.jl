@@ -1540,7 +1540,6 @@ Behavior:
 - ArgParse errors: prints a concise message, shows help if `settings` provided,
   exits 2.
 - KeyError (e.g., missing ENV vars): prints which key is missing and a hint; exits 1.
-- Base.ExitException: preserves explicit `exit(n)` by re-exiting with same code.
 - All other errors: prints a concise message; if `debug_getter()` returns true,
   prints stack trace; otherwise suggests running with `--debug`; exits 1.
 
@@ -1588,9 +1587,6 @@ function run_cli(f::Function; settings=nothing, debug_getter::Function=() -> fal
         if err isa InterruptException
             println(stderr, "Cancelled.")
             exit(130)
-        elseif err isa Base.ExitException
-            # Preserve explicit exit codes from inner code paths (e.g., ArgParse)
-            exit(err.status)
         elseif err isa ArgParse.ArgParseError
             # Argument parsing / usage error
             println(stderr, "Invalid arguments: ", sprint(showerror, err))
