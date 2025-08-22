@@ -159,7 +159,9 @@ end
 """
     get_llm_list()
 
-Returns the list of LLM provider.
+Returns an iterable of LLM provider names.
+Note: this returns a `KeySet` over `DEFAULT_MODELS` keys; use `collect(...)`
+if you need a concrete `Vector{String}`.
 """
 function get_llm_list()
     return keys(DEFAULT_MODELS)
@@ -386,19 +388,19 @@ function post_request(url, headers, payload)
 end
 
 """
-    get_request(url, headers)
+    get_request(url, header=Dict())
 
-Sends an HTTP GET request to the specified URL and handles potential errors, 
-returning the HTTP response or `nothing` on failure.
+Sends an HTTP GET request to the specified URL and handles potential errors.
 
 # Arguments
-- `url`: The endpoint URL to send the GET request to. This should be a string 
-  representing the full URL, including the protocol (e.g., `https://example.com`).
-- `headers`: HTTP headers to include in the request.
+- `url`: The endpoint URL (e.g., `"https://example.com"`).
+- `header`: HTTP headers to include in the request.
 
 # Returns
-An `HTTP.Response` if the request is successful (status code 200); 
-otherwise, `nothing` in case of an error or if the request fails with a non-200 status code.
+An `HTTP.Response` if the request is successful (2xx status code).
+
+# Throws
+- `ErrorException` if the request fails with a non-2xx status code or on HTTP errors.
 """
 function get_request(url, header=Dict())
     response = nothing
@@ -445,13 +447,15 @@ Processes the JSON response and extracts the desired data from nested keys.
 
 # Arguments
 - `response::HTTP.Response`: The HTTP response object.
-- `extraction_path::Vector{String}`: Array representing the path to the desired data.
+- `extraction_path::Vector{Any}`: Path to the desired data. Elements may be
+  `String` keys or `Int` indices for arrays.
 
 # Returns
 The extracted data if successful.
 
 # Throws
-- `ErrorException`: For JSON parsing or data extraction failures. HTTP status errors should be handled before calling this.
+- `ErrorException`: For JSON parsing or data extraction failures. HTTP status
+  errors should be handled before calling this.
 """
 function handle_json_response(response, extraction_path)
     # Status check removed - should be handled by post_request/get_request
@@ -845,24 +849,29 @@ function call_llm(
 
     headers = ["Content-Type" => "application/json"]
 
+    # Build parts for the user content
     text_data = Dict("text" => input_text)
-    parts     = attach_file != "" ? [text_data, encode_file_to_base64(llm, attach_file)] : [text_data]
+    parts = attach_file != "" ? [text_data, encode_file_to_base64(llm, attach_file)] : [text_data]
 
     generation_config = Dict{String, Any}()
     generation_config["temperature"] = temperature
 
-    # Add thinkingConfig
-    @debug "Adding thinking budget to generation config" think
-    generation_config["thinkingConfig"] = Dict("thinkingBudget" => think)
+    # Add thinkingConfig only when explicitly requested (non-zero)
+    if think != 0
+        @debug "Adding thinking budget to generation config" think
+        generation_config["thinkingConfig"] = Dict("thinkingBudget" => think)
+    end
 
+    # Google expects contents as an array of objects
     data = Dict(
-        "generationConfig"   => generation_config,
-        "contents"           => Dict("parts" => parts),
+        "generationConfig" => generation_config,
+        "contents" => [Dict("parts" => parts)],
     )
 
     if !isempty(system_instruction)
         @debug "Adding system instruction" system_instruction
-        data["system_instruction"] = Dict("parts" => Dict("text" => system_instruction))
+        # system_instruction.parts must be an array
+        data["system_instruction"] = Dict("parts" => [Dict("text" => system_instruction)])
     end
 
     response = post_request(url, headers, data)
