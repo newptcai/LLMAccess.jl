@@ -1535,10 +1535,12 @@ consistent messaging and exit codes. On success, returns whatever `f()` returns
 and does not exit explicitly.
 
 Behavior:
-- InterruptException: prints "Cancelled." and exits 130.
+- InterruptException (including when wrapped in TaskFailedException): prints
+  "Cancelled." and exits 130.
 - ArgParse errors: prints a concise message, shows help if `settings` provided,
   exits 2.
 - KeyError (e.g., missing ENV vars): prints which key is missing and a hint; exits 1.
+- Base.ExitException: preserves explicit `exit(n)` by re-exiting with same code.
 - All other errors: prints a concise message; if `debug_getter()` returns true,
   prints stack trace; otherwise suggests running with `--debug`; exits 1.
 
@@ -1549,6 +1551,13 @@ Behavior:
   whether to include stack traces in error output (e.g., read from parsed args).
 """
 function run_cli(f::Function; settings=nothing, debug_getter::Function=() -> false)
+    # Ensure SIGINT becomes InterruptException so we can handle it
+    try
+        Base.exit_on_sigint(false)
+    catch
+        # Older Julia versions: ignore if unavailable
+    end
+
     try
         return f()
     catch err
@@ -1562,9 +1571,26 @@ function run_cli(f::Function; settings=nothing, debug_getter::Function=() -> fal
             debug_mode = false
         end
 
+        # Normalize TaskFailedException wrapping an InterruptException
+        if err isa TaskFailedException
+            cause = try
+                err.task.exception
+            catch
+                nothing
+            end
+            if cause isa InterruptException
+                println(stderr, "Cancelled.")
+                exit(130)
+            end
+            # fall through to generic handling below for other causes
+        end
+
         if err isa InterruptException
             println(stderr, "Cancelled.")
             exit(130)
+        elseif err isa Base.ExitException
+            # Preserve explicit exit codes from inner code paths (e.g., ArgParse)
+            exit(err.status)
         elseif err isa ArgParse.ArgParseError
             # Argument parsing / usage error
             println(stderr, "Invalid arguments: ", sprint(showerror, err))
