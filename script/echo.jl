@@ -17,25 +17,26 @@ function main(_)
         version = "v1.0.0"
     )
 
-    args = parse_commandline(custom_settings)
+    # Mirror ask.jl: delegate error handling and Ctrl+C to run_cli
+    args_ref = Ref{Any}(nothing)
+    run_cli(() -> begin
+        args = parse_commandline(custom_settings)
+        args_ref[] = args
 
-    try
-        result = call_llm(
-            system_instruction,
-            args
-        )
+        result = call_llm(system_instruction, args)
 
-        @assert rstrip(result)==rstrip(args["input_text"])
+        @assert rstrip(result) == rstrip(args["input_text"])
         println("""
                 LLM returned:
 
                 $(result)
                 """)
-        exit(0)
-    catch err
-        @error "Echo test failed" exception=(err, catch_backtrace())
-        exit(1)
-    end
+        nothing
+    end; settings=custom_settings,
+         debug_getter=() -> begin
+             a = args_ref[]
+             a === nothing ? false : get(a, "debug", false)
+         end)
 end
 
 @main

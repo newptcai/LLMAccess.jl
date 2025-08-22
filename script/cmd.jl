@@ -34,23 +34,24 @@ function main(_)
         version = "v1.0.0"
     )
 
-    args = parse_commandline(custom_settings)
+    # Mirror ask.jl: delegate error handling and Ctrl+C to run_cli
+    args_ref = Ref{Any}(nothing)
+    run_cli(() -> begin
+        args = parse_commandline(custom_settings)
+        args_ref[] = args
 
-    try
-        result = call_llm(
-            system_instruction,
-            args
-        )
+        result = call_llm(system_instruction, args)
 
         # Use regex to remove trailing whitespace on each line (with multiline mode)
         trimmed_text = replace(result, r"\s+$"m => "")
         println(trimmed_text)
         clipboard(trimmed_text)
-        exit(0)
-    catch err
-        @error "Command generation failed" exception=(err, catch_backtrace())
-        exit(1)
-    end
+        nothing
+    end; settings=custom_settings,
+         debug_getter=() -> begin
+             a = args_ref[]
+             a === nothing ? false : get(a, "debug", false)
+         end)
 end
 
 @main
