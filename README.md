@@ -1,6 +1,6 @@
 # LLMAccess
 
-LLMAccess is a Julia package designed to simplify interactions with multiple Large Language Model (LLM) APIs. It provides a unified interface to integrate models from providers such as OpenAI, Anthropic, Google, Ollama, Mistral, OpenRouter, Groq, and DeepSeek into your Julia scripts seamlessly.
+LLMAccess is a Julia package designed to simplify interactions with multiple Large Language Model (LLM) APIs. It provides a unified interface to integrate models from providers such as OpenAI, Anthropic, Google, Ollama, Mistral, OpenRouter, Groq, and DeepSeek into your Julia scripts seamlessly, plus shared CLI helpers for argument parsing and robust error handling.
 
 ## Table of Contents
 
@@ -34,6 +34,12 @@ To install LLMAccess, use Julia's package manager. In your Julia REPL, run:
 ```julia
 using Pkg
 Pkg.add("git@gitlab.com:newptcai/llmaccess.jl.git")
+```
+
+If working from a clone of this repo, instantiate the environment:
+
+```bash
+julia --project -e 'using Pkg; Pkg.instantiate()'
 ```
 
 ## Configuration
@@ -178,82 +184,41 @@ response = call_llm("openai", "You are helpful", "Hello", model="4o")
 
 Full list of aliases can be found in the [source code](src/LLMAccess.jl).
 
-### Using with Command-Line
+### CLI Scripts
 
-LLMAccess includes a `parse_commandline` function to parse command-line arguments, allowing you to integrate it into scripts and automation workflows.
+LLMAccess ships with runnable scripts and shared CLI helpers:`parse_commandline` for consistent flags and `run_cli` for robust error handling (usage errors, Ctrl+C, debug traces).
 
-#### Example Script
+- `script/ask.jl` — General-purpose Q&A.
+- `script/cmd.jl` — Generates bash commands (prints and copies to clipboard).
+- `script/echo.jl` — Echo utility for validating responses.
 
-Create a Julia script called `ask.jl`:
-
-```julia
-#!/usr/bin/env -S julia -O 0 --compile=min --project="${SRC_DIR}/bin/"
-
-using LLMAccess
-using ArgParse
-
-function main(_)
-    # Define the system prompt
-    system_instruction = """
-    Please answer the user's question as truthfully as possible.
-    Be concise with your answer.
-    """
-
-    custom_settings = ArgParseSettings(
-        prog = "ask.jl",
-        description = "Use LLM to answer simple question.",
-        add_version = true,
-        version = "v1.0.0",
-    )
-
-    args = parse_commandline(custom_settings)
-
-    try
-        result = call_llm(
-            system_instruction,
-            args
-        )
-
-        print(result)
-        if result[end] != '\n'
-            print("\n")
-        end
-        exit(0)
-    catch err
-        @error "Operation failed" exception=(err, catch_backtrace())
-        exit(1)
-    end
-end
-
-@main
-```
-
-#### Running the Script
-
-Make the script executable:
+Examples:
 
 ```bash
-chmod +x ask.jl
+# Default provider (google)
+julia --project script/ask.jl "What is 2+2?"
+
+# OpenAI with model alias
+julia --project script/ask.jl --llm openai --model 4o "Summarize this repo"
+
+# Generate shell commands
+julia --project script/cmd.jl --llm openai "list files changed today"
+
+# Vision with attachments
+julia --project script/ask.jl --llm openai --model 4o --attachment ~/Downloads/example.webp "What's in this picture?"
 ```
 
-Run the script with the desired arguments:
+Common arguments:
 
-```bash
-./ask.jl --llm openai --model 4o --attachment ~/Downloads/example.webp "What's in this picture?" 
-```
-
-**Available Command-Line Arguments:**
-
-- `--llm`, `-l`: **(Required)** LLM provider (e.g., `openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `groq`, `deepseek`).
-- `input_text`: **(Optional)** Input text for the LLM. If not provided, the script reads from `stdin`. This is a positional argument.
-- `--model`, `-m`: **(Optional)** Specific model to use. If omitted, the default model for the LLM provider will be used.
-- `--attachment`, `-a`: **(Optional)** Path to a file to attach to the request.
-- `--temperature`, `-t`: **(Optional)** Sampling temperature for text generation (default: `1.0`).
-- `--debug`, `-d`: **(Optional)** Enable debug mode to print detailed information.
-- `--copy`, `-c`: **(Optional)** Copy response to clipboard.
-- `--think`, `-k`: **(Optional)** Enable thinking for compatible models (e.g., Google Gemini, Anthropic Claude, and Ollama). For Google and Anthropic, this is a budget in tokens (e.g., `-k 1000`). For Ollama, any non-zero value enables thinking. Default is 0 (disabled). When used with certain Anthropic models, `temperature` is automatically set to 1.0 and `max_tokens` is adjusted based on the budget.
-
-See the [script](script) for more examples.
+- `--llm, -l`: LLM provider (`openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `groq`, `deepseek`). Defaults to `DEFAULT_LLM` or `google`.
+- `--model, -m`: Model name; supports aliases below. Defaults to provider’s default.
+- `--file, -f`: Path to input file to process (optional; reserved for helpers that consume files).
+- `--attachment, -a`: Path to a file to attach (e.g., image for vision APIs).
+- `--temperature, -t`: Sampling temperature (default: 1.0).
+- `--debug, -d`: Enable debug logging and richer error output.
+- `--copy, -c`: Copy response to clipboard.
+- `--think, -k`: Enable “thinking” for providers that support it (e.g., Gemini, Claude, Ollama). For Gemini/Claude, this is a token budget (e.g., `-k 1000`). For Ollama, any non-zero enables thinking.
+- `input_text` (positional): Prompt text; if omitted and required, stdin is read.
 
 ## Supported LLM Providers
 
@@ -267,6 +232,8 @@ LLMAccess currently supports the following LLM providers:
 - **Google**: Connects to Google's generative language models.
 - **Ollama**: Interfaces with Ollama's local LLM deployments.
 - **Mistral**: Access to Mistral's LLM offerings.
+
+You can call providers using typed instances (e.g., `call_llm(GoogleLLM(), ...)`) or by name via `call_llm(llm_name, system_instruction, input_text; model, temperature, copy, think)`.
 
 ## Contributing
 
