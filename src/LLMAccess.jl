@@ -120,6 +120,7 @@ const MODEL_ALIASES = Dict(
     "small" => "mistral-small-latest",
     "medium" => "mistral-medium-latest",
     "large" => "mistral-large-latest",
+    "magistral" => "magistral-medium-latest",
 
     # Google Gemini
     "gemini" => "gemini-2.5-pro",
@@ -140,9 +141,6 @@ const MODEL_ALIASES = Dict(
     "3.5"     => "gpt-3.5-turbo",
     "5"       => "gpt-5",
     "5-mini"  => "gpt-5-mini",
-
-    # Mistral special alias
-    "magistral" => "mistral-large-latest",
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1587,6 +1585,10 @@ function parse_commandline(
         arg_type = Int
         default = 0
 
+        "--alias", "-A"
+        help = "Print all model aliases and exit"
+        action = :store_true
+
         "input_text"
         help = "Input text/prompt (reads from stdin if empty)"
         required = false
@@ -1594,6 +1596,15 @@ function parse_commandline(
 
     args = parse_args(settings)
     @debug "parse_commandline: Args after parse_args: llm='$(args["llm"])', model='$(args["model"])'"
+
+    # Handle alias listing early and exit
+    if get(args, "alias", false)
+        keys_sorted = sort!(collect(keys(MODEL_ALIASES)))
+        for k in keys_sorted
+            println("$(k) => $(MODEL_ALIASES[k])")
+        end
+        exit(0)
+    end
 
     # If no input_text was provided and we require it, read from stdin
     if isnothing(args["input_text"]) && require_input
