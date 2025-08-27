@@ -167,6 +167,7 @@ LLMAccess supports shorthand names for common models. Here are some key aliases:
 | `sonnet` | `claude-sonnet-4-20250514` |
 | `opus` | `claude-opus-4-1-20250805` |
 | `haiku` | `claude-3-5-haiku-latest` |
+| `magistral` | `mistral-large-latest` |
 | `r1` | `deepseek-reasoner` |
 | `v3` | `deepseek-chat` |
 | `4o` | `gpt-4o` |
@@ -183,6 +184,16 @@ response = call_llm("openai", "You are helpful", "Hello", model="4o")
 ```
 
 Full list of aliases can be found in the [source code](src/LLMAccess.jl).
+
+### Thinking Budget (`--think`, `-k`)
+
+- Default now varies by model:
+  - Gemini: `-1` (dynamic)
+  - Claude Sonnet: `0` (disabled)
+  - DeepSeek Reasoner: `0` (not used by API)
+  - Mistral/Magistral: `0` (not used by API)
+- Pass an explicit value to override (e.g., `-k 1000`).
+- Providers that don’t support “thinking” ignore this option.
 
 ### CLI Scripts
 

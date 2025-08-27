@@ -140,6 +140,9 @@ const MODEL_ALIASES = Dict(
     "3.5"     => "gpt-3.5-turbo",
     "5"       => "gpt-5",
     "5-mini"  => "gpt-5-mini",
+
+    # Mistral special alias
+    "magistral" => "mistral-large-latest",
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -202,6 +205,45 @@ function resolve_model_alias(model_name)
         @debug "Model name '$model_name' is not an alias or not found in MODEL_ALIASES."
     end
     return resolved_name
+end
+
+"""
+    default_think_for_model(model_name::String) :: Int
+
+Return a sensible default for the `--think/-k` option based on the selected model.
+
+Policy:
+- Gemini models: -1 (dynamic budget)
+- Claude Sonnet: 0 (disabled by default)
+- DeepSeek Reasoner: 0 (no explicit thinking config used)
+- Mistral/Magistral: 0 (no explicit thinking config used)
+- Otherwise: 0
+"""
+function default_think_for_model(model_name::String)::Int
+    # Normalize for checks
+    m = lowercase(model_name)
+
+    # Gemini family
+    if startswith(m, "gemini-")
+        return -1
+    end
+
+    # Claude Sonnet variants: explicitly keep disabled
+    if occursin("claude-sonnet-", m) || occursin("-sonnet-", m)
+        return 0
+    end
+
+    # DeepSeek reasoner
+    if occursin("deepseek-reasoner", m)
+        return 0
+    end
+
+    # Mistral and 'magistral' (alias -> mistral-large-latest)
+    if startswith(m, "mistral-")
+        return 0
+    end
+
+    return 0
 end
 
 """
@@ -1541,7 +1583,7 @@ function parse_commandline(
         action = :store_true
 
         "--think", "-k"
-        help = "Enable thinking with a given budget (e.g., -k 1000)."
+        help = "Thinking budget; default varies by model (e.g., Gemini=-1, Sonnet=0)."
         arg_type = Int
         default = 0
 
@@ -1566,6 +1608,16 @@ function parse_commandline(
         @debug "parse_commandline: LLM changed from '$default_llm' to '$(args["llm"])' and model was the original default ('$original_model_before_llm_switch_default'). Switched model to default for new LLM: '$(args["model"])'."
     end
     @debug "parse_commandline: Final model name from parse_commandline (before alias resolution in call_llm): '$(args["model"])'"
+
+    # Apply model-based default think if user did not specify -k
+    begin
+        resolved_model = resolve_model_alias(args["model"]) # do not mutate 'model' here
+        suggested_think = default_think_for_model(resolved_model)
+        if args["think"] == 0 && suggested_think != 0
+            args["think"] = suggested_think
+            @debug "parse_commandline: Applying model-based default think" resolved_model suggested_think
+        end
+    end
 
     # Enable debug logging if requested
     if args["debug"]

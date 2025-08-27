@@ -82,12 +82,13 @@ using Test
     @testset "Command-line parsing for --think/-k" begin                                                                                                                                        
         original_ARGS = copy(ARGS)                                                                                                                                                              
         try                                                                                                                                                                                     
-            # Test case 1: No --think/-k flag, should default to 0                                                                                                                              
+            # Test case 1: No --think/-k flag; default depends on model.
+            # Default LLM is google (gemini-*), so default think should be -1 (dynamic)
             empty!(ARGS)                                                                                                                                                                        
             settings = LLMAccess.create_default_settings()                                                                                                                                      
             # We must not require input, otherwise it will try to read from stdin and hang                                                                                                      
             parsed_args = LLMAccess.parse_commandline(settings, require_input=false)                                                                                                            
-            @test parsed_args["think"] == 0                                                                                                                                                     
+            @test parsed_args["think"] == -1                                                                                                                                                    
                                                                                                                                                                                                 
             # Test case 2: -k with value                                                                                                                                                        
             empty!(ARGS)                                                                                                                                                                        
