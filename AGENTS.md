@@ -13,6 +13,18 @@
 - Run scripts:
   - `julia --project script/ask.jl --llm google "Hello"`
   - `julia --project script/cmd.jl --llm openai "list files changed today"`
+  - `julia --project script/ask.jl -A` (or `--alias`) to print all model aliases and exit.
+
+## CLI Flags Quick Reference
+- `--llm, -l`: Provider (`openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `groq`, `deepseek`).
+- `--model, -m`: Model name (supports aliases; defaults per provider env or built-in).
+- `--attachment, -a`: Path to file to attach (e.g., image for vision models).
+- `--file, -f`: Input file path (optional; some scripts may use it).
+- `--temperature, -t`: Sampling temperature (Float64; default 1.0 unless overridden by env).
+- `--debug, -d`: Enable debug logging and verbose error output.
+- `--copy, -c`: Copy response to clipboard (scripts that support it).
+- `--think, -k`: Thinking budget for supported providers (e.g., Gemini, Claude).
+- `--alias, -A`: Print all model aliases and exit.
 
 ## Coding Style & Naming Conventions
 - Julia style, 4-space indentation, no trailing whitespace.
@@ -38,4 +50,3 @@
 - Configure providers via environment variables (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, etc.).
 - Do not commit secrets. Use your shell rc or a secure secret manager.
 - You can set default models via env (e.g., `DEFAULT_OPENAI_MODEL`); see README for the full list and examples.
-

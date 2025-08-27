@@ -167,7 +167,7 @@ LLMAccess supports shorthand names for common models. Here are some key aliases:
 | `sonnet` | `claude-sonnet-4-20250514` |
 | `opus` | `claude-opus-4-1-20250805` |
 | `haiku` | `claude-3-5-haiku-latest` |
-| `magistral` | `mistral-large-latest` |
+| `magistral` | `magistral-medium-latest` |
 | `r1` | `deepseek-reasoner` |
 | `v3` | `deepseek-chat` |
 | `4o` | `gpt-4o` |
@@ -183,7 +183,13 @@ Use these aliases anywhere you would specify a model name. For example:
 response = call_llm("openai", "You are helpful", "Hello", model="4o")
 ```
 
-Full list of aliases can be found in the [source code](src/LLMAccess.jl).
+To list all available aliases from the CLI, run:
+
+```bash
+julia --project script/ask.jl --alias
+# or
+julia --project script/ask.jl -A
+```
 
 ### Thinking Budget (`--think`, `-k`)
 
@@ -229,6 +235,7 @@ Common arguments:
 - `--debug, -d`: Enable debug logging and richer error output.
 - `--copy, -c`: Copy response to clipboard.
 - `--think, -k`: Enable “thinking” for providers that support it (e.g., Gemini, Claude, Ollama). For Gemini/Claude, this is a token budget (e.g., `-k 1000`). For Ollama, any non-zero enables thinking.
+- `--alias, -A`: Print all model aliases and exit.
 - `input_text` (positional): Prompt text; if omitted and required, stdin is read.
 
 ## Supported LLM Providers
