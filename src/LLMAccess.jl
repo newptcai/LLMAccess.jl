@@ -634,7 +634,8 @@ function make_api_request(
     input_text,
     model,
     temperature::Float64,
-    attach_file
+    attach_file;
+    dry_run::Bool = false
 )
     @debug "Making API request" llm system_instruction input_text model temperature attach_file
 
@@ -664,6 +665,10 @@ function make_api_request(
     )
 
     @debug "API request data" data
+
+    if dry_run
+        return JSON.json(data)
+    end
 
     response = post_request(url, headers, data)
     return handle_json_response(response, ["choices", 1, "message", "content"])
@@ -698,6 +703,7 @@ function call_llm(
     attach_file = "";
     kwargs...
 )
+    dry_run = get(kwargs, :dry_run, false)
     api_key = ENV["DEEPSEEK_API_KEY"]
     url     = "https://api.deepseek.com/v1/chat/completions"
 
@@ -709,7 +715,8 @@ function call_llm(
         input_text,
         model,
         temperature,
-        attach_file
+        attach_file;
+        dry_run=dry_run
     )
 end
 
@@ -746,6 +753,8 @@ function call_llm(
     api_key = ENV["OPENAI_API_KEY"]
     url     = "https://api.openai.com/v1/chat/completions"
 
+    dry_run = get(kwargs, :dry_run, false)
+
     return make_api_request(
         llm,
         api_key,
@@ -754,7 +763,8 @@ function call_llm(
         input_text,
         model,
         temperature,
-        attach_file
+        attach_file;
+        dry_run=dry_run
     )
 end
 
@@ -780,6 +790,8 @@ function call_llm(
     api_key = ENV["OPENROUTER_API_KEY"]
     url     = "https://openrouter.ai/api/v1/chat/completions"
 
+    dry_run = get(kwargs, :dry_run, false)
+
     return make_api_request(
         llm,
         api_key,
@@ -788,7 +800,8 @@ function call_llm(
         input_text,
         model,
         temperature,
-        attach_file
+        attach_file;
+        dry_run=dry_run
     )
 end
 
@@ -820,6 +833,8 @@ function call_llm(
     # Groq does not allow system instructions + attachments in the same message
     sys_instruction = attach_file != "" ? "" : system_instruction
 
+    dry_run = get(kwargs, :dry_run, false)
+
     return make_api_request(
         llm,
         api_key,
@@ -828,7 +843,8 @@ function call_llm(
         input_text,
         model,
         temperature,
-        attach_file
+        attach_file;
+        dry_run=dry_run
     )
 end
 
@@ -852,6 +868,7 @@ function call_llm(
     kwargs...
 )
     think = get(kwargs, :think, 0) # Extract think value
+    dry_run = get(kwargs, :dry_run, false)
     @debug "Making API request" llm system_instruction input_text model temperature attach_file think
 
     api_key = ENV["ANTHROPIC_API_KEY"]
@@ -870,9 +887,13 @@ function call_llm(
         "model"       => model,
         "max_tokens"  => 4096,
         "temperature" => temperature,
-        "system"      => system_instruction,
         "messages"    => [ Dict("role" => "user", "content" => content) ],
     )
+
+    # Only set system when non-empty
+    if !isempty(system_instruction)
+        data["system"] = system_instruction
+    end
 
     # Add thinking config if applicable
     if is_anthropic_thinking_model(model) && think != 0
@@ -890,6 +911,10 @@ function call_llm(
         # Set temperature to 1.0 when thinking is enabled
         data["temperature"] = 1.0
         @debug "Set temperature to 1.0 due to thinking budget"
+    end
+
+    if dry_run
+        return JSON.json(data)
     end
 
     response = post_request(url, headers, data)
@@ -939,6 +964,7 @@ function call_llm(
     kwargs...
 )
     think = get(kwargs, :think, 0)
+    dry_run = get(kwargs, :dry_run, false)
     @debug "Making API request" llm system_instruction input_text model temperature attach_file think
 
     api_key = ENV["GOOGLE_API_KEY"]
@@ -974,6 +1000,10 @@ function call_llm(
         )
     end
 
+    if dry_run
+        return JSON.json(data)
+    end
+
     response = post_request(url, headers, data)
     return extract_google_text(response)
 end
@@ -998,6 +1028,7 @@ function call_llm(
     kwargs...
 )
     think = get(kwargs, :think, 0)
+    dry_run = get(kwargs, :dry_run, false)
     @debug "Making API request" llm system_instruction input_text model temperature attach_file think
 
     url     = "http://127.0.0.1:11434/api/generate"
@@ -1007,9 +1038,13 @@ function call_llm(
         "model"  => model,
         "prompt" => input_text,
         "stream" => false,
-        "system" => system_instruction,
         "options" => Dict("temperature" => temperature),
     )
+
+    # Only include system when it's non-empty
+    if !isempty(system_instruction)
+        data["system"] = system_instruction
+    end
 
     if think != 0
         data["think"] = true
@@ -1021,6 +1056,10 @@ function call_llm(
         @debug "Attaching file to Ollama request" attach_file
         _ , base64_encoded = encode_file_to_base64(attach_file)
         data["images"] = [base64_encoded]
+    end
+
+    if dry_run
+        return JSON.json(data)
     end
 
     response = post_request(url, headers, data)
@@ -1047,6 +1086,8 @@ function call_llm(
     kwargs...
 )
     @debug "Making API request" llm system_instruction input_text model temperature attach_file
+
+    dry_run = get(kwargs, :dry_run, false)
 
     api_key = ENV["MISTRAL_API_KEY"]
     url     = "https://api.mistral.ai/v1/chat/completions"
@@ -1075,6 +1116,10 @@ function call_llm(
         "temperature" => temperature,
         "messages"    => messages,
     )
+
+    if dry_run
+        return JSON.json(data)
+    end
 
     response = post_request(url, headers, data)
     return handle_json_response(response, ["choices", 1, "message", "content"])
@@ -1143,7 +1188,8 @@ function call_llm(
     model = "",
     temperature::Float64 = get_default_temperature(),
     copy = false,
-    think::Int = 0
+    think::Int = 0,
+    dry_run::Bool = false
 )
     llm_type = get_llm_type(llm_name)
     @debug "call_llm (by name): received model parameter: '$model' for LLM '$llm_name'"
@@ -1160,6 +1206,9 @@ function call_llm(
     kwargs = Dict{Symbol, Any}()
     if think != 0
         kwargs[:think] = think
+    end
+    if dry_run
+        kwargs[:dry_run] = true
     end
 
     result = call_llm(llm_type, system_instruction, input_text, selected_model, temperature; kwargs...)
@@ -1203,11 +1252,15 @@ function call_llm(system_instruction, args::Dict)
     attach_file     = haskey(args, "attachment") ? args["attachment"] : ""
     copy            = args["copy"]
     think           = args["think"]
+    dry_run         = get(args, "dry_run", false)
 
     # Prepare kwargs for specific call_llm
     kwargs = Dict{Symbol, Any}()
     if think != 0
         kwargs[:think] = think
+    end
+    if dry_run
+        kwargs[:dry_run] = true
     end
 
     result = call_llm(
@@ -1500,6 +1553,7 @@ A dictionary containing parsed command-line arguments:
 - `"attachment"`: Path to a file to attach (if any).
 - `"temperature"`: Sampling temperature.
 - `"debug"`: Whether debug mode is enabled.
+- `"dry_run"`: If true, return JSON payload instead of sending.
 - `"input_text"`: The user-supplied text
 """
 function parse_commandline(
@@ -1587,6 +1641,11 @@ function parse_commandline(
 
         "--alias", "-A"
         help = "Print all model aliases and exit"
+        action = :store_true
+
+        "--dry-run", "-n"
+        help = "Print JSON payload and do not send"
+        dest_name = "dry_run"
         action = :store_true
 
         "input_text"
