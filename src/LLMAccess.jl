@@ -116,21 +116,30 @@ const DEFAULT_TEMPERATURE = 1.0
 const DEFAULT_LLM = "google"
 
 const MODEL_ALIASES = Dict(
+    # Mistral
     "small" => "mistral-small-latest",
     "medium" => "mistral-medium-latest",
     "large" => "mistral-large-latest",
+
+    # Google Gemini
     "gemini" => "gemini-2.5-pro",
-    "flash" => "gemini-2.5-flash",
+    "flash"  => "gemini-2.5-flash",
+
+    # Anthropic Claude
     "sonnet" => "claude-sonnet-4-20250514",
-    "opus" => "claude-opus-4-1-20250805",
-    "haiku" => "claude-3-5-haiku-latest",
+    "opus"   => "claude-opus-4-1-20250805",
+    "haiku"  => "claude-3-5-haiku-latest",
+
+    # DeepSeek
     "r1" => "deepseek-reasoner",
     "v3" => "deepseek-chat",
-    "4o" => "gpt-4o",
+
+    # OpenAI GPT
+    "4o"      => "gpt-4o",
     "4o-mini" => "gpt-4o-mini",
-    "3.5" => "gpt-3.5-turbo",
-    "5" => "gpt-5",
-    "5-mini" => "gpt-5-mini",
+    "3.5"     => "gpt-3.5-turbo",
+    "5"       => "gpt-5",
+    "5-mini"  => "gpt-5-mini",
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
