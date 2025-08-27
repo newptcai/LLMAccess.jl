@@ -236,7 +236,22 @@ Common arguments:
 - `--copy, -c`: Copy response to clipboard.
 - `--think, -k`: Enable “thinking” for providers that support it (e.g., Gemini, Claude, Ollama). For Gemini/Claude, this is a token budget (e.g., `-k 1000`). For Ollama, any non-zero enables thinking.
 - `--alias, -A`: Print all model aliases and exit.
+- `--dry-run, -n`: Print the JSON payload that would be sent and exit (no network call).
 - `input_text` (positional): Prompt text; if omitted and required, stdin is read.
+
+### Dry Run
+
+Use `--dry-run` to inspect the exact JSON payload without sending a request. This is useful for testing.
+
+Examples:
+
+```bash
+# Ollama dry run
+julia --project script/ask.jl --llm ollama -n "Hello"
+
+# Google with attachment (no request made)
+julia --project script/ask.jl --llm google --attachment image.png --dry-run "describe"
+```
 
 ## Supported LLM Providers
 
