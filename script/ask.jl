@@ -1,4 +1,4 @@
-#!/usr/bin/env -S julia -O 0 --compile=min --project="${SRC_DIR}/bin/"
+#!/usr/bin/env -S julia -O 0 --compile=min --startup-file=no --project=@script
 
 using LLMAccess
 using ArgParse
