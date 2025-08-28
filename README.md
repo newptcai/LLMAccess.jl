@@ -5,6 +5,7 @@ LLMAccess is a Julia package designed to simplify interactions with multiple Lar
 ## Table of Contents
 
 - [Features](#features)
+- [Documentation](#documentation)
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Usage](#usage)
@@ -100,6 +101,12 @@ Set environment variables through the System Properties:
 3. Under **User variables** or **System variables**, click **New**.
 4. Enter the variable name (e.g., `OPENAI_API_KEY`) and your API key as the value.
 5. Click **OK** to save.
+
+## Documentation
+
+The full user and API documentation is available at:
+
+- https://newptcai.gitlab.io/llmaccess.jl/
 
 ## Usage
 
