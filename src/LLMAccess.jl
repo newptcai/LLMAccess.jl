@@ -1643,7 +1643,7 @@ function parse_commandline(
         help = "Print all model aliases and exit"
         action = :store_true
 
-        "--dry-run", "-n"
+        "--dry-run", "-D"
         help = "Print JSON payload and do not send"
         dest_name = "dry_run"
         action = :store_true
