@@ -29,23 +29,47 @@ function main(_)
 
     custom_settings = ArgParseSettings(
         prog = "cmd.jl",
-        description = "Use LLM to generate command line.",
+        description = "Generate a bash command with LLM, copy it to clipboard, then optionally execute it after confirmation.",
         add_version = true,
         version = "v1.0.0"
     )
 
+    # Optional: allow directly supplying a command (bypasses LLM), useful for offline/testing
+    @add_arg_table! custom_settings begin
+        "--cmd"; help = "Direct command to use instead of calling LLM"; metavar = "CMD"; default = ""
+    end
+
     # Mirror ask.jl: delegate error handling and Ctrl+C to run_cli
     args_ref = Ref{Any}(nothing)
     run_cli(() -> begin
-        args = parse_commandline(custom_settings)
+        # Avoid blocking for input when --cmd is provided (or in tests)
+        args = parse_commandline(custom_settings; require_input = false)
         args_ref[] = args
 
-        result = call_llm(system_instruction, args)
+        result = if isempty(strip(get(args, "cmd", "")))
+            call_llm(system_instruction, args)
+        else
+            String(args["cmd"])
+        end
 
         # Use regex to remove trailing whitespace on each line (with multiline mode)
         trimmed_text = replace(result, r"\s+$"m => "")
         println(trimmed_text)
         clipboard(trimmed_text)
+
+        # Ask for confirmation before executing
+        print("⚠️ Execute this command now? [y/N]: ")
+        flush(stdout)
+        reply = try
+            readline(stdin)
+        catch
+            ""
+        end
+        ans = lowercase(strip(reply))
+        if ans == "y" || ans == "yes"
+            # Use bash -lc to support pipes, redirects, and multi-line commands
+            run(Cmd(["bash", "-lc", "set -euo pipefail; " * trimmed_text]))
+        end
         nothing
     end; settings=custom_settings,
          debug_getter=() -> begin
