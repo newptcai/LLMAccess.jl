@@ -24,64 +24,73 @@ using Test
         @test LLMAccess.is_anthropic_thinking_model("gemini-1.5-pro") == false
     end
 
-    # Integration tests (can be commented out to avoid API calls)
-    system_instruction = """
-    Please repeat what ever the input text is.
-    Do not return anything else.
-    """
+    # Integration tests (run only when explicitly enabled)
+    if get(ENV, "LLMACCESS_RUN_INTEGRATION", "0") == "1"
+        system_instruction = """
+        Please repeat what ever the input text is.
+        Do not return anything else.
+        """
 
-    text = "Hello, World! This is a funny test."
+        text = "Hello, World! This is a funny test."
 
-    function test_llm(llm)
-        println("Testing LLM $(llm)")
-        response = LLMAccess.call_llm(llm, system_instruction, text) |> rstrip
-        @show response
-        @test response == text
-    end
-    
-    test_llm(get_llm_type("google"))
-    test_llm(get_llm_type("openai"))
-    test_llm(get_llm_type("anthropic"))
-    test_llm(get_llm_type("mistral"))
-    test_llm(get_llm_type("ollama"))
-    test_llm(get_llm_type("openrouter"))
-    test_llm(get_llm_type("groq"))
-    test_llm(get_llm_type("deepseek"))
-
-    # Test specific Google model
-    println("Testing Google model flash")
-    google_flash_response = LLMAccess.call_llm(
-        "google", 
-        system_instruction,
-        text,
-        model="flash",
-        think=0 # Explicitly set think for the test
-    )
-    @show google_flash_response
-    @test google_flash_response |> rstrip == text
-
-    # Test error handling for non-existent model (Mistral example)
-    println("Testing Mistral with non-existent model")
-    non_existent_model = "non-existent-model-abcxyz"
-    @test_logs (:error, r"HTTP request failed") begin
-        try
-            LLMAccess.call_llm(
-                "mistral",
-                system_instruction,
-                text,
-                model=non_existent_model
-            )
-            @test false # Should not be reached
-        catch err
-            @test err isa ErrorException
-            @test occursin(non_existent_model, err.msg)
-            @test occursin(r"status (404|400)", err.msg)
+        function test_llm(llm)
+            println("Testing LLM $(llm)")
+            response = LLMAccess.call_llm(llm, system_instruction, text) |> rstrip
+            @show response
+            @test response == text
         end
+
+        test_llm(get_llm_type("google"))
+        test_llm(get_llm_type("openai"))
+        test_llm(get_llm_type("anthropic"))
+        test_llm(get_llm_type("mistral"))
+        test_llm(get_llm_type("ollama"))
+        test_llm(get_llm_type("openrouter"))
+        test_llm(get_llm_type("groq"))
+        test_llm(get_llm_type("deepseek"))
+
+        # Test specific Google model
+        println("Testing Google model flash")
+        google_flash_response = LLMAccess.call_llm(
+            "google",
+            system_instruction,
+            text,
+            model="flash",
+            think=0 # Explicitly set think for the test
+        )
+        @show google_flash_response
+        @test google_flash_response |> rstrip == text
+
+        # Test error handling for non-existent model (Mistral example)
+        println("Testing Mistral with non-existent model")
+        non_existent_model = "non-existent-model-abcxyz"
+        @test_logs (:error, r"HTTP request failed") begin
+            try
+                LLMAccess.call_llm(
+                    "mistral",
+                    system_instruction,
+                    text,
+                    model=non_existent_model
+                )
+                @test false # Should not be reached
+            catch err
+                @test err isa ErrorException
+                @test occursin(non_existent_model, err.msg)
+                @test occursin(r"status (404|400)", err.msg)
+            end
+        end
+    else
+        @info "Skipping integration tests (set LLMACCESS_RUN_INTEGRATION=1 to enable)"
     end
 
     @testset "Command-line parsing for --think/-k" begin                                                                                                                                        
-        original_ARGS = copy(ARGS)                                                                                                                                                              
-        try                                                                                                                                                                                     
+        original_ARGS = copy(ARGS)
+        # Force stable defaults regardless of host environment
+        old_default_llm = get(ENV, "DEFAULT_LLM", nothing)
+        old_default_google_model = get(ENV, "DEFAULT_GOOGLE_MODEL", nothing)
+        ENV["DEFAULT_LLM"] = "google"
+        ENV["DEFAULT_GOOGLE_MODEL"] = "gemini-2.0-flash"
+        try
             # Test case 1: No --think/-k flag; default depends on model.
             # Default LLM is google (gemini-*), so default think should be -1 (dynamic)
             empty!(ARGS)                                                                                                                                                                        
@@ -118,9 +127,19 @@ using Test
             parsed_args = LLMAccess.parse_commandline(settings, require_input=false)                                                                                                            
             @test parsed_args["think"] == 750                                                                                                                                                   
             @test parsed_args["input_text"] == "my prompt"                                                                                                                                      
-        finally                                                                                                                                                                                 
-            empty!(ARGS)                                                                                                                                                                        
-            append!(ARGS, original_ARGS)                                                                                                                                                        
-        end                                                                                                                                                                                     
+        finally
+            empty!(ARGS)
+            append!(ARGS, original_ARGS)
+            if old_default_llm === nothing
+                pop!(ENV, "DEFAULT_LLM"; default=nothing)
+            else
+                ENV["DEFAULT_LLM"] = old_default_llm
+            end
+            if old_default_google_model === nothing
+                pop!(ENV, "DEFAULT_GOOGLE_MODEL"; default=nothing)
+            else
+                ENV["DEFAULT_GOOGLE_MODEL"] = old_default_google_model
+            end
+        end
     end  
 end
