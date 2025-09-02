@@ -14,6 +14,7 @@
   - `julia --project script/ask.jl --llm google "Hello"`
   - `julia --project script/cmd.jl --llm openai "list files changed today"`
   - `julia --project script/ask.jl -A` (or `--alias`) to print all model aliases and exit.
+  - `julia --project script/ask.jl -D --llm google --attachment img.png "describe"` to print the JSON payload without sending.
 
 ## CLI Flags Quick Reference
 - `--llm, -l`: Provider (`openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `groq`, `deepseek`).
@@ -25,6 +26,7 @@
 - `--copy, -c`: Copy response to clipboard (scripts that support it).
 - `--think, -k`: Thinking budget for supported providers (e.g., Gemini, Claude).
 - `--alias, -A`: Print all model aliases and exit.
+- `--dry-run, -D`: Print the request JSON and exit (no network call).
 
 ## Coding Style & Naming Conventions
 - Julia style, 4-space indentation, no trailing whitespace.
@@ -33,10 +35,17 @@
 - Add docstrings using triple quotes above public APIs.
 - Prefer small, composable functions; keep provider-specific logic isolated to typed methods.
 
+### Public API and Utilities (from `src/`)
+- `call_llm(...)`: Multi-method dispatch by provider type and name; supports attachments and dry-run.
+- `list_llm_models(llm::Provider)`: Lists models for Google, Anthropic, OpenRouter, Groq, OpenAI, Mistral, DeepSeek, Ollama.
+- `parse_commandline(...)` and `run_cli(...)`: Centralized CLI parsing and robust error handling.
+- Readers: `jina_reader(url)` (requires `JINA_API_KEY`) and `pandoc_reader(url)` (uses Pandoc) for fetching/markdown conversion.
+
 ## Testing Guidelines
 - Framework: `Test` stdlib (`using Test`). Add new tests under `test/runtests.jl` or split into files and include them from there.
 - Keep fast, unit-level tests near helpers; mark or isolate API-calling tests to keep local runs reliable.
 - Run with keys set (e.g., `OPENAI_API_KEY`, `GOOGLE_API_KEY`, etc.). Avoid hard-coding secrets.
+  - Optional: integration tests gated by `LLMACCESS_RUN_INTEGRATION=1` (see `test/runtests.jl`).
 
 ## Commit & Pull Request Guidelines
 - Use Conventional Commits (emoji optional) and scopes where helpful:
@@ -47,6 +56,21 @@
   - Tests for new behavior or bug fixes and updates to README when user-facing changes occur.
 
 ## Security & Configuration Tips
-- Configure providers via environment variables (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, etc.).
+- Configure providers via environment variables:
+  - Core: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `MISTRAL_API_KEY`.
+  - OpenAI-compatible: `OPENROUTER_API_KEY`, `GROQ_API_KEY`, `DEEPSEEK_API_KEY`.
+  - Readers: `JINA_API_KEY` for `jina_reader`; Pandoc must be installed for `pandoc_reader`.
 - Do not commit secrets. Use your shell rc or a secure secret manager.
-- You can set default models via env (e.g., `DEFAULT_OPENAI_MODEL`); see README for the full list and examples.
+- Defaults via env:
+  - `DEFAULT_LLM` (default provider; current default is `google`).
+  - `DEFAULT_TEMPERATURE` (Float; fallback 1.0).
+  - `DEFAULT_<PROVIDER>_MODEL` (e.g., `DEFAULT_OPENAI_MODEL`, `DEFAULT_GOOGLE_MODEL`, etc.).
+
+## Behavior Notes (as implemented in `src/`)
+- Model aliases: Resolved via `MODEL_ALIASES` (e.g., `flash` => `gemini-2.5-flash`, `4o-mini` => `gpt-4o-mini`). Use `--alias/-A` to print all.
+- Attachments: Images supported across providers with provider-specific payloads (OpenAI-compatible `image_url`, Google `inline_data`, Anthropic base64 image, Mistral multimodal, Ollama `images`).
+- Thinking budget (`--think/-k`):
+  - Google: Sets `generationConfig.thinkingConfig.thinkingBudget` when non-zero; default is `-1` for Gemini models.
+  - Anthropic: Enabled for Sonnet ≥ 3.7 and Opus ≥ 4; sets `thinking` and adjusts `max_tokens`/temperature.
+  - Others default to 0 (disabled).
+- Dry run: `-D/--dry-run` returns the exact JSON payload without sending the request.
