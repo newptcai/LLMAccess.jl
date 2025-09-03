@@ -13,6 +13,7 @@
 - Run scripts:
   - `julia --project script/ask.jl --llm google "Hello"`
   - `julia --project script/cmd.jl --llm openai "list files changed today"`
+  - `julia --project script/cmd.jl --cmd 'echo hi'` to bypass LLM and test clipboard/exec flow.
   - `julia --project script/ask.jl -A` (or `--alias`) to print all model aliases and exit.
   - `julia --project script/ask.jl -D --llm google --attachment img.png "describe"` to print the JSON payload without sending.
 
@@ -27,6 +28,7 @@
 - `--think, -k`: Thinking budget for supported providers (e.g., Gemini, Claude).
 - `--alias, -A`: Print all model aliases and exit.
 - `--dry-run, -D`: Print the request JSON and exit (no network call).
+  - Note: `script/cmd.jl` adds `--cmd CMD` to bypass the LLM and directly use a provided command (still copies to clipboard and offers to execute).
 
 ## Coding Style & Naming Conventions
 - Julia style, 4-space indentation, no trailing whitespace.
@@ -39,6 +41,9 @@
 - `call_llm(...)`: Multi-method dispatch by provider type and name; supports attachments and dry-run.
 - `list_llm_models(llm::Provider)`: Lists models for Google, Anthropic, OpenRouter, Groq, OpenAI, Mistral, DeepSeek, Ollama.
 - `parse_commandline(...)` and `run_cli(...)`: Centralized CLI parsing and robust error handling.
+- `create_default_settings()`: Helper to build ArgParse settings shared by scripts.
+- `get_llm_type(name)` / `get_llm_list()`: Resolve provider types and enumerate supported providers.
+- `resolve_model_alias(name)` / `default_think_for_model(name)` / `is_anthropic_thinking_model(name)`: Model helpers used by CLI defaults and behavior.
 - Readers: `jina_reader(url)` (requires `JINA_API_KEY`) and `pandoc_reader(url)` (uses Pandoc) for fetching/markdown conversion.
 
 ## Testing Guidelines
@@ -73,4 +78,8 @@
   - Google: Sets `generationConfig.thinkingConfig.thinkingBudget` when non-zero; default is `-1` for Gemini models.
   - Anthropic: Enabled for Sonnet ≥ 3.7 and Opus ≥ 4; sets `thinking` and adjusts `max_tokens`/temperature.
   - Others default to 0 (disabled).
-- Dry run: `-D/--dry-run` returns the exact JSON payload without sending the request.
+- Groq: When an attachment is present, system instruction is omitted to align with API content rules.
+- Ollama: `think` is a boolean option; any non-zero `-k/--think` enables thinking mode.
+- Clipboard: When `--copy/-c` is set, results are copied. `script/cmd.jl` always copies the trimmed command output.
+- Error handling: `run_cli` standardizes usage errors, Ctrl+C (exit 130), missing keys (helpful message for `*_API_KEY`), and optional stack traces in `--debug` mode.
+- Dry run: `-D/--dry-run` returns the exact JSON payload without sending the request (supported across providers and respected by scripts).
