@@ -29,16 +29,19 @@ Programmatic usage:
 ```julia
 using LLMAccess
 
-llm = LLMAccess.get_llm_type("google")
-text = LLMAccess.call_llm(llm,
-    system_instruction = "You are helpful",
-    input_text = "Hello!",
+# Call by provider name (keywords for options)
+text = LLMAccess.call_llm(
+    "google",
+    "You are helpful",
+    "Hello!";
     model = LLMAccess.get_default_model("google"),
     temperature = LLMAccess.get_default_temperature(),
-    attach_file = "",
 )
 println(text)
 ```
+
+Notes:
+- For attachments (e.g., images), use the typed form which accepts an attachment path positionally: `call_llm(GoogleLLM(), system, input, model, temperature, attach_file)`. The name-based helper does not take attachments.
 
 CLI examples (see also the CLI page):
 
@@ -67,4 +70,3 @@ Pages = [
 ]
 Depth = 2
 ```
-
