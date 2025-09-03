@@ -14,7 +14,9 @@ LLMAccess is a Julia package designed to simplify interactions with multiple Lar
     - [Example: OpenAI](#example-openai)
     - [Example: Google](#example-google)
   - [Model Aliases](#model-aliases)
-  - [Using with Command-Line](#using-with-command-line)
+  - [Thinking Budget (`--think`, `-k`)](#thinking-budget--think--k)
+  - [CLI Scripts](#cli-scripts)
+  - [Dry Run](#dry-run)
 - [Supported LLM Providers](#supported-llm-providers)
 - [Contributing](#contributing)
 - [License](#license)
@@ -30,11 +32,19 @@ LLMAccess is a Julia package designed to simplify interactions with multiple Lar
 
 ## Installation
 
-To install LLMAccess, use Julia's package manager. In your Julia REPL, run:
+Install via Julia's package manager. Two common options:
+
+1) Develop from a local clone (recommended for contributors):
+
+```julia
+pkg> dev /path/to/llmaccess.jl
+```
+
+2) Add by URL:
 
 ```julia
 using Pkg
-Pkg.add("git@gitlab.com:newptcai/llmaccess.jl.git")
+Pkg.add(url="https://gitlab.com/newptcai/llmaccess.jl.git")
 ```
 
 If working from a clone of this repo, instantiate the environment:
@@ -68,6 +78,7 @@ export GROQ_API_KEY="your_groq_api_key"
 export ANTHROPIC_API_KEY="your_anthropic_api_key"
 export GOOGLE_API_KEY="your_google_api_key"
 export MISTRAL_API_KEY="your_mistral_api_key"
+export DEEPSEEK_API_KEY="your_deepseek_api_key"
 ```
 
 To set the default LLM provider and models, add the following lines:
@@ -82,6 +93,8 @@ export DEFAULT_OLLAMA_MODEL="gemma3:4b"
 export DEFAULT_MISTRAL_MODEL="mistral-small-latest"
 export DEFAULT_GROQ_MODEL="llama-3.3-70b-versatile"
 export DEFAULT_DEEPSEEK_MODEL="deepseek-chat"
+# Optional global default temperature (Float64)
+export DEFAULT_TEMPERATURE="1.0"
 ```
 
 After adding the variables, reload your shell configuration:
@@ -123,6 +136,10 @@ using LLMAccess
 The `call_llm` function interacts with the specified LLM provider.
 You can create an instance of the desired LLM type and invoke the function with the
 necessary parameters.
+
+You may also call by provider name using the convenience signature
+`call_llm(llm_name, system_instruction, input_text; model, temperature, copy, think, dry_run)`. Note: the
+name-based form does not accept attachments directly; use the typed form (or the CLI) when you need to send an attachment.
 
 #### Example: OpenAI
 
@@ -210,11 +227,11 @@ julia --project script/ask.jl -A
 
 ### CLI Scripts
 
-LLMAccess ships with runnable scripts and shared CLI helpers:`parse_commandline` for consistent flags and `run_cli` for robust error handling (usage errors, Ctrl+C, debug traces).
+LLMAccess ships with runnable scripts and shared CLI helpers: `parse_commandline` for consistent flags and `run_cli` for robust error handling (usage errors, Ctrl+C, debug traces).
 
-- `script/ask.jl` — General-purpose Q&A.
-- `script/cmd.jl` — Generates bash commands (prints and copies to clipboard).
-- `script/echo.jl` — Echo utility for validating responses.
+- `script/ask.jl`: General-purpose Q&A.
+- `script/cmd.jl`: Generate bash commands (prints, copies to clipboard, and can execute after confirmation). Also supports `--cmd CMD` to bypass the LLM.
+- `script/echo.jl`: Echo utility for validating responses.
 
 Examples:
 
@@ -227,6 +244,9 @@ julia --project script/ask.jl --llm openai --model 4o "Summarize this repo"
 
 # Generate shell commands
 julia --project script/cmd.jl --llm openai "list files changed today"
+
+# Bypass the LLM and still get copy/execute flow
+julia --project script/cmd.jl --cmd 'echo hi'
 
 # Vision with attachments
 julia --project script/ask.jl --llm openai --model 4o --attachment ~/Downloads/example.webp "What's in this picture?"
@@ -273,7 +293,7 @@ LLMAccess currently supports the following LLM providers:
 - **Ollama**: Interfaces with Ollama's local LLM deployments.
 - **Mistral**: Access to Mistral's LLM offerings.
 
-You can call providers using typed instances (e.g., `call_llm(GoogleLLM(), ...)`) or by name via `call_llm(llm_name, system_instruction, input_text; model, temperature, copy, think)`.
+You can call providers using typed instances (e.g., `call_llm(GoogleLLM(), ...)`) or by name via `call_llm(llm_name, system_instruction, input_text; model, temperature, copy, think, dry_run)`. The name-based form does not accept attachments; use the typed method or the CLI when you need to include `--attachment`.
 
 ## Contributing
 
