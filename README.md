@@ -186,6 +186,7 @@ LLMAccess supports shorthand names for common models. Here are some key aliases:
 | `small` | `mistral-small-latest` |
 | `medium` | `mistral-medium-latest` |
 | `large` | `mistral-large-latest` |
+| `ocr` | `mistral-ocr-latest` |
 | `gemini` | `gemini-2.5-pro` |
 | `flash` | `gemini-2.5-flash` |
 | `sonnet` | `claude-sonnet-4-20250514` |
@@ -251,6 +252,23 @@ julia --project script/cmd.jl --cmd 'echo hi'
 # Vision with attachments
 julia --project script/ask.jl --llm openai --model 4o --attachment ~/Downloads/example.webp "What's in this picture?"
 ```
+
+#### Mistral OCR
+
+Use Mistral's OCR models with the dedicated endpoint by selecting `mistral-ocr-latest` (or the alias `ocr`). An attachment is required.
+
+```bash
+# Dry run (inspect JSON payload only)
+julia --project script/ask.jl --llm mistral --model ocr --attachment ./page.jpg -D "extract"
+
+# Real request
+julia --project script/ask.jl --llm mistral --model ocr --attachment ./page.jpg "extract"
+```
+
+Notes:
+- Routes to `https://api.mistral.ai/v1/ocr` with `document.image_url` as a `data:` URL.
+- Ignores system instruction and temperature.
+- Prefers `pages[*].markdown` in the response; falls back to text fields.
 
 Common arguments:
 

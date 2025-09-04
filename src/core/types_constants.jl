@@ -91,6 +91,7 @@ const MODEL_ALIASES = Dict(
     "small" => "mistral-small-latest",
     "medium" => "mistral-medium-latest",
     "large" => "mistral-large-latest",
+    "ocr" => "mistral-ocr-latest",
     "magistral" => "magistral-medium-latest",
 
     # Google Gemini
@@ -113,4 +114,3 @@ const MODEL_ALIASES = Dict(
     "5"       => "gpt-5",
     "5-mini"  => "gpt-5-mini",
 )
-
