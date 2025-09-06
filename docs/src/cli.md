@@ -52,3 +52,20 @@ julia --project script/cmd.jl --llm openai "list files changed today"
 # Bypass the LLM and still get copy/execute flow
 julia --project script/cmd.jl --cmd 'echo hi'
 ```
+
+## Aliases
+
+- Use short aliases for common models via `-m/--model`.
+- Print the full list: `julia --project script/ask.jl --alias`.
+
+Common examples
+
+- OpenAI: `4o`, `4o-mini`, `o1`, `o1-mini`, `o3`, `o3-mini`, `o4-mini`, `4.1`, `4o-search`
+- Google: `g` (Gemini Pro), `gf` (Gemini Flash), `1.5-pro`, `1.5-flash`, `1.5-flash-8b`, `flash-lite`, `gemma3-12b`
+- Anthropic: `h` (Haiku), `s` (Sonnet), `o` (Opus), `sonnet-3.7`
+- Mistral: `m` (Medium), `ms` (Small), `ml` (Large), `mo` (OCR), `codestral`, `pix`
+- Groq: `llama-70b`, `qwen-32b`, `whisper`, `r1-70b`
+- OpenRouter: `grok-4`, `glm-4.5`, `command-r+`, `sonar-pro`, `nova-pro`
+- Ollama: `gemma3-12b-ollama`, `qwen3-14b-ollama`, `phi4-r`
+
+See the README “Model Aliases” section for a longer list.

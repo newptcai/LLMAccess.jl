@@ -179,20 +179,31 @@ println("Google Response: ", response)
 
 ### Model Aliases
 
-LLMAccess supports shorthand names for common models. Here are some key aliases:
+LLMAccess supports shorthand names for common models. Here are some key aliases (including new 1–2 letter shorthands):
 
 | Alias | Full Model Name |
 |---|---|
+| `ms` | `mistral-small-latest` |
+| `m` | `mistral-medium-latest` |
+| `ml` | `mistral-large-latest` |
+| `mo` | `mistral-ocr-latest` |
 | `small` | `mistral-small-latest` |
 | `medium` | `mistral-medium-latest` |
 | `large` | `mistral-large-latest` |
 | `ocr` | `mistral-ocr-latest` |
+| `g` | `gemini-2.5-pro` |
+| `gf` | `gemini-2.5-flash` |
 | `gemini` | `gemini-2.5-pro` |
 | `flash` | `gemini-2.5-flash` |
+| `s` | `claude-sonnet-4-20250514` |
+| `o` | `claude-opus-4-1-20250805` |
+| `h` | `claude-3-5-haiku-latest` |
 | `sonnet` | `claude-sonnet-4-20250514` |
 | `opus` | `claude-opus-4-1-20250805` |
 | `haiku` | `claude-3-5-haiku-latest` |
 | `magistral` | `magistral-medium-latest` |
+| `r` | `deepseek-reasoner` |
+| `d` | `deepseek-chat` |
 | `r1` | `deepseek-reasoner` |
 | `v3` | `deepseek-chat` |
 | `4o` | `gpt-4o` |
@@ -207,6 +218,30 @@ Use these aliases anywhere you would specify a model name. For example:
 # Using alias instead of full model name
 response = call_llm("openai", "You are helpful", "Hello", model="4o")
 ```
+
+Additional popular aliases by provider
+
+- OpenAI (`--llm openai`)
+  - `o1`, `o1-mini`, `o1-pro`, `o3`, `o3-mini`, `o3-mini-high`, `o4-mini`
+  - `4.1`, `4.1-mini`, `4.1-nano`, `4o-audio`, `4o-rt`, `4o-search`, `4o-mini-search`, `4o-transcribe`
+  - `5-chat`, `5-nano`
+- Google (`--llm google`)
+  - `pro` (Gemini 2.5 Pro), `flash-lite` (Gemini 2.5 Flash Lite)
+  - `1.5-pro`, `1.5-flash`, `1.5-flash-8b`, `2.0-flash`
+  - `gemma3-4b`, `gemma3-12b`, `gemma3-27b`
+  - Media: `imagen-4`, `veo2`
+- Anthropic (`--llm anthropic`)
+  - `sonnet-3.7`, `sonnet-3.5`, `haiku-3.5`, `opus-4`, `opus-4.1`
+- Mistral (`--llm mistral`)
+  - Families: `codestral`, `codestral-2508`, `pix` (Pixtral 12B), `pix-large`, `saba`
+  - Sizes: `ministral-3b`, `ministral-8b`
+  - Dev/Magistral: `devstral-s`, `devstral-m`, `mag-s`, `mag-m`
+- Groq (`--llm groq`)
+  - `llama-70b`, `llama-8b`, `qwen-32b`, `qwen-14b`, `qwen-8b`, `whisper`, `whisper-turbo`, `r1-70b`, `r1-8b`
+- OpenRouter (`--llm openrouter`)
+  - `grok-4`, `grok-3`, `grok-3-mini`, `kimi-k2`, `kimi-dev-72b`, `glm-4.5`, `glm-4.5v`, `glm-4.5-air`, `command-r`, `command-r+`, `sonar-pro`, `sonar-reason`, `nova-micro`, `nova-lite`, `nova-pro`, `gemma3-27b-or`
+- Ollama (`--llm ollama`)
+  - `gemma3-4b-ollama`, `gemma3-12b-ollama`, `qwen3-14b-ollama`, `phi4-r`, `gemma3n-e4b`, `gemma3n-e2b`, `oss-120b`
 
 To list all available aliases from the CLI, run:
 
