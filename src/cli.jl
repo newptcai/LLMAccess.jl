@@ -57,6 +57,7 @@ function parse_commandline(
         "--copy", "-c"; help = "Copy response to clipboard"; action = :store_true
         "--think", "-k"; help = "Thinking budget; default varies by model (e.g., Gemini=-1, Sonnet=0)."; arg_type = Int; default = 0
         "--alias", "-A"; help = "Print all model aliases and exit"; action = :store_true
+        "--providers"; help = "Print supported LLM providers (valid --llm choices) and exit"; action = :store_true
         "--dry-run", "-D"; help = "Print JSON payload and do not send"; dest_name = "dry_run"; action = :store_true
         "input_text"; help = "Input text/prompt (reads from stdin if empty)"; required = false
     end
@@ -69,6 +70,12 @@ function parse_commandline(
         for k in keys_sorted
             println("$(k) => $(MODEL_ALIASES[k])")
         end
+        exit(0)
+    end
+
+    if get(args, "providers", false)
+        providers = sort!(collect(get_llm_list()))
+        println.(providers)
         exit(0)
     end
 
@@ -175,4 +182,3 @@ function run_cli(f::Function; settings=nothing, debug_getter::Function=() -> fal
         end
     end
 end
-

@@ -338,6 +338,7 @@ Common arguments:
 - `--copy, -c`: Copy response to clipboard.
 - `--think, -k`: Enable “thinking” for providers that support it (e.g., Gemini, Claude, Ollama). For Gemini/Claude, this is a token budget (e.g., `-k 1000`). For Ollama, any non-zero enables thinking.
 - `--alias, -A`: Print all model aliases and exit.
+- `--providers`: Print supported LLM providers (valid `--llm` choices) and exit.
 - `--dry-run, -D`: Print the JSON payload that would be sent and exit (no network call).
 - `input_text` (positional): Prompt text; if omitted and required, stdin is read.
 

@@ -25,6 +25,7 @@ julia --project script/ask.jl --llm google "Hello"
 - `--copy, -c`: Copy response to clipboard (if supported by script).
 - `--think, -k`: Thinking budget for supported providers (e.g., Gemini, Claude).
 - `--alias, -A`: Print all model aliases and exit.
+- `--providers`: Print supported LLM providers (valid `--llm` choices) and exit.
 - `--dry-run, -D`: Print the exact JSON payload that would be sent and exit (no network call).
 
 ## Examples
@@ -41,6 +42,9 @@ julia --project script/ask.jl --llm openai -m gpt-4o --attachment path/to/image.
 
 # Show available aliases
 julia --project script/ask.jl --alias
+
+# Show valid provider choices
+julia --project script/ask.jl --providers
 
 # Dry run to inspect payload (no request made)
 julia --project script/ask.jl --llm ollama -D "Hello"
