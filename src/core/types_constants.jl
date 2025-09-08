@@ -80,15 +80,16 @@ struct ZaiLLM <: OpenAICompatibleLLM end
 # ─────────────────────────────────────────────────────────────────────────────
 
 const DEFAULT_MODELS = Dict(
-    "openai"      => "gpt-4o-mini",
+    # Prefer economical, widely-available defaults per provider
+    "openai"      => "gpt-5-mini",
     "openrouter"  => "amazon/nova-micro-v1",
     "anthropic"   => "claude-3-5-haiku-latest",
-    "google"      => "gemini-2.0-flash",
+    "google"      => "gemini-2.5-flash",
     "ollama"      => "gemma3:4b",
     "mistral"     => "mistral-small-latest",
-    "groq"        => "llama-3.3-70b-versatile",
+    "groq"        => "qwen/qwen3-32b",
     "deepseek"    => "deepseek-chat",
-    "zai"         => "glm-4.5",
+    "zai"         => "glm-4.5-air",
 )
 
 const DEFAULT_TEMPERATURE = 1.0

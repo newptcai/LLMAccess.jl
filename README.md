@@ -87,16 +87,16 @@ To set the default LLM provider and models, add the following lines:
 
 ```bash
 export DEFAULT_LLM="ollama"
-export DEFAULT_OPENAI_MODEL="gpt-4o-mini"
+export DEFAULT_OPENAI_MODEL="gpt-5-mini"
 export DEFAULT_OPENROUTER_MODEL="amazon/nova-micro-v1"
 export DEFAULT_ANTHROPIC_MODEL="claude-3-5-haiku-latest"
-export DEFAULT_GOOGLE_MODEL="gemini-2.0-flash"
+export DEFAULT_GOOGLE_MODEL="gemini-2.5-flash"
 export DEFAULT_OLLAMA_MODEL="gemma3:4b"
 export DEFAULT_MISTRAL_MODEL="mistral-small-latest"
-export DEFAULT_GROQ_MODEL="llama-3.3-70b-versatile"
+export DEFAULT_GROQ_MODEL="qwen/qwen3-32b"
 export DEFAULT_DEEPSEEK_MODEL="deepseek-chat"
 # Z.ai default model
-export DEFAULT_ZAI_MODEL="glm-4.5"
+export DEFAULT_ZAI_MODEL="glm-4.5-air"
 # Optional global default temperature (Float64)
 export DEFAULT_TEMPERATURE="1.0"
 ```

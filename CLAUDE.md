@@ -82,7 +82,7 @@ export GOOGLE_API_KEY="your_key"
 Configure default models:
 ```bash
 export DEFAULT_LLM="google"
-export DEFAULT_GOOGLE_MODEL="gemini-2.0-flash"
+export DEFAULT_GOOGLE_MODEL="gemini-2.5-flash"
 # ... other defaults
 ```
 
