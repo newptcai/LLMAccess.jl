@@ -13,6 +13,7 @@ LLMAccess is a Julia package designed to simplify interactions with multiple Lar
   - [Calling an LLM](#calling-an-llm)
     - [Example: OpenAI](#example-openai)
     - [Example: Google](#example-google)
+    - [Example: Z.ai](#example-zai)
   - [Model Aliases](#model-aliases)
   - [Thinking Budget (`--think`, `-k`)](#thinking-budget--think--k)
   - [CLI Scripts](#cli-scripts)
@@ -178,6 +179,24 @@ system_instruction = "You are a translation assistant."
 response = call_llm(google_llm, system_instruction, input_text)
 
 println("Google Response: ", response)
+```
+
+#### Example: Z.ai
+
+```julia
+using LLMAccess
+
+# Create a Z.ai LLM instance
+zai_llm = ZaiLLM()
+
+# Define input text and system instructions
+input_text = "What is the capital of France?"
+system_instruction = "You are concise."
+
+# Call the Z.ai LLM (supports glm-4.5 and glm-4.5-air)
+response = call_llm(zai_llm, system_instruction, input_text; model="glm-4.5-air")
+
+println("Z.ai Response: ", response)
 ```
 
 ### Model Aliases
