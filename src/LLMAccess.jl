@@ -37,6 +37,7 @@ module Core
            OllamaLLM,
            MistralLLM,
            DeepSeekLLM,
+           ZaiLLM,
            DEFAULT_MODELS,
            DEFAULT_TEMPERATURE,
            DEFAULT_LLM,

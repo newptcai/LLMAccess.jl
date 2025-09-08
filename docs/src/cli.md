@@ -16,7 +16,7 @@ julia --project script/ask.jl --llm google "Hello"
 
 ## Common Flags
 
-- `--llm, -l`: Provider (`openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `groq`, `deepseek`).
+- `--llm, -l`: Provider (`openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `groq`, `deepseek`, `zai`).
 - `--model, -m`: Model name (supports aliases; defaults per provider or env).
 - `--attachment, -a`: Path to file to attach (e.g., image for vision models).
 - `--file, -f`: Input file path (optional; script-specific).

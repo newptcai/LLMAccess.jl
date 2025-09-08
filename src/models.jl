@@ -120,3 +120,15 @@ function list_llm_models(llm::OllamaLLM)
     return [model["model"] for model in model_list]
 end
 
+"""
+    list_llm_models(llm::ZaiLLM)
+
+Return supported model names for Z.ai provider.
+"""
+function list_llm_models(llm::ZaiLLM)
+    # Z.ai API model listing isn’t standardized publicly; hardcode known ones
+    return [
+        "glm-4.5",
+        "glm-4.5-air",
+    ]
+end

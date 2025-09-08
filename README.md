@@ -64,6 +64,7 @@ Before using LLMAccess, set the necessary API keys for the LLM providers you wan
 - `GOOGLE_API_KEY` for Google
 - `MISTRAL_API_KEY` for Mistral
 - `DEEPSEEK_API_KEY` for DeepSeek
+- `Z_API_KEY` for Z.ai
 
 ### Setting Environment Variables
 
@@ -93,6 +94,8 @@ export DEFAULT_OLLAMA_MODEL="gemma3:4b"
 export DEFAULT_MISTRAL_MODEL="mistral-small-latest"
 export DEFAULT_GROQ_MODEL="llama-3.3-70b-versatile"
 export DEFAULT_DEEPSEEK_MODEL="deepseek-chat"
+# Z.ai default model
+export DEFAULT_ZAI_MODEL="glm-4.5"
 # Optional global default temperature (Float64)
 export DEFAULT_TEMPERATURE="1.0"
 ```
@@ -307,7 +310,7 @@ Notes:
 
 Common arguments:
 
-- `--llm, -l`: LLM provider (`openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `groq`, `deepseek`). Defaults to `DEFAULT_LLM` or `google`.
+- `--llm, -l`: LLM provider (`openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `groq`, `deepseek`, `zai`). Defaults to `DEFAULT_LLM` or `google`.
 - `--model, -m`: Model name; supports aliases below. Defaults to provider’s default.
 - `--file, -f`: Path to input file to process (optional; reserved for helpers that consume files).
 - `--attachment, -a`: Path to a file to attach (e.g., image for vision APIs).
@@ -341,6 +344,7 @@ LLMAccess currently supports the following LLM providers:
 - **OpenRouter**: Compatible with OpenAI's API endpoints.
 - **Groq**: Integrates with Groq's LLM services.
 - **DeepSeek**: OpenAI-compatible API access to DeepSeek's models.
+- **Z.ai**: OpenAI-compatible API access to GLM-4.5 family.
 - **Anthropic**: Utilizes Anthropic's Claude models.
 - **Google**: Connects to Google's generative language models.
 - **Ollama**: Interfaces with Ollama's local LLM deployments.

@@ -13,6 +13,7 @@ function get_llm_type(llm_name)
         "openrouter"  => OpenRouterLLM(),
         "groq"        => GroqLLM(),
         "deepseek"    => DeepSeekLLM(),
+        "zai"         => ZaiLLM(),
     )
     get(llm_types, llm_name) do
         error("Unknown LLM: $llm_name")
@@ -83,4 +84,3 @@ function call_llm(system_instruction, args::Dict)
     end
     return result
 end
-

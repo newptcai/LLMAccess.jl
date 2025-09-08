@@ -109,3 +109,20 @@ function call_llm(
     return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run)
 end
 
+# Z.ai (OpenAI-compatible)
+function call_llm(
+    llm::ZaiLLM,
+    system_instruction="",
+    input_text="",
+    model = get_default_model("zai"),
+    temperature::Float64 = get_default_temperature(),
+    attach_file = "";
+    kwargs...
+)
+    api_key = ENV["Z_API_KEY"]
+    url     = "https://api.z.ai/api/paas/v4/chat/completions"
+    dry_run = get(kwargs, :dry_run, false)
+    # Normalize OpenRouter-style aliases like "z-ai/glm-4.5" back to model id
+    normalized_model = occursin("/", model) ? split(model, "/")[end] : model
+    return make_api_request(llm, api_key, url, system_instruction, input_text, normalized_model, temperature, attach_file; dry_run=dry_run)
+end

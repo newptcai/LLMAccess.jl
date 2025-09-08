@@ -18,7 +18,7 @@
   - `julia --project script/ask.jl -D --llm google --attachment img.png "describe"` to print the JSON payload without sending.
 
 ## CLI Flags Quick Reference
-- `--llm, -l`: Provider (`openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `groq`, `deepseek`).
+- `--llm, -l`: Provider (`openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `groq`, `deepseek`, `zai`).
 - `--model, -m`: Model name (supports aliases; defaults per provider env or built-in).
 - `--attachment, -a`: Path to file to attach (e.g., image for vision models).
 - `--file, -f`: Input file path (optional; some scripts may use it).

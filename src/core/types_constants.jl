@@ -68,6 +68,13 @@ Concrete type for DeepSeek's LLM (OpenAI-compatible API).
 """
 struct DeepSeekLLM <: OpenAICompatibleLLM end
 
+"""
+    ZaiLLM
+
+Concrete type for Z.ai's LLM (OpenAI-compatible API).
+"""
+struct ZaiLLM <: OpenAICompatibleLLM end
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Constants
 # ─────────────────────────────────────────────────────────────────────────────
@@ -81,6 +88,7 @@ const DEFAULT_MODELS = Dict(
     "mistral"     => "mistral-small-latest",
     "groq"        => "llama-3.3-70b-versatile",
     "deepseek"    => "deepseek-chat",
+    "zai"         => "glm-4.5",
 )
 
 const DEFAULT_TEMPERATURE = 1.0
