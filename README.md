@@ -271,7 +271,7 @@ To list all available aliases from the CLI, run:
 ```bash
 julia --project script/ask.jl --alias
 # or
-julia --project script/ask.jl -A
+# legacy: previously `-A`
 ```
 
 ### Provider Aliases
@@ -337,7 +337,7 @@ Use Mistral's OCR models with the dedicated endpoint by selecting `mistral-ocr-l
 
 ```bash
 # Dry run (inspect JSON payload only)
-julia --project script/ask.jl --llm mistral --model ocr --attachment ./page.jpg -D "extract"
+julia --project script/ask.jl --llm mistral --model ocr --attachment ./page.jpg --dry-run "extract"
 
 # Real request
 julia --project script/ask.jl --llm mistral --model ocr --attachment ./page.jpg "extract"
@@ -358,10 +358,10 @@ Common arguments:
 - `--debug, -d`: Enable debug logging and richer error output.
 - `--copy, -c`: Copy response to clipboard.
 - `--think, -k`: Enable “thinking” for providers that support it (e.g., Gemini, Claude, Ollama). For Gemini/Claude, this is a token budget (e.g., `-k 1000`). For Ollama, any non-zero enables thinking.
-- `--alias, -A`: Print all model aliases and exit.
+- `--alias`: Print all model aliases and exit.
 - `--providers`: Print supported LLM providers (valid `--llm` choices) and exit.
 - `--llm-alias`: Print provider aliases for `--llm` and exit.
-- `--dry-run, -D`: Print the JSON payload that would be sent and exit (no network call).
+- `--dry-run`: Print the JSON payload that would be sent and exit (no network call).
 - `input_text` (positional): Prompt text; if omitted and required, stdin is read.
 
 ### Dry Run
@@ -372,7 +372,7 @@ Examples:
 
 ```bash
 # Ollama dry run
-julia --project script/ask.jl --llm ollama -D "Hello"
+julia --project script/ask.jl --llm ollama --dry-run "Hello"
 
 # Google with attachment (no request made)
 julia --project script/ask.jl --llm google --attachment image.png --dry-run "describe"

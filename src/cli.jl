@@ -57,10 +57,10 @@ function parse_commandline(
         "--debug", "-d"; help = "Enable debug logging"; action = :store_true
         "--copy", "-c"; help = "Copy response to clipboard"; action = :store_true
         "--think", "-k"; help = "Thinking budget; default varies by model (e.g., Gemini=-1, Sonnet=0)."; arg_type = Int; default = 0
-        "--alias", "-A"; help = "Print all model aliases and exit"; action = :store_true
+        "--alias"; help = "Print all model aliases and exit"; action = :store_true
         "--providers"; help = "Print supported LLM providers (valid --llm choices) and exit"; action = :store_true
         "--llm-alias"; help = "Print provider aliases for --llm and exit"; dest_name = "llm_alias"; action = :store_true
-        "--dry-run", "-D"; help = "Print JSON payload and do not send"; dest_name = "dry_run"; action = :store_true
+        "--dry-run"; help = "Print JSON payload and do not send"; dest_name = "dry_run"; action = :store_true
         "input_text"; help = "Input text/prompt (reads from stdin if empty)"; required = false
     end
 
