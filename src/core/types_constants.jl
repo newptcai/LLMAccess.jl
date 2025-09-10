@@ -95,6 +95,49 @@ const DEFAULT_MODELS = Dict(
 const DEFAULT_TEMPERATURE = 1.0
 const DEFAULT_LLM = "google"
 
+"""
+    PROVIDER_ALIASES
+
+Short aliases mapping to canonical provider names accepted by `--llm`.
+
+Examples:
+  - "g"  => "google"
+  - "oa" => "openai"
+  - "an" => "anthropic"
+"""
+const PROVIDER_ALIASES = Dict(
+    # OpenAI
+    "o"  => "openai",
+    "oa" => "openai",
+
+    # Anthropic
+    "a"  => "anthropic",
+    "an" => "anthropic",
+
+    # Google
+    "g"  => "google",
+
+    # Mistral
+    "m"  => "mistral",
+
+    # Ollama
+    "ol" => "ollama",
+
+    # OpenRouter
+    "or" => "openrouter",
+
+    # Groq
+    "gr" => "groq",
+
+    # DeepSeek
+    "d"  => "deepseek",
+    "ds" => "deepseek",
+
+    # Z.ai
+    "z"  => "zai",
+    "za" => "zai",
+)
+
 const MODEL_ALIASES = Dict(
     # Mistral
     # 1–2 letter shorthands

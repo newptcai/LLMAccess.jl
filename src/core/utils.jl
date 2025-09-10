@@ -26,6 +26,22 @@ function get_llm_list()
 end
 
 """
+    resolve_provider_alias(llm_name::AbstractString) :: String
+
+Resolve short provider aliases (e.g., "g", "oa", "an") to canonical
+provider names (e.g., "google", "openai", "anthropic"). Returns the
+original name if no alias mapping is found.
+"""
+function resolve_provider_alias(llm_name::AbstractString)::String
+    name = lowercase(String(llm_name))
+    resolved = get(PROVIDER_ALIASES, name, name)
+    if resolved != name
+        @debug "Resolved provider alias" name resolved
+    end
+    return resolved
+end
+
+"""
     get_default_model(llm_name)
 
 Returns the default model for a provider using `ENV["DEFAULT_<LLM>_MODEL"]` or `DEFAULT_MODELS`.
@@ -162,4 +178,3 @@ function get_nested(data, path)
     end
     return data
 end
-

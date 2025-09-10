@@ -15,6 +15,7 @@ LLMAccess is a Julia package designed to simplify interactions with multiple Lar
     - [Example: Google](#example-google)
     - [Example: Z.ai](#example-zai)
   - [Model Aliases](#model-aliases)
+  - [Provider Aliases](#provider-aliases)
   - [Thinking Budget (`--think`, `-k`)](#thinking-budget--think--k)
   - [CLI Scripts](#cli-scripts)
   - [Dry Run](#dry-run)
@@ -273,6 +274,26 @@ julia --project script/ask.jl --alias
 julia --project script/ask.jl -A
 ```
 
+### Provider Aliases
+
+You can also use short aliases for providers via `--llm`:
+
+- `g` → `google`
+- `oa`/`o` → `openai`
+- `an`/`a` → `anthropic`
+- `m` → `mistral`
+- `ol` → `ollama`
+- `or` → `openrouter`
+- `gr` → `groq`
+- `ds`/`d` → `deepseek`
+- `z`/`za` → `zai`
+
+List them from the CLI:
+
+```bash
+julia --project script/ask.jl --llm-alias
+```
+
 ### Thinking Budget (`--think`, `-k`)
 
 - Default now varies by model:
@@ -339,6 +360,7 @@ Common arguments:
 - `--think, -k`: Enable “thinking” for providers that support it (e.g., Gemini, Claude, Ollama). For Gemini/Claude, this is a token budget (e.g., `-k 1000`). For Ollama, any non-zero enables thinking.
 - `--alias, -A`: Print all model aliases and exit.
 - `--providers`: Print supported LLM providers (valid `--llm` choices) and exit.
+- `--llm-alias`: Print provider aliases for `--llm` and exit.
 - `--dry-run, -D`: Print the JSON payload that would be sent and exit (no network call).
 - `input_text` (positional): Prompt text; if omitted and required, stdin is read.
 

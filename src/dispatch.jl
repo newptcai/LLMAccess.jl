@@ -4,6 +4,7 @@
 Map provider name to concrete LLM type instance.
 """
 function get_llm_type(llm_name)
+    canonical = resolve_provider_alias(llm_name)
     llm_types = Dict(
         "openai"      => OpenAILLM(),
         "anthropic"   => AnthropicLLM(),
@@ -15,7 +16,7 @@ function get_llm_type(llm_name)
         "deepseek"    => DeepSeekLLM(),
         "zai"         => ZaiLLM(),
     )
-    get(llm_types, llm_name) do
+    get(llm_types, canonical) do
         error("Unknown LLM: $llm_name")
     end
 end
@@ -35,8 +36,9 @@ function call_llm(
     think::Int = 0,
     dry_run::Bool = false
 )
-    llm_type = get_llm_type(llm_name)
-    default_model_for_llm = get_default_model(llm_name)
+    canonical_llm = resolve_provider_alias(llm_name)
+    llm_type = get_llm_type(canonical_llm)
+    default_model_for_llm = get_default_model(canonical_llm)
     model_to_resolve = isempty(model) ? default_model_for_llm : model
     selected_model = resolve_model_alias(model_to_resolve)
 
@@ -61,7 +63,8 @@ end
 Call the appropriate provider based on config dictionary.
 """
 function call_llm(system_instruction, args::Dict)
-    llm_type    = get_llm_type(args["llm"])
+    canonical_llm = resolve_provider_alias(args["llm"]) 
+    llm_type    = get_llm_type(canonical_llm)
     input_text  = args["input_text"]
     model       = resolve_model_alias(args["model"])
     temperature = args["temperature"]

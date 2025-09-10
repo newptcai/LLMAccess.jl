@@ -19,7 +19,7 @@ function parse_commandline(
     settings = create_default_settings();
     require_input::Bool = true
 )
-    llm   = get_default_llm()
+    llm   = resolve_provider_alias(get_default_llm())
     model = get_default_model(llm)
     @debug "parse_commandline: Initial default_llm='$llm', initial default_model='$model' (before parsing args)"
     return parse_commandline(settings, llm, model; require_input=require_input)
@@ -33,9 +33,10 @@ function parse_commandline(
     default_llm::String;
     require_input = true
 )
-    default_model = get_default_model(default_llm)
+    canonical_llm = resolve_provider_alias(default_llm)
+    default_model = get_default_model(canonical_llm)
     @debug "parse_commandline: Using provided default_llm='$default_llm', derived default_model='$default_model'"
-    return parse_commandline(settings, default_llm, default_model; require_input=require_input)
+    return parse_commandline(settings, canonical_llm, default_model; require_input=require_input)
 end
 
 """
@@ -48,7 +49,7 @@ function parse_commandline(
     require_input::Bool = true
 )
     @add_arg_table! settings begin
-        "--llm", "-l"; help = "LLM provider to use"; default = default_llm
+        "--llm", "-l"; help = "LLM provider to use (aliases: g, oa, an, m, ol, or, gr, ds, z)"; default = default_llm
         "--model", "-m"; help = "Specific model to use"; default = default_model
         "--file", "-f"; help = "Path to input file to process"; default = ""
         "--attachment", "-a"; help = "Path to file attachment"; default = ""
@@ -58,12 +59,21 @@ function parse_commandline(
         "--think", "-k"; help = "Thinking budget; default varies by model (e.g., Gemini=-1, Sonnet=0)."; arg_type = Int; default = 0
         "--alias", "-A"; help = "Print all model aliases and exit"; action = :store_true
         "--providers"; help = "Print supported LLM providers (valid --llm choices) and exit"; action = :store_true
+        "--llm-alias"; help = "Print provider aliases for --llm and exit"; dest_name = "llm_alias"; action = :store_true
         "--dry-run", "-D"; help = "Print JSON payload and do not send"; dest_name = "dry_run"; action = :store_true
         "input_text"; help = "Input text/prompt (reads from stdin if empty)"; required = false
     end
 
     args = parse_args(settings)
     @debug "parse_commandline: Args after parse_args: llm='$(args["llm"])', model='$(args["model"])'"
+
+    if get(args, "llm_alias", false)
+        keys_sorted = sort!(collect(keys(PROVIDER_ALIASES)))
+        for k in keys_sorted
+            println("$(k) => $(PROVIDER_ALIASES[k])")
+        end
+        exit(0)
+    end
 
     if get(args, "alias", false)
         keys_sorted = sort!(collect(keys(MODEL_ALIASES)))
@@ -83,9 +93,12 @@ function parse_commandline(
         args["input_text"] = chomp(read(stdin, String))
     end
 
+    # Canonicalize provider early so defaults and downstream code align
+    args["llm"] = resolve_provider_alias(args["llm"])
+
     if args["llm"] != default_llm && args["model"] == default_model
         original_model_before_llm_switch_default = args["model"]
-        args["model"] = get_default_model(args["llm"])
+        args["model"] = get_default_model(args["llm"])  # args["llm"] is canonical now
         @debug "parse_commandline: LLM changed from '$default_llm' to '$(args["llm"])'. Model was '$original_model_before_llm_switch_default' -> default for new LLM: '$(args["model"])'"
     end
     @debug "parse_commandline: Final model name from parse_commandline (before alias resolution in call_llm): '$(args["model"])'"
