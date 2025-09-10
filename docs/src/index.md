@@ -49,6 +49,7 @@ CLI examples (see also the CLI page):
 julia --project script/ask.jl --llm google "Hello"
 julia --project script/cmd.jl --llm openai "list files changed today"
 julia --project script/ask.jl --alias
+julia --project script/ask.jl --llm-alias
 julia --project script/ask.jl --llm zai --model glm-4.5-air "What is the capital of France?"
 ```
 

@@ -24,9 +24,10 @@ julia --project script/ask.jl --llm google "Hello"
 - `--debug, -d`: Enable debug logging and verbose error output.
 - `--copy, -c`: Copy response to clipboard (if supported by script).
 - `--think, -k`: Thinking budget for supported providers (e.g., Gemini, Claude).
-- `--alias, -A`: Print all model aliases and exit.
+- `--alias`: Print all model aliases and exit.
+- `--llm-alias`: Print provider aliases for `--llm` and exit.
 - `--providers`: Print supported LLM providers (valid `--llm` choices) and exit.
-- `--dry-run, -D`: Print the exact JSON payload that would be sent and exit (no network call).
+- `--dry-run`: Print the exact JSON payload that would be sent and exit (no network call).
 
 ## Examples
 
@@ -47,8 +48,11 @@ julia --project script/ask.jl --alias
 julia --project script/ask.jl --providers
 
 # Dry run to inspect payload (no request made)
-julia --project script/ask.jl --llm ollama -D "Hello"
+julia --project script/ask.jl --llm ollama --dry-run "Hello"
 julia --project script/ask.jl --llm google --attachment image.png --dry-run "describe"
+
+# Show provider alias map
+julia --project script/ask.jl --llm-alias
 
 # Generate shell commands
 julia --project script/cmd.jl --llm openai "list files changed today"
@@ -60,7 +64,9 @@ julia --project script/cmd.jl --cmd 'echo hi'
 ## Aliases
 
 - Use short aliases for common models via `-m/--model`.
-- Print the full list: `julia --project script/ask.jl --alias`.
+- Use short aliases for providers via `-l/--llm` (e.g., `g` for `google`, `oa` for `openai`).
+- Print model aliases: `julia --project script/ask.jl --alias`.
+- Print provider aliases: `julia --project script/ask.jl --llm-alias`.
 
 Common examples
 
