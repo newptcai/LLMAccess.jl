@@ -2,6 +2,15 @@ using LLMAccess
 using Test
 
 @testset "LLMAccess.jl" begin
+    @testset "normalize_output_text" begin
+        s = "“Hello — world – ‘quotes’ and ‘apostrophes’ and «double».”"
+        expected = "\"Hello --- world -- 'quotes' and 'apostrophes' and \"double\".\""
+        @test LLMAccess.normalize_output_text(s) == expected
+
+        # Idempotency on plain ASCII
+        plain = "Hello -- world --- 'quotes' \"double\"."
+        @test LLMAccess.normalize_output_text(plain) == plain
+    end
     @testset "is_anthropic_thinking_model" begin
         # Opus models - should be true for versions >= 4.0
         @test LLMAccess.is_anthropic_thinking_model("claude-opus-4-20250514") == true
@@ -79,6 +88,16 @@ using Test
                 @test occursin(r"status (404|400)", err.msg)
             end
         end
+
+        # Test echo.jl script with Ollama and normalization
+        println("Testing echo.jl with Ollama (normalization)")
+        s = "“Hello — world – ‘quotes’ and ‘apostrophes’ and «double».”"
+        expected_norm = LLMAccess.normalize_output_text(s)
+        julia_exe = joinpath(Sys.BINDIR, Base.julia_exename())
+        cmd = Cmd([julia_exe, "--project", "script/echo.jl", "--llm", "ollama", s])
+        output = read(cmd, String)
+        @info output
+        @test occursin(expected_norm, output)
     else
         @info "Skipping integration tests (set LLMACCESS_RUN_INTEGRATION=1 to enable)"
     end

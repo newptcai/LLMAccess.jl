@@ -8,6 +8,39 @@ function get_default_llm()
 end
 
 """
+    normalize_output_text(text::AbstractString) :: String
+
+Normalize LLM output by replacing certain Unicode punctuation with ASCII-friendly
+alternatives:
+
+- Em dash (—) -> "---"
+- En dash (–) -> "--"
+- Smart double quotes (“ ” „ ‟ « ») -> '"'
+- Smart single quotes (‘ ’ ‚ ‛ ʼ) -> "'"
+
+This is a minimal, opinionated normalization intended for plain-text output.
+"""
+function normalize_output_text(text::AbstractString)::String
+    isempty(text) && return String(text)
+    return replace(
+        String(text),
+        '—' => "---",
+        '–' => "--",
+        '“' => '"',
+        '”' => '"',
+        '„' => '"',
+        '‟' => '"',
+        '«' => '"',
+        '»' => '"',
+        '‘' => '\'',
+        '’' => '\'',
+        '‚' => '\'',
+        '‛' => '\'',
+        'ʼ' => '\''
+    )
+end
+
+"""
     get_default_temperature()
 
 Returns the default temperature from `ENV["DEFAULT_TEMPERATURE"]` or `DEFAULT_TEMPERATURE`.

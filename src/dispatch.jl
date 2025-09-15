@@ -51,6 +51,8 @@ function call_llm(
     end
 
     result = call_llm(llm_type, system_instruction, input_text, selected_model, temperature; kwargs...)
+    # Normalize punctuation (em/en dashes, smart quotes) for consistent plain text output
+    result = normalize_output_text(result)
     if !isempty(result) && copy
         clipboard(result)
     end
@@ -82,6 +84,8 @@ function call_llm(system_instruction, args::Dict)
     end
 
     result = call_llm(llm_type, system_instruction, input_text, model, temperature, attach_file; kwargs...)
+    # Normalize punctuation (em/en dashes, smart quotes) for consistent plain text output
+    result = normalize_output_text(result)
     if !isempty(result) && copy
         clipboard(result)
     end

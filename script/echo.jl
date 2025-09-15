@@ -25,7 +25,9 @@ function main(_)
 
         result = call_llm(system_instruction, args)
 
-        @assert rstrip(result) == rstrip(args["input_text"])
+        # Output normalization is applied in dispatch; assert against normalized input
+        expected = LLMAccess.normalize_output_text(args["input_text"]) |> rstrip
+        @assert rstrip(result) == expected
         println("""
                 LLM returned:
 
