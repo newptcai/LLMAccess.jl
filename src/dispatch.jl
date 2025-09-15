@@ -34,7 +34,8 @@ function call_llm(
     temperature::Float64 = get_default_temperature(),
     copy = false,
     think::Int = 0,
-    dry_run::Bool = false
+    dry_run::Bool = false,
+    normalize_output::Bool = true
 )
     canonical_llm = resolve_provider_alias(llm_name)
     llm_type = get_llm_type(canonical_llm)
@@ -51,8 +52,10 @@ function call_llm(
     end
 
     result = call_llm(llm_type, system_instruction, input_text, selected_model, temperature; kwargs...)
-    # Normalize punctuation (em/en dashes, smart quotes) for consistent plain text output
-    result = normalize_output_text(result)
+    # Normalize punctuation unless explicit opt-out
+    if normalize_output
+        result = normalize_output_text(result)
+    end
     if !isempty(result) && copy
         clipboard(result)
     end
@@ -84,8 +87,11 @@ function call_llm(system_instruction, args::Dict)
     end
 
     result = call_llm(llm_type, system_instruction, input_text, model, temperature, attach_file; kwargs...)
-    # Normalize punctuation (em/en dashes, smart quotes) for consistent plain text output
-    result = normalize_output_text(result)
+    # Normalize punctuation unless explicit opt-out via CLI flag
+    do_normalize = !get(args, "no_normalize", false)
+    if do_normalize
+        result = normalize_output_text(result)
+    end
     if !isempty(result) && copy
         clipboard(result)
     end
