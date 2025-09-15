@@ -43,6 +43,14 @@ println(text)
 Notes:
 - For attachments (e.g., images), use the typed form which accepts an attachment path positionally: `call_llm(GoogleLLM(), system, input, model, temperature, attach_file)`. The name-based helper does not take attachments.
 
+Output normalization:
+
+By default the dispatcher normalizes certain punctuation in responses (dashes and smart quotes). To opt out in the name-based helper, pass `normalize_output=false`:
+
+```julia
+text = LLMAccess.call_llm("google", "", "“Quotes” and — dashes –"; normalize_output=false)
+```
+
 CLI examples (see also the CLI page):
 
 ```bash

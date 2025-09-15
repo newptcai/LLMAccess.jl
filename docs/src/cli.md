@@ -28,6 +28,7 @@ julia --project script/ask.jl --llm google "Hello"
 - `--llm-alias`: Print provider aliases for `--llm` and exit.
 - `--providers`: Print supported LLM providers (valid `--llm` choices) and exit.
 - `--dry-run`: Print the exact JSON payload that would be sent and exit (no network call).
+- `--no-normalize`: Disable punctuation normalization (dashes/quotes) in output.
 
 ## Examples
 
@@ -59,6 +60,21 @@ julia --project script/cmd.jl --llm openai "list files changed today"
 
 # Bypass the LLM and still get copy/execute flow
 julia --project script/cmd.jl --cmd 'echo hi'
+```
+
+## Output normalization
+
+By default, responses are normalized to replace certain Unicode punctuation with ASCII-friendly characters:
+
+- Em dash — -> `---`
+- En dash – -> `--`
+- Smart double quotes “ ” „ ‟ « » -> `"`
+- Smart single quotes ‘ ’ ‚ ‛ ʼ -> `'`
+
+Disable with:
+
+```bash
+julia --project script/ask.jl --no-normalize --llm google "“Quotes” and — dashes –"
 ```
 
 ## Aliases

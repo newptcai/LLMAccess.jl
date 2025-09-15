@@ -19,6 +19,7 @@ LLMAccess is a Julia package designed to simplify interactions with multiple Lar
   - [Thinking Budget (`--think`, `-k`)](#thinking-budget--think--k)
   - [CLI Scripts](#cli-scripts)
   - [Dry Run](#dry-run)
+  - [Output Normalization](#output-normalization)
 - [Supported LLM Providers](#supported-llm-providers)
 - [Contributing](#contributing)
 - [License](#license)
@@ -362,6 +363,7 @@ Common arguments:
 - `--providers`: Print supported LLM providers (valid `--llm` choices) and exit.
 - `--llm-alias`: Print provider aliases for `--llm` and exit.
 - `--dry-run`: Print the JSON payload that would be sent and exit (no network call).
+- `--no-normalize`: Disable punctuation normalization (dashes/quotes) in output.
 - `input_text` (positional): Prompt text; if omitted and required, stdin is read.
 
 ### Dry Run
@@ -377,6 +379,30 @@ julia --project script/ask.jl --llm ollama --dry-run "Hello"
 # Google with attachment (no request made)
 julia --project script/ask.jl --llm google --attachment image.png --dry-run "describe"
 ```
+
+### Output Normalization
+
+By default, responses are normalized to be shell/ASCII friendly:
+
+- Em dash — -> `---`
+- En dash – -> `--`
+- Smart double quotes “ ” „ ‟ « » -> `"`
+- Smart single quotes ‘ ’ ‚ ‛ ʼ -> `'`
+
+Disable normalization with the CLI:
+
+```bash
+julia --project script/ask.jl --no-normalize --llm google "“Quotes” and — dashes –"
+```
+
+Programmatic control (name-based helper):
+
+```julia
+using LLMAccess
+text = LLMAccess.call_llm("google", "", "“Quotes” and — dashes –"; normalize_output=false)
+```
+
+The helper `LLMAccess.normalize_output_text(str)` implements the transformation used by the dispatcher.
 
 ## Supported LLM Providers
 
