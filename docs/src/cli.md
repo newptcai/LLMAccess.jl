@@ -5,7 +5,7 @@ LLMAccess includes simple scripts in the `script/` directory for quick interacti
 ## Scripts
 
 - `script/ask.jl`: Send a prompt and print the model response.
-- `script/cmd.jl`: Generate a shell command, copy it to clipboard, and optionally execute after confirmation. Supports `--cmd CMD` to bypass the LLM and still use the copy/execute flow.
+- `script/cmd.jl`: Generate a shell command, copy it to clipboard by default, and optionally execute after confirmation. Supports `--cmd CMD` to bypass the LLM and still use the copy/execute flow. Use `--no-copy` to disable clipboard copying for this script.
 - `script/echo.jl`: Simple echo utility using the library.
 
 Run with the project environment:
@@ -23,6 +23,7 @@ julia --project script/ask.jl --llm google "Hello"
 - `--temperature, -t`: Sampling temperature (Float64; default 1.0 unless overridden by env).
 - `--debug, -d`: Enable debug logging and verbose error output.
 - `--copy, -c`: Copy response to clipboard (if supported by script).
+- `--no-copy`: For `script/cmd.jl` only, disable the default clipboard copying.
 - `--think, -k`: Thinking budget for supported providers (e.g., Gemini, Claude).
 - `--alias`: Print all model aliases and exit.
 - `--llm-alias`: Print provider aliases for `--llm` and exit.

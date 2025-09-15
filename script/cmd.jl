@@ -37,6 +37,7 @@ function main(_)
     # Optional: allow directly supplying a command (bypasses LLM), useful for offline/testing
     @add_arg_table! custom_settings begin
         "--cmd"; help = "Direct command to use instead of calling LLM"; metavar = "CMD"; default = ""
+        "--no-copy"; help = "Do not copy the generated command to the clipboard"; dest_name = "no_copy"; action = :store_true
     end
 
     # Mirror ask.jl: delegate error handling and Ctrl+C to run_cli
@@ -46,8 +47,12 @@ function main(_)
         args = parse_commandline(custom_settings; require_input = false)
         args_ref[] = args
 
-        result = if isempty(strip(get(args, "cmd", "")))
-            call_llm(system_instruction, args)
+        # For this script, copy by default unless --no-copy is provided
+        args["copy"] = !get(args, "no_copy", false)
+
+        using_llm = isempty(strip(get(args, "cmd", "")))
+        result = if using_llm
+            call_llm(system_instruction, args)  # handles clipboard when args["copy"]
         else
             String(args["cmd"])
         end
@@ -55,7 +60,10 @@ function main(_)
         # Use regex to remove trailing whitespace on each line (with multiline mode)
         trimmed_text = replace(result, r"\s+$"m => "")
         println(trimmed_text)
-        clipboard(trimmed_text)
+        # When bypassing LLM with --cmd, apply clipboard based on effective default
+        if !using_llm && get(args, "copy", false)
+            clipboard(trimmed_text)
+        end
 
         # Ask for confirmation before executing
         print("⚠️ Execute this command now? [y/N]: ")

@@ -310,7 +310,7 @@ julia --project script/ask.jl --llm-alias
 LLMAccess ships with runnable scripts and shared CLI helpers: `parse_commandline` for consistent flags and `run_cli` for robust error handling (usage errors, Ctrl+C, debug traces).
 
 - `script/ask.jl`: General-purpose Q&A.
-- `script/cmd.jl`: Generate bash commands (prints, copies to clipboard, and can execute after confirmation). Also supports `--cmd CMD` to bypass the LLM.
+- `script/cmd.jl`: Generate bash commands (prints, copies to clipboard by default, and can execute after confirmation). Supports `--cmd CMD` to bypass the LLM. Use `--no-copy` to disable clipboard copying for this script.
 - `script/echo.jl`: Echo utility for validating responses.
 
 Examples:
@@ -358,6 +358,7 @@ Common arguments:
 - `--temperature, -t`: Sampling temperature (default: 1.0).
 - `--debug, -d`: Enable debug logging and richer error output.
 - `--copy, -c`: Copy response to clipboard.
+- `--no-copy`: For `script/cmd.jl` only, disable default clipboard copying.
 - `--think, -k`: Enable “thinking” for providers that support it (e.g., Gemini, Claude, Ollama). For Gemini/Claude, this is a token budget (e.g., `-k 1000`). For Ollama, any non-zero enables thinking.
 - `--alias`: Print all model aliases and exit.
 - `--providers`: Print supported LLM providers (valid `--llm` choices) and exit.

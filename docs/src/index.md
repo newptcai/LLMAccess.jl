@@ -59,6 +59,8 @@ julia --project script/cmd.jl --llm openai "list files changed today"
 julia --project script/ask.jl --alias
 julia --project script/ask.jl --llm-alias
 julia --project script/ask.jl --llm zai --model glm-4.5-air "What is the capital of France?"
+
+Note: `script/cmd.jl` copies the generated command to your clipboard by default. Use `--no-copy` to disable copying for that script, or `--cmd 'your command'` to bypass the LLM and still use the copy/execute flow.
 ```
 
 ## Configuration
