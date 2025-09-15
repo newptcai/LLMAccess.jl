@@ -147,9 +147,9 @@ using Test
             @test parsed_args["think"] == 750                                                                                                                                                   
             @test parsed_args["input_text"] == "my prompt"                                                                                                                                      
 
-            # Test case 6: --no-normalize-output should set no_normalize
+            # Test case 6: --no-normalize should set no_normalize
             empty!(ARGS)
-            push!(ARGS, "--no-normalize-output")
+            push!(ARGS, "--no-normalize")
             settings = LLMAccess.create_default_settings()
             parsed_args = LLMAccess.parse_commandline(settings, require_input=false)
             @test get(parsed_args, "no_normalize", false) == true
