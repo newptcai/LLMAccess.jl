@@ -43,6 +43,14 @@ println(text)
 Notes:
 - For attachments (e.g., images), use the typed form which accepts an attachment path positionally: `call_llm(GoogleLLM(), system, input, model, temperature, attach_file)`. The name-based helper does not take attachments.
 
+Output normalization:
+
+By default the dispatcher normalizes certain punctuation in responses (dashes and smart quotes). To opt out in the name-based helper, pass `normalize_output=false`:
+
+```julia
+text = LLMAccess.call_llm("google", "", "“Quotes” and — dashes –"; normalize_output=false)
+```
+
 CLI examples (see also the CLI page):
 
 ```bash
@@ -51,6 +59,8 @@ julia --project script/cmd.jl --llm openai "list files changed today"
 julia --project script/ask.jl --alias
 julia --project script/ask.jl --llm-alias
 julia --project script/ask.jl --llm zai --model glm-4.5-air "What is the capital of France?"
+
+Note: `script/cmd.jl` copies the generated command to your clipboard by default. Use `--no-copy` to disable copying for that script, or `--cmd 'your command'` to bypass the LLM and still use the copy/execute flow.
 ```
 
 ## Configuration

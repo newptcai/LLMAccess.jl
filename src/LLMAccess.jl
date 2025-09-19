@@ -56,7 +56,8 @@ module Core
            get_request,
            handle_json_response,
            extract_google_text,
-           get_nested
+           get_nested,
+           normalize_output_text
 end # module Core
 
 module Providers
@@ -107,7 +108,7 @@ end # module Dispatch
 
 using .Dispatch: call_llm, get_llm_type
 using .Models: list_llm_models
-using .Core: get_llm_list, is_anthropic_thinking_model
+using .Core: get_llm_list, is_anthropic_thinking_model, normalize_output_text
 using .CLI: parse_commandline, run_cli, create_default_settings
 using .Readers: jina_reader, pandoc_reader
 

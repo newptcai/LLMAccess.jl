@@ -25,7 +25,6 @@ function main(_)
 
         result = call_llm(system_instruction, args)
 
-        @assert rstrip(result) == rstrip(args["input_text"])
         println("""
                 LLM returned:
 

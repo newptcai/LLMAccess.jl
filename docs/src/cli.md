@@ -5,7 +5,7 @@ LLMAccess includes simple scripts in the `script/` directory for quick interacti
 ## Scripts
 
 - `script/ask.jl`: Send a prompt and print the model response.
-- `script/cmd.jl`: Generate a shell command, copy it to clipboard, and optionally execute after confirmation. Supports `--cmd CMD` to bypass the LLM and still use the copy/execute flow.
+- `script/cmd.jl`: Generate a shell command, copy it to clipboard by default, and optionally execute after confirmation. Supports `--cmd CMD` to bypass the LLM and still use the copy/execute flow. Use `--no-copy` to disable clipboard copying for this script.
 - `script/echo.jl`: Simple echo utility using the library.
 
 Run with the project environment:
@@ -23,11 +23,13 @@ julia --project script/ask.jl --llm google "Hello"
 - `--temperature, -t`: Sampling temperature (Float64; default 1.0 unless overridden by env).
 - `--debug, -d`: Enable debug logging and verbose error output.
 - `--copy, -c`: Copy response to clipboard (if supported by script).
+- `--no-copy`: For `script/cmd.jl` only, disable the default clipboard copying.
 - `--think, -k`: Thinking budget for supported providers (e.g., Gemini, Claude).
 - `--alias`: Print all model aliases and exit.
 - `--llm-alias`: Print provider aliases for `--llm` and exit.
 - `--providers`: Print supported LLM providers (valid `--llm` choices) and exit.
 - `--dry-run`: Print the exact JSON payload that would be sent and exit (no network call).
+- `--no-normalize`: Disable punctuation normalization (dashes/quotes) in output.
 
 ## Examples
 
@@ -59,6 +61,21 @@ julia --project script/cmd.jl --llm openai "list files changed today"
 
 # Bypass the LLM and still get copy/execute flow
 julia --project script/cmd.jl --cmd 'echo hi'
+```
+
+## Output normalization
+
+By default, responses are normalized to replace certain Unicode punctuation with ASCII-friendly characters:
+
+- Em dash — -> `---`
+- En dash – -> `--`
+- Smart double quotes “ ” „ ‟ « » -> `"`
+- Smart single quotes ‘ ’ ‚ ‛ ʼ -> `'`
+
+Disable with:
+
+```bash
+julia --project script/ask.jl --no-normalize --llm google "“Quotes” and — dashes –"
 ```
 
 ## Aliases
