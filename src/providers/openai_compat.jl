@@ -32,10 +32,11 @@ function make_api_request(
     content = attach_file != "" ? [text_data, encode_file_to_base64(llm, attach_file)] : [text_data]
     user_message   = Dict("role" => "user", "content" => content)
     system_message = Dict("role" => "system", "content" => system_instruction)
-    messages = [user_message]
+    messages = Vector{Dict{String, Any}}()
     if !isempty(system_instruction)
         push!(messages, system_message)
     end
+    push!(messages, user_message)
     data = Dict("model" => model, "temperature" => temperature, "messages" => messages)
     if dry_run
         return JSON.json(data)
