@@ -10,6 +10,26 @@ using Test
         # Idempotency on plain ASCII
         plain = "Hello -- world --- 'quotes' \"double\"."
         @test LLMAccess.normalize_output_text(plain) == plain
+
+        # Handle structured responses with thinking segments
+        structured = Any[
+            Dict("type" => "thinking", "thinking" => Any[
+                Dict("type" => "text", "text" => "Internal chain-of-thought.")
+            ]),
+            Dict("type" => "text", "text" => "Final answer: 4.")
+        ]
+        @test LLMAccess.normalize_output_text(structured) == "Final answer: 4."
+
+        # Support nested dictionaries without errors
+        wrapped = Dict(
+            "message" => Dict(
+                "parts" => [
+                    Dict("type" => "text", "text" => "Nested “smart quotes” — handled.")
+                ]
+            )
+        )
+        nested_expected = "Nested \"smart quotes\" --- handled."
+        @test LLMAccess.normalize_output_text(wrapped) == nested_expected
     end
     @testset "is_anthropic_thinking_model" begin
         # Opus models - should be true for versions >= 4.0
