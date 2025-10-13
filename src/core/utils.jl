@@ -41,6 +41,94 @@ function normalize_output_text(text::AbstractString)::String
 end
 
 """
+    normalize_output_text(parts::AbstractVector) :: String
+
+Flatten structured response content (e.g. Mistral "thinking" outputs) into a plain
+string before applying punctuation normalization.
+"""
+function normalize_output_text(parts::AbstractVector)::String
+    fragments = String[]
+    _collect_text_fragments!(fragments, parts)
+    return _normalize_fragments(fragments, parts)
+end
+
+"""
+    normalize_output_text(data::AbstractDict) :: String
+
+Support provider responses that wrap text in dictionaries by extracting textual
+fields before normalization.
+"""
+function normalize_output_text(data::AbstractDict)::String
+    fragments = String[]
+    _collect_text_fragments!(fragments, data)
+    return _normalize_fragments(fragments, data)
+end
+
+"""
+    _normalize_fragments(fragments, fallback) :: String
+
+Join collected fragments (if any) and run the string normalizer. Falls back to
+JSON stringification when no human-readable fragments were found.
+"""
+function _normalize_fragments(fragments::Vector{String}, fallback)::String
+    if isempty(fragments)
+        return normalize_output_text(JSON.json(fallback))
+    end
+    return normalize_output_text(join(fragments, ""))
+end
+
+"""
+    _collect_text_fragments!(acc, node; include_thinking=false)
+
+Recursively collect human-readable text nodes from heterogeneous response
+structures while skipping internal "thinking" payloads by default.
+"""
+function _collect_text_fragments!(acc::Vector{String}, node; include_thinking::Bool=false)
+    node === nothing && return
+
+    if node isa AbstractString
+        push!(acc, String(node))
+        return
+    elseif node isa Char
+        push!(acc, string(node))
+        return
+    elseif node isa Number || node isa Bool
+        push!(acc, string(node))
+        return
+    elseif node isa AbstractVector
+        for item in node
+            _collect_text_fragments!(acc, item; include_thinking=include_thinking)
+        end
+        return
+    elseif node isa AbstractDict
+        type_field = get(node, "type", nothing)
+        has_text = haskey(node, "text") ? node["text"] !== nothing : false
+
+        # Only include explicit text when not inside a "thinking" wrapper unless requested.
+        if has_text && (include_thinking || type_field != "thinking")
+            push!(acc, String(node["text"]))
+        end
+
+        for (key, value) in node
+            if key == "text" || key == "type"
+                continue
+            end
+            if !include_thinking && (key == "thinking" || key == :thinking ||
+                                     key == "internal" || key == :internal ||
+                                     key == "metadata" || key == :metadata ||
+                                     key == "logprobs" || key == :logprobs)
+                continue
+            end
+            _collect_text_fragments!(acc, value; include_thinking=include_thinking)
+        end
+        return
+    end
+
+    # Fallback: stringify unknown node types.
+    push!(acc, string(node))
+end
+
+"""
     get_default_temperature()
 
 Returns the default temperature from `ENV["DEFAULT_TEMPERATURE"]` or `DEFAULT_TEMPERATURE`.
