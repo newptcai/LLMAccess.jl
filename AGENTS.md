@@ -1,85 +1,95 @@
-# Repository Guidelines
+# Agent Guide
 
-## Project Structure & Module Organization
-- `src/LLMAccess.jl`: Main module with providers, request helpers, and CLI parsing.
-- `test/runtests.jl`: Unit/integration tests using Julia `Test` stdlib.
-- `script/`: Runnable examples and utilities (`ask.jl`, `cmd.jl`, `echo.jl`).
-- `Project.toml` / `Manifest.toml`: Package metadata and dependency lock.
+This document consolidates the guidance previously spread across `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md`. Use it as the single reference for repository structure, development workflow, and LLM-specific behaviors.
 
-## Build, Test, and Development Commands
-- Install deps: `julia --project -e 'using Pkg; Pkg.instantiate()'`
-- Run tests: `julia --project -e 'using Pkg; Pkg.test()'`
-  - Integration tests call external LLM APIs. Ensure provider API keys are set (see README) and network is available.
-- Run scripts:
-  - `julia --project script/ask.jl --llm google "Hello"`
-  - `julia --project script/cmd.jl --llm openai "list files changed today"`
-  - `julia --project script/cmd.jl --cmd 'echo hi'` to bypass LLM and test clipboard/exec flow.
-  - `julia --project script/ask.jl -A` (or `--alias`) to print all model aliases and exit.
-  - `julia --project script/ask.jl -D --llm google --attachment img.png "describe"` to print the JSON payload without sending.
+## Project Overview
+- `LLMAccess.jl` is a Julia package offering a unified interface to multiple LLM providers (OpenAI, Anthropic, Google, Mistral, Ollama, OpenRouter, Groq, DeepSeek, ZAI).
+- The package ships CLI utilities in `script/` for common tasks such as Q&A, command generation, and echo testing.
+- A modular architecture keeps provider-specific logic isolated while exposing a consistent API (`call_llm`) across backends.
 
-## CLI Flags Quick Reference
-- `--llm, -l`: Provider (`openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `groq`, `deepseek`, `zai`).
-- `--model, -m`: Model name (supports aliases; defaults per provider env or built-in).
-- `--attachment, -a`: Path to file to attach (e.g., image for vision models).
-- `--file, -f`: Input file path (optional; some scripts may use it).
-- `--temperature, -t`: Sampling temperature (Float64; default 1.0 unless overridden by env).
-- `--debug, -d`: Enable debug logging and verbose error output.
-- `--copy, -c`: Copy response to clipboard (scripts that support it).
-- `--think, -k`: Thinking budget for supported providers (e.g., Gemini, Claude).
-- `--alias, -A`: Print all model aliases and exit.
-- `--dry-run, -D`: Print the request JSON and exit (no network call).
-  - Note: `script/cmd.jl` adds `--cmd CMD` to bypass the LLM and directly use a provided command (still copies to clipboard and offers to execute).
+### Key Features
+- **Multi-provider dispatch:** Concrete `Provider` types share the `AbstractLLM` hierarchy; OpenAI-compatible services reuse `OpenAICompatibleLLM`.
+- **Model alias resolution:** Shorthands (e.g., `4o-mini`, `flash`) map to full model IDs via `resolve_model_alias`.
+- **Thinking mode:** Google Gemini, Anthropic Claude Sonnet/Opus, and Ollama support adjustable thinking budgets or toggles via `--think/-k`.
+- **Attachment handling:** Provider-specific encoders support inline/base64 image uploads with correct MIME metadata.
+- **Robust error reporting:** HTTP failures are parsed into actionable messages; `--debug/-d` emits verbose diagnostics.
 
-## Coding Style & Naming Conventions
-- Julia style, 4-space indentation, no trailing whitespace.
-- Functions and variables: `snake_case` (e.g., `call_llm`, `get_default_model`).
-- Module is `LLMAccess` (single top-level module in `src/`).
-- Add docstrings using triple quotes above public APIs.
-- Prefer small, composable functions; keep provider-specific logic isolated to typed methods.
+### Core Technologies
+- **Language:** Julia
+- **Key dependencies:** `ArgParse`, `HTTP`, `JSON`
 
-### Public API and Utilities (from `src/`)
-- `call_llm(...)`: Multi-method dispatch by provider type and name; supports attachments and dry-run.
-- `list_llm_models(llm::Provider)`: Lists models for Google, Anthropic, OpenRouter, Groq, OpenAI, Mistral, DeepSeek, Ollama.
-- `parse_commandline(...)` and `run_cli(...)`: Centralized CLI parsing and robust error handling.
-- `create_default_settings()`: Helper to build ArgParse settings shared by scripts.
-- `get_llm_type(name)` / `get_llm_list()`: Resolve provider types and enumerate supported providers.
-- `resolve_model_alias(name)` / `default_think_for_model(name)` / `is_anthropic_thinking_model(name)`: Model helpers used by CLI defaults and behavior.
-- Readers: `jina_reader(url)` (requires `JINA_API_KEY`) and `pandoc_reader(url)` (uses Pandoc) for fetching/markdown conversion.
+## Repository Layout
+- `src/LLMAccess.jl`: Main module with provider implementations, request helpers, and CLI parsing.
+- `script/`: Example entry points (`ask.jl`, `cmd.jl`, `echo.jl`) that invoke `run_cli`.
+- `test/runtests.jl`: Unit and integration tests using the `Test` stdlib.
+- `Project.toml` / `Manifest.toml`: Environment metadata and dependency lockfiles.
 
-## Testing Guidelines
-- Framework: `Test` stdlib (`using Test`). Add new tests under `test/runtests.jl` or split into files and include them from there.
-- Keep fast, unit-level tests near helpers; mark or isolate API-calling tests to keep local runs reliable.
-- Run with keys set (e.g., `OPENAI_API_KEY`, `GOOGLE_API_KEY`, etc.). Avoid hard-coding secrets.
-  - Optional: integration tests gated by `LLMACCESS_RUN_INTEGRATION=1` (see `test/runtests.jl`).
+## Environment Setup
+```bash
+# Clone and develop locally
+julia --project -e 'using Pkg; Pkg.instantiate()'
+```
 
-## Commit & Pull Request Guidelines
-- Use Conventional Commits (emoji optional) and scopes where helpful:
-  - Examples: `feat(LLMAccess): add DeepSeek alias`, `fix: handle 404 from Mistral`, `docs(README): update CLI flags`, `chore: bump version`.
-- PRs should include:
-  - Clear description, rationale, and before/after behavior.
-  - Linked issues (e.g., `Fixes #123`).
-  - Tests for new behavior or bug fixes and updates to README when user-facing changes occur.
+Optional workflows:
+- Add directly from the Julia REPL package manager: `Pkg.add(url="https://gitlab.com/newptcai/llmaccess.jl.git")`
+- Develop a local checkout: `pkg> dev /path/to/llmaccess.jl`
 
-## Security & Configuration Tips
-- Configure providers via environment variables:
-  - Core: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `MISTRAL_API_KEY`.
-  - OpenAI-compatible: `OPENROUTER_API_KEY`, `GROQ_API_KEY`, `DEEPSEEK_API_KEY`.
-  - Readers: `JINA_API_KEY` for `jina_reader`; Pandoc must be installed for `pandoc_reader`.
-- Do not commit secrets. Use your shell rc or a secure secret manager.
-- Defaults via env:
-  - `DEFAULT_LLM` (default provider; current default is `google`).
-  - `DEFAULT_TEMPERATURE` (Float; fallback 1.0).
-  - `DEFAULT_<PROVIDER>_MODEL` (e.g., `DEFAULT_OPENAI_MODEL`, `DEFAULT_GOOGLE_MODEL`, etc.).
+### Provider Configuration
+- Export API keys: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `MISTRAL_API_KEY`, `OPENROUTER_API_KEY`, `GROQ_API_KEY`, `DEEPSEEK_API_KEY`, `ZAI_API_KEY`.
+- Optional defaults: `DEFAULT_LLM`, `DEFAULT_TEMPERATURE`, `DEFAULT_<PROVIDER>_MODEL` (e.g., `DEFAULT_GOOGLE_MODEL="gemini-2.5-flash"`).
+- Readers: `JINA_API_KEY` powers `jina_reader`; Pandoc must be installed for `pandoc_reader`.
+- Keep secrets out of version control; prefer shell RC files or secret managers.
 
-## Behavior Notes (as implemented in `src/`)
-- Model aliases: Resolved via `MODEL_ALIASES` (e.g., `flash` => `gemini-2.5-flash`, `4o-mini` => `gpt-4o-mini`). Use `--alias/-A` to print all.
-- Attachments: Images supported across providers with provider-specific payloads (OpenAI-compatible `image_url`, Google `inline_data`, Anthropic base64 image, Mistral multimodal, Ollama `images`).
-- Thinking budget (`--think/-k`):
-  - Google: Sets `generationConfig.thinkingConfig.thinkingBudget` when non-zero; default is `-1` for Gemini models.
-  - Anthropic: Enabled for Sonnet ≥ 3.7 and Opus ≥ 4; sets `thinking` and adjusts `max_tokens`/temperature.
-  - Others default to 0 (disabled).
-- Groq: When an attachment is present, system instruction is omitted to align with API content rules.
-- Ollama: `think` is a boolean option; any non-zero `-k/--think` enables thinking mode.
-- Clipboard: When `--copy/-c` is set, results are copied. `script/cmd.jl` always copies the trimmed command output.
-- Error handling: `run_cli` standardizes usage errors, Ctrl+C (exit 130), missing keys (helpful message for `*_API_KEY`), and optional stack traces in `--debug` mode.
-- Dry run: `-D/--dry-run` returns the exact JSON payload without sending the request (supported across providers and respected by scripts).
+## Running the CLI
+```bash
+# Ask a question with Google Gemini
+julia --project script/ask.jl --llm google "Hello"
+
+# Generate commands with OpenAI GPT-4o Mini
+julia --project script/cmd.jl --llm openai --model 4o-mini "list files changed today"
+
+# Bypass the LLM and test command/clipboard flow
+julia --project script/cmd.jl --cmd 'echo hi'
+```
+
+Common flags:
+- `--llm/-l` provider selection
+- `--model/-m` model override (aliases supported)
+- `--attachment/-a` attach files for multimodal requests
+- `--temperature/-t` sampling control
+- `--think/-k` provider-specific thinking budget or toggle
+- `--debug/-d` verbose logging
+- `--copy/-c` copy responses to the clipboard
+- `--alias/-A` list all model aliases and exit
+- `--dry-run/-D` print the outbound JSON payload without sending the request
+
+## Architecture Highlights
+- Centralized `call_llm` multimethod dispatch chooses provider-specific request builders.
+- Provider types encapsulate authentication headers, payload schemas, and response parsing.
+- `resolve_model_alias`, `default_think_for_model`, and `is_anthropic_thinking_model` standardize model behavior.
+- Error handling flows through helpers such as `post_request` and `handle_json_response`.
+- CLI parsing delegates to `parse_commandline`, `create_default_settings`, and `run_cli` for consistent UX across scripts.
+
+## Development Guidelines
+- Follow Julia style: 4-space indentation, `snake_case` identifiers, no trailing whitespace.
+- Document public APIs with triple-quoted docstrings.
+- Favor small, composable functions; keep provider-specific logic within typed methods.
+- Leverage `@debug` logging for introspection when `--debug` is enabled.
+- When adding providers or features, emulate existing provider structures and reuse shared helpers.
+
+## Testing
+- Unit tests live in `test/runtests.jl`; split additional files and include them as needed.
+- Keep fast tests near helper functions; gate API-calling integration tests behind environment checks (e.g., `LLMACCESS_RUN_INTEGRATION=1`).
+- Run from the shell: `julia --project -e 'using Pkg; Pkg.test()'`.
+- Ensure required API keys are available; avoid hard-coding credentials.
+
+## Commit & PR Practices
+- Use Conventional Commit style with optional emoji scopes (e.g., `✨ (script/cmd.jl): Add dry-run flag hint`).
+- PRs should explain purpose, include before/after behavior, and reference issues when relevant.
+- Add or update tests alongside behavioral changes; refresh documentation for user-facing updates.
+
+## Additional Tips
+- Model alias listings help verify available shorthands: `julia --project script/ask.jl -A`.
+- Groq omits system instructions when attachments are provided to satisfy API requirements.
+- Ollama treats any non-zero `--think` value as enabling thinking mode.
+- `script/cmd.jl` always copies trimmed command output; confirm clipboard access on your platform.
