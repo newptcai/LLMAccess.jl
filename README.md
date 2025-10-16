@@ -91,7 +91,7 @@ To set the default LLM provider and models, add the following lines:
 export DEFAULT_LLM="ollama"
 export DEFAULT_OPENAI_MODEL="gpt-5-mini"
 export DEFAULT_OPENROUTER_MODEL="amazon/nova-micro-v1"
-export DEFAULT_ANTHROPIC_MODEL="claude-3-5-haiku-latest"
+export DEFAULT_ANTHROPIC_MODEL="claude-haiku-4-5-20251001"
 export DEFAULT_GOOGLE_MODEL="gemini-2.5-flash"
 export DEFAULT_OLLAMA_MODEL="gemma3:4b"
 export DEFAULT_MISTRAL_MODEL="mistral-small-latest"
@@ -219,12 +219,14 @@ LLMAccess supports shorthand names for common models. Here are some key aliases 
 | `gf` | `gemini-2.5-flash` |
 | `gemini` | `gemini-2.5-pro` |
 | `flash` | `gemini-2.5-flash` |
-| `s` | `claude-sonnet-4-20250514` |
+| `s` | `claude-sonnet-4-5-20250929` |
 | `o` | `claude-opus-4-1-20250805` |
-| `h` | `claude-3-5-haiku-latest` |
-| `sonnet` | `claude-sonnet-4-20250514` |
+| `h` | `claude-haiku-4-5-20251001` |
+| `sonnet` | `claude-sonnet-4-5-20250929` |
 | `opus` | `claude-opus-4-1-20250805` |
-| `haiku` | `claude-3-5-haiku-latest` |
+| `haiku` | `claude-haiku-4-5-20251001` |
+| `sonnet-4.5` | `claude-sonnet-4-5-20250929` |
+| `haiku-4.5` | `claude-haiku-4-5-20251001` |
 | `magistral` | `magistral-medium-latest` |
 | `r` | `deepseek-reasoner` |
 | `d` | `deepseek-chat` |

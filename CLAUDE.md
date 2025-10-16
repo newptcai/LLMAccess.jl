@@ -46,7 +46,7 @@ julia --project script/cmd.jl --llm openai "list files changed today"
 1. **Abstract Type Hierarchy**: `AbstractLLM` → `OpenAICompatibleLLM` for providers using OpenAI-style APIs
 2. **Provider Types**: Concrete types for each LLM provider (OpenAILLM, AnthropicLLM, GoogleLLM, etc.)
 3. **Unified Interface**: Single `call_llm()` function with multiple dispatch based on provider type
-4. **Model Aliasing**: Convenient shorthand names (e.g., `4o` → `gpt-4o`, `sonnet` → `claude-sonnet-4-20250514`)
+4. **Model Aliasing**: Convenient shorthand names (e.g., `4o` → `gpt-4o`, `sonnet` → `claude-sonnet-4-5-20250929`)
 
 ### Key Files
 

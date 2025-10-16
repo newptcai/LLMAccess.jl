@@ -83,7 +83,7 @@ const DEFAULT_MODELS = Dict(
     # Prefer economical, widely-available defaults per provider
     "openai"      => "gpt-5-mini",
     "openrouter"  => "amazon/nova-micro-v1",
-    "anthropic"   => "claude-3-5-haiku-latest",
+    "anthropic"   => "claude-haiku-4-5-20251001",
     "google"      => "gemini-2.5-flash",
     "ollama"      => "gemma3:4b",
     "mistral"     => "mistral-small-latest",
@@ -187,16 +187,20 @@ const MODEL_ALIASES = Dict(
 
     # Anthropic Claude
     # 1–2 letter shorthands
-    "h" => "claude-3-5-haiku-latest",
-    "s" => "claude-sonnet-4-20250514",
+    "h" => "claude-haiku-4-5-20251001",
+    "s" => "claude-sonnet-4-5-20250929",
     "o" => "claude-opus-4-1-20250805",
 
-    "sonnet" => "claude-sonnet-4-20250514",
+    "sonnet" => "claude-sonnet-4-5-20250929",
     "opus"   => "claude-opus-4-1-20250805",
-    "haiku"  => "claude-3-5-haiku-latest",
+    "haiku"  => "claude-haiku-4-5-20251001",
     # Specific versioned Anthropic aliases
+    "sonnet-4.5" => "claude-sonnet-4-5-20250929",
+    "sonnet-4-5" => "claude-sonnet-4-5-20250929",
     "sonnet-3.7" => "claude-3-7-sonnet-20250219",
     "sonnet-3.5" => "claude-3-5-sonnet-20240620",
+    "haiku-4.5"  => "claude-haiku-4-5-20251001",
+    "haiku-4-5"  => "claude-haiku-4-5-20251001",
     "haiku-3.5"  => "claude-3-5-haiku-20241022",
     "opus-4"     => "claude-opus-4-20250514",
     "opus-4.1"   => "claude-opus-4-1-20250805",

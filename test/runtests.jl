@@ -43,11 +43,13 @@ using Test
         # Sonnet models - should be true for versions >= 3.7
         @test LLMAccess.is_anthropic_thinking_model("claude-sonnet-3-7-20250219") == true
         @test LLMAccess.is_anthropic_thinking_model("claude-3-7-sonnet-20250219") == true
+        @test LLMAccess.is_anthropic_thinking_model("claude-sonnet-4-5-20250929") == true
         @test LLMAccess.is_anthropic_thinking_model("claude-sonnet-4-20250514") == true
         @test LLMAccess.is_anthropic_thinking_model("claude-3.5-sonnet-20240620") == false
         @test LLMAccess.is_anthropic_thinking_model("claude-sonnet-3-5-20240620") == false
 
         # Other models - should be false
+        @test LLMAccess.is_anthropic_thinking_model("claude-haiku-4-5-20251001") == false
         @test LLMAccess.is_anthropic_thinking_model("claude-3-haiku-20240307") == false
         @test LLMAccess.is_anthropic_thinking_model("gpt-4o") == false
         @test LLMAccess.is_anthropic_thinking_model("gemini-1.5-pro") == false
