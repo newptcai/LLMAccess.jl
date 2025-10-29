@@ -1,6 +1,6 @@
 # LLMAccess
 
-LLMAccess is a Julia package designed to simplify interactions with multiple Large Language Model (LLM) APIs. It provides a unified interface to integrate models from providers such as OpenAI, Anthropic, Google, Ollama, Mistral, OpenRouter, Groq, and DeepSeek into your Julia scripts seamlessly, plus shared CLI helpers for argument parsing and robust error handling.
+LLMAccess is a Julia package designed to simplify interactions with multiple Large Language Model (LLM) APIs. It provides a unified interface to integrate models from providers such as OpenAI, Anthropic, Google, Ollama, Ollama Cloud, Mistral, OpenRouter, Groq, DeepSeek, and Z.ai into your Julia scripts seamlessly, plus shared CLI helpers for argument parsing and robust error handling.
 
 ## Table of Contents
 
@@ -65,6 +65,7 @@ Before using LLMAccess, set the necessary API keys for the LLM providers you wan
 - `GROQ_API_KEY` for Groq
 - `ANTHROPIC_API_KEY` for Anthropic
 - `GOOGLE_API_KEY` for Google
+- `OLLAMA_API_KEY` for Ollama Cloud
 - `MISTRAL_API_KEY` for Mistral
 - `DEEPSEEK_API_KEY` for DeepSeek
 - `Z_API_KEY` for Z.ai
@@ -81,6 +82,7 @@ export OPENROUTER_API_KEY="your_openrouter_api_key"
 export GROQ_API_KEY="your_groq_api_key"
 export ANTHROPIC_API_KEY="your_anthropic_api_key"
 export GOOGLE_API_KEY="your_google_api_key"
+export OLLAMA_API_KEY="your_ollama_cloud_api_key"
 export MISTRAL_API_KEY="your_mistral_api_key"
 export DEEPSEEK_API_KEY="your_deepseek_api_key"
 ```
@@ -94,6 +96,7 @@ export DEFAULT_OPENROUTER_MODEL="amazon/nova-micro-v1"
 export DEFAULT_ANTHROPIC_MODEL="claude-haiku-4-5-20251001"
 export DEFAULT_GOOGLE_MODEL="gemini-2.5-flash"
 export DEFAULT_OLLAMA_MODEL="gemma3:4b"
+export DEFAULT_OLLAMA_CLOUD_MODEL="gpt-oss:20b"
 export DEFAULT_MISTRAL_MODEL="mistral-small-latest"
 export DEFAULT_GROQ_MODEL="qwen/qwen3-32b"
 export DEFAULT_DEEPSEEK_MODEL="deepseek-chat"
@@ -419,6 +422,7 @@ LLMAccess currently supports the following LLM providers:
 - **Anthropic**: Utilizes Anthropic's Claude models.
 - **Google**: Connects to Google's generative language models.
 - **Ollama**: Interfaces with Ollama's local LLM deployments.
+- **Ollama Cloud**: Calls Ollama's hosted chat API (requires `OLLAMA_API_KEY`).
 - **Mistral**: Access to Mistral's LLM offerings.
 
 You can call providers using typed instances (e.g., `call_llm(GoogleLLM(), ...)`) or by name via `call_llm(llm_name, system_instruction, input_text; model, temperature, copy, think, dry_run)`. The name-based form does not accept attachments; use the typed method or the CLI when you need to include `--attachment`.

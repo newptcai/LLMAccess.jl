@@ -10,6 +10,7 @@ function get_llm_type(llm_name)
         "anthropic"   => AnthropicLLM(),
         "google"      => GoogleLLM(),
         "ollama"      => OllamaLLM(),
+        "ollama_cloud" => OllamaCloudLLM(),
         "mistral"     => MistralLLM(),
         "openrouter"  => OpenRouterLLM(),
         "groq"        => GroqLLM(),

@@ -55,6 +55,13 @@ Concrete type for Ollama's LLM.
 struct OllamaLLM <: AbstractLLM end
 
 """
+    OllamaCloudLLM
+
+Concrete type for Ollama Cloud's hosted LLM service.
+"""
+struct OllamaCloudLLM <: AbstractLLM end
+
+"""
     MistralLLM
 
 Concrete type for Mistral's LLM.
@@ -86,6 +93,7 @@ const DEFAULT_MODELS = Dict(
     "anthropic"   => "claude-haiku-4-5-20251001",
     "google"      => "gemini-2.5-flash",
     "ollama"      => "gemma3:4b",
+    "ollama_cloud" => "gpt-oss:20b",
     "mistral"     => "mistral-small-latest",
     "groq"        => "qwen/qwen3-32b",
     "deepseek"    => "deepseek-chat",
@@ -122,6 +130,10 @@ const PROVIDER_ALIASES = Dict(
 
     # Ollama
     "ol" => "ollama",
+    "oc" => "ollama_cloud",
+    "olc" => "ollama_cloud",
+    "ollama-cloud" => "ollama_cloud",
+    "ollamacloud" => "ollama_cloud",
 
     # OpenRouter
     "or" => "openrouter",

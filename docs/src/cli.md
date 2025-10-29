@@ -16,7 +16,7 @@ julia --project script/ask.jl --llm google "Hello"
 
 ## Common Flags
 
-- `--llm, -l`: Provider (`openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `groq`, `deepseek`, `zai`).
+- `--llm, -l`: Provider (`openai`, `anthropic`, `google`, `ollama`, `ollama_cloud`, `mistral`, `openrouter`, `groq`, `deepseek`, `zai`).
 - `--model, -m`: Model name (supports aliases; defaults per provider or env).
 - `--attachment, -a`: Path to file to attach (e.g., image for vision models).
 - `--file, -f`: Input file path (optional; script-specific).
@@ -94,5 +94,6 @@ Common examples
 - Groq: `llama-70b`, `qwen-32b`, `whisper`, `r1-70b`
 - OpenRouter: `grok-4`, `glm-4.5`, `command-r+`, `sonar-pro`, `nova-pro`
 - Ollama: `gemma3-12b-ollama`, `qwen3-14b-ollama`, `phi4-r`
+- Ollama Cloud: `gpt-oss:20b`, `gpt-oss:120b`, `kimi-k2:1t`
 
 See the README “Model Aliases” section for a longer list.

@@ -117,7 +117,39 @@ function list_llm_models(llm::OllamaLLM)
     url     = "http://127.0.0.1:11434/api/tags"
     response = get_request(url)
     model_list = handle_json_response(response, ["models"])
-    return [model["model"] for model in model_list]
+    ids = String[]
+    for entry in model_list
+        id = get(entry, "model", get(entry, "name", ""))
+        if id != ""
+            push!(ids, id)
+        end
+    end
+    return ids
+end
+
+"""
+    list_llm_models(llm::OllamaCloudLLM)
+
+List available models from Ollama Cloud.
+"""
+function list_llm_models(llm::OllamaCloudLLM)
+    @debug "Listing LLM Models" llm
+    headers = Pair{String, String}[]
+    api_key = get(ENV, "OLLAMA_API_KEY", nothing)
+    if api_key !== nothing
+        push!(headers, "Authorization" => "Bearer $api_key")
+    end
+    url = "https://ollama.com/api/tags"
+    response = isempty(headers) ? get_request(url) : get_request(url, headers)
+    model_list = handle_json_response(response, ["models"])
+    ids = String[]
+    for entry in model_list
+        id = get(entry, "model", get(entry, "name", ""))
+        if id != ""
+            push!(ids, id)
+        end
+    end
+    return ids
 end
 
 """

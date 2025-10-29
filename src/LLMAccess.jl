@@ -35,6 +35,7 @@ module Core
            AnthropicLLM,
            GoogleLLM,
            OllamaLLM,
+           OllamaCloudLLM,
            MistralLLM,
            DeepSeekLLM,
            ZaiLLM,
@@ -69,6 +70,7 @@ module Providers
     include("providers/google.jl")
     include("providers/mistral.jl")
     include("providers/ollama.jl")
+    include("providers/ollama_cloud.jl")
 
     export call_llm
 end # module Providers
