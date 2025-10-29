@@ -1,4 +1,4 @@
-image: julia:1.12-bullseye
+image: julia:1.12.1-trixie
 
 stages:
   - build
