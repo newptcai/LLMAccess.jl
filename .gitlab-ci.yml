@@ -6,6 +6,22 @@ stages:
 
 docs:build:
   stage: build
+  variables:
+    JULIA_PKG_USE_CLI_GIT: "true"      # avoid LibGit2_jll on first use
+    JULIA_PKG_SERVER: ""              # force git clones over pkg server tarballs
+    JULIA_DEPOT_PATH: "$CI_PROJECT_DIR/.julia"  # writable, cacheable depot
+  cache:
+    key: "julia-depot"
+    paths:
+      - .julia/
+  before_script:
+    # Ensure git is available and pre-clone General with CLI git to avoid LibGit2/Downloads
+    - apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
+    - mkdir -p "$JULIA_DEPOT_PATH/registries"
+    - |
+      if [ ! -d "$JULIA_DEPOT_PATH/registries/General/.git" ]; then
+        git clone --depth 1 https://github.com/JuliaRegistries/General "$JULIA_DEPOT_PATH/registries/General"
+      fi
   script:
     - julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate(); include("docs/make.jl")'
   artifacts:
