@@ -3,7 +3,7 @@
 This document consolidates the guidance previously spread across `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md`. Use it as the single reference for repository structure, development workflow, and LLM-specific behaviors.
 
 ## Project Overview
-- `LLMAccess.jl` is a Julia package offering a unified interface to multiple LLM providers (OpenAI, Anthropic, Google, Mistral, Ollama, OpenRouter, Groq, DeepSeek, ZAI).
+- `LLMAccess.jl` is a Julia package offering a unified interface to multiple LLM providers (OpenAI, Anthropic, MiniMax, Google, Mistral, Ollama, OpenRouter, Groq, DeepSeek, ZAI).
 - The package ships CLI utilities in `script/` for common tasks such as Q&A, command generation, and echo testing.
 - A modular architecture keeps provider-specific logic isolated while exposing a consistent API (`call_llm`) across backends.
 
@@ -35,7 +35,7 @@ Optional workflows:
 - Develop a local checkout: `pkg> dev /path/to/llmaccess.jl`
 
 ### Provider Configuration
-- Export API keys: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `MISTRAL_API_KEY`, `OPENROUTER_API_KEY`, `GROQ_API_KEY`, `DEEPSEEK_API_KEY`, `ZAI_API_KEY`.
+- Export API keys: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `MINIMAX_API_KEY`, `GOOGLE_API_KEY`, `MISTRAL_API_KEY`, `OPENROUTER_API_KEY`, `GROQ_API_KEY`, `DEEPSEEK_API_KEY`, `Z_API_KEY`.
 - Optional defaults: `DEFAULT_LLM`, `DEFAULT_TEMPERATURE`, `DEFAULT_<PROVIDER>_MODEL` (e.g., `DEFAULT_GOOGLE_MODEL="gemini-2.5-flash"`).
 - Readers: `JINA_API_KEY` powers `jina_reader`; Pandoc must be installed for `pandoc_reader`.
 - Keep secrets out of version control; prefer shell RC files or secret managers.

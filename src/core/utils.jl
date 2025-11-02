@@ -288,6 +288,14 @@ function encode_file_to_base64(::AnthropicLLM, file_path)
     )
 end
 
+function encode_file_to_base64(::MinimaxLLM, file_path)
+    mime_type, base64_encoded = encode_file_to_base64(file_path)
+    return Dict(
+        "type" => "image",
+        "source" => Dict("type" => "base64", "media_type" => "$(mime_type)", "data" => "$(base64_encoded)"),
+    )
+end
+
 """
     get_nested(data, path)
 

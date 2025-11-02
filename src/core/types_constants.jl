@@ -41,6 +41,13 @@ Concrete type for Anthropic's LLM (e.g., Claude).
 struct AnthropicLLM <: AbstractLLM end
 
 """
+    MinimaxLLM
+
+Concrete type for MiniMax's Anthropic-compatible LLM.
+"""
+struct MinimaxLLM <: AbstractLLM end
+
+"""
     GoogleLLM
 
 Concrete type for Google's LLM (e.g., PaLM/Gemini).
@@ -91,6 +98,7 @@ const DEFAULT_MODELS = Dict(
     "openai"      => "gpt-5-mini",
     "openrouter"  => "amazon/nova-micro-v1",
     "anthropic"   => "claude-haiku-4-5-20251001",
+    "minimax"     => "MiniMax-M2",
     "google"      => "gemini-2.5-flash",
     "ollama"      => "gemma3:4b",
     "ollama_cloud" => "gpt-oss:20b",
@@ -121,6 +129,10 @@ const PROVIDER_ALIASES = Dict(
     # Anthropic
     "a"  => "anthropic",
     "an" => "anthropic",
+
+    # MiniMax
+    "mm" => "minimax",
+    "mini" => "minimax",
 
     # Google
     "g"  => "google",
@@ -287,4 +299,8 @@ const MODEL_ALIASES = Dict(
     "4o-search" => "gpt-4o-search-preview",
     "4o-mini-search" => "gpt-4o-mini-search-preview",
     "4o-transcribe" => "gpt-4o-transcribe",
+
+    # MiniMax
+    "mm2" => "MiniMax-M2",
+    "minimax" => "MiniMax-M2",
 )

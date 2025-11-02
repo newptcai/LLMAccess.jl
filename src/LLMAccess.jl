@@ -33,6 +33,7 @@ module Core
            OpenRouterLLM,
            GroqLLM,
            AnthropicLLM,
+           MinimaxLLM,
            GoogleLLM,
            OllamaLLM,
            OllamaCloudLLM,
@@ -67,6 +68,7 @@ module Providers
 
     include("providers/openai_compat.jl")
     include("providers/anthropic.jl")
+    include("providers/minimax.jl")
     include("providers/google.jl")
     include("providers/mistral.jl")
     include("providers/ollama.jl")

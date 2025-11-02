@@ -200,7 +200,7 @@ version = "1.12.0"
 deps = ["ArgParse", "Base64", "HTTP", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Pandoc", "Serialization"]
 path = "/home/xing/code/ai/llmaccess.jl"
 uuid = "1a9614b5-a00e-4537-a79a-85f37aa414d6"
-version = "1.38.0"
+version = "1.39.0"
 
 [[deps.LazilyInitializedFields]]
 git-tree-sha1 = "0f2da712350b020bc3957f269c9caad516383ee0"

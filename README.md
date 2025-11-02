@@ -1,6 +1,6 @@
 # LLMAccess
 
-LLMAccess is a Julia package designed to simplify interactions with multiple Large Language Model (LLM) APIs. It provides a unified interface to integrate models from providers such as OpenAI, Anthropic, Google, Ollama, Ollama Cloud, Mistral, OpenRouter, Groq, DeepSeek, and Z.ai into your Julia scripts seamlessly, plus shared CLI helpers for argument parsing and robust error handling.
+LLMAccess is a Julia package designed to simplify interactions with multiple Large Language Model (LLM) APIs. It provides a unified interface to integrate models from providers such as OpenAI, Anthropic, MiniMax, Google, Ollama, Ollama Cloud, Mistral, OpenRouter, Groq, DeepSeek, and Z.ai into your Julia scripts seamlessly, plus shared CLI helpers for argument parsing and robust error handling.
 
 ## Table of Contents
 
@@ -26,7 +26,7 @@ LLMAccess is a Julia package designed to simplify interactions with multiple Lar
 
 ## Features
 
-- **Multi-Provider Support**: Seamlessly interact with multiple LLM providers through a single interface.
+- **Multi-Provider Support**: Seamlessly interact with multiple LLM providers through a single interface, now including MiniMax's Anthropic-compatible models.
 - **File Attachments**: Easily attach files to API requests.
 - **Command-Line Integration**: Parse command-line arguments for flexible script execution.
 - **Model Aliases**: Use convenient shorthand names for popular models (e.g. `4o` for GPT-4o, `haiku` for Claude 3 Haiku)
@@ -64,6 +64,7 @@ Before using LLMAccess, set the necessary API keys for the LLM providers you wan
 - `OPENROUTER_API_KEY` for OpenRouter
 - `GROQ_API_KEY` for Groq
 - `ANTHROPIC_API_KEY` for Anthropic
+- `MINIMAX_API_KEY` for MiniMax
 - `GOOGLE_API_KEY` for Google
 - `OLLAMA_API_KEY` for Ollama Cloud
 - `MISTRAL_API_KEY` for Mistral
@@ -81,10 +82,12 @@ export OPENAI_API_KEY="your_openai_api_key"
 export OPENROUTER_API_KEY="your_openrouter_api_key"
 export GROQ_API_KEY="your_groq_api_key"
 export ANTHROPIC_API_KEY="your_anthropic_api_key"
+export MINIMAX_API_KEY="your_minimax_api_key"
 export GOOGLE_API_KEY="your_google_api_key"
 export OLLAMA_API_KEY="your_ollama_cloud_api_key"
 export MISTRAL_API_KEY="your_mistral_api_key"
 export DEEPSEEK_API_KEY="your_deepseek_api_key"
+export Z_API_KEY="your_zai_api_key"
 ```
 
 To set the default LLM provider and models, add the following lines:
@@ -94,6 +97,7 @@ export DEFAULT_LLM="ollama"
 export DEFAULT_OPENAI_MODEL="gpt-5-mini"
 export DEFAULT_OPENROUTER_MODEL="amazon/nova-micro-v1"
 export DEFAULT_ANTHROPIC_MODEL="claude-haiku-4-5-20251001"
+export DEFAULT_MINIMAX_MODEL="MiniMax-M2"
 export DEFAULT_GOOGLE_MODEL="gemini-2.5-flash"
 export DEFAULT_OLLAMA_MODEL="gemma3:4b"
 export DEFAULT_OLLAMA_CLOUD_MODEL="gpt-oss:20b"
@@ -186,6 +190,24 @@ response = call_llm(google_llm, system_instruction, input_text)
 println("Google Response: ", response)
 ```
 
+#### Example: MiniMax
+
+```julia
+using LLMAccess
+
+# Create a MiniMax LLM instance (Anthropic-compatible endpoint)
+minimax_llm = MinimaxLLM()
+
+# Define input text and system instructions
+input_text = "Explain the main idea in one sentence."
+system_instruction = "You are concise."
+
+# Call the MiniMax LLM (defaults to MiniMax-M2)
+response = call_llm(minimax_llm, system_instruction, input_text)
+
+println("MiniMax Response: ", response)
+```
+
 #### Example: Z.ai
 
 ```julia
@@ -230,6 +252,8 @@ LLMAccess supports shorthand names for common models. Here are some key aliases 
 | `haiku` | `claude-haiku-4-5-20251001` |
 | `sonnet-4.5` | `claude-sonnet-4-5-20250929` |
 | `haiku-4.5` | `claude-haiku-4-5-20251001` |
+| `mm2` | `MiniMax-M2` |
+| `minimax` | `MiniMax-M2` |
 | `magistral` | `magistral-medium-latest` |
 | `r` | `deepseek-reasoner` |
 | `d` | `deepseek-chat` |
@@ -287,6 +311,7 @@ You can also use short aliases for providers via `--llm`:
 - `g` → `google`
 - `oa`/`o` → `openai`
 - `an`/`a` → `anthropic`
+- `mm`/`mini` → `minimax`
 - `m` → `mistral`
 - `ol` → `ollama`
 - `or` → `openrouter`
@@ -326,6 +351,9 @@ julia --project script/ask.jl "What is 2+2?"
 
 # OpenAI with model alias
 julia --project script/ask.jl --llm openai --model 4o "Summarize this repo"
+
+# MiniMax default (MiniMax-M2) using provider alias
+julia --project script/ask.jl --llm mm "Give me three agenda bullets"
 
 # Generate shell commands
 julia --project script/cmd.jl --llm openai "list files changed today"
@@ -420,6 +448,7 @@ LLMAccess currently supports the following LLM providers:
 - **DeepSeek**: OpenAI-compatible API access to DeepSeek's models.
 - **Z.ai**: OpenAI-compatible API access to GLM-4.5 family.
 - **Anthropic**: Utilizes Anthropic's Claude models.
+- **MiniMax**: Anthropic-compatible access to MiniMax models like MiniMax-M2.
 - **Google**: Connects to Google's generative language models.
 - **Ollama**: Interfaces with Ollama's local LLM deployments.
 - **Ollama Cloud**: Calls Ollama's hosted chat API (requires `OLLAMA_API_KEY`).

@@ -1,6 +1,6 @@
 # LLMAccess.jl
 
-LLMAccess.jl provides a lightweight, composable interface and CLI to interact with multiple LLM providers (OpenAI, Anthropic, Google, Ollama, Ollama Cloud, Mistral, OpenRouter, Groq, DeepSeek, Z.ai) from Julia.
+LLMAccess.jl provides a lightweight, composable interface and CLI to interact with multiple LLM providers (OpenAI, Anthropic, MiniMax, Google, Ollama, Ollama Cloud, Mistral, OpenRouter, Groq, DeepSeek, Z.ai) from Julia.
 
 - Flexible provider abstraction with typed methods
 - Sensible defaults via environment variables
@@ -42,6 +42,7 @@ println(text)
 
 Notes:
 - For attachments (e.g., images), use the typed form which accepts an attachment path positionally: `call_llm(GoogleLLM(), system, input, model, temperature, attach_file)`. The name-based helper does not take attachments.
+- MiniMax works through the Anthropic-compatible endpoint, so `MinimaxLLM()` shares response formatting with Claude and defaults to `MiniMax-M2`.
 
 Output normalization:
 
@@ -67,7 +68,7 @@ Note: `script/cmd.jl` copies the generated command to your clipboard by default.
 
 Configure API keys and defaults via environment variables (examples):
 
-- `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `OLLAMA_API_KEY`, `MISTRAL_API_KEY`, `GROQ_API_KEY`, `DEEPSEEK_API_KEY`, `Z_API_KEY`
+- `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `MINIMAX_API_KEY`, `GOOGLE_API_KEY`, `OLLAMA_API_KEY`, `MISTRAL_API_KEY`, `GROQ_API_KEY`, `DEEPSEEK_API_KEY`, `Z_API_KEY`
 - `DEFAULT_LLM`, `DEFAULT_OPENAI_MODEL`, `DEFAULT_GOOGLE_MODEL`, etc.
 - `DEFAULT_TEMPERATURE`
 
