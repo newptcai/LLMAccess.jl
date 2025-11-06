@@ -31,13 +31,14 @@ function main(_)
         prog = "cmd.jl",
         description = "Generate a bash command with LLM, copy it to clipboard, then optionally execute it after confirmation.",
         add_version = true,
-        version = "v1.0.0"
+        version = "v1.1.0"
     )
 
     # Optional: allow directly supplying a command (bypasses LLM), useful for offline/testing
     @add_arg_table! custom_settings begin
         "--cmd"; help = "Direct command to use instead of calling LLM"; metavar = "CMD"; default = ""
         "--no-copy"; help = "Do not copy the generated command to the clipboard"; dest_name = "no_copy"; action = :store_true
+        "-n", "--non-iteractive"; help = "Print the command without prompting to run it"; dest_name = "non_iteractive"; action = :store_true
     end
 
     # Mirror ask.jl: delegate error handling and Ctrl+C to run_cli
@@ -66,17 +67,19 @@ function main(_)
         end
 
         # Ask for confirmation before executing
-        print("⚠️ Execute this command now? [y/N]: ")
-        flush(stdout)
-        reply = try
-            readline(stdin)
-        catch
-            ""
-        end
-        ans = lowercase(strip(reply))
-        if ans == "y" || ans == "yes"
-            # Use bash -lc to support pipes, redirects, and multi-line commands
-            run(Cmd(["bash", "-lc", "set -euo pipefail; " * trimmed_text]))
+        if !get(args, "non_iteractive", false)
+            print("⚠️ Execute this command now? [y/N]: ")
+            flush(stdout)
+            reply = try
+                readline(stdin)
+            catch
+                ""
+            end
+            ans = lowercase(strip(reply))
+            if ans == "y" || ans == "yes"
+                # Use bash -lc to support pipes, redirects, and multi-line commands
+                run(Cmd(["bash", "-lc", "set -euo pipefail; " * trimmed_text]))
+            end
         end
         nothing
     end; settings=custom_settings,
