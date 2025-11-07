@@ -69,7 +69,7 @@ Before using LLMAccess, set the necessary API keys for the LLM providers you wan
 - `OLLAMA_API_KEY` for Ollama Cloud
 - `MISTRAL_API_KEY` for Mistral
 - `DEEPSEEK_API_KEY` for DeepSeek
-- `Z_API_KEY` for Z.ai
+- `ZAI_API_KEY` for Z.ai
 
 ### Setting Environment Variables
 
@@ -87,7 +87,7 @@ export GOOGLE_API_KEY="your_google_api_key"
 export OLLAMA_API_KEY="your_ollama_cloud_api_key"
 export MISTRAL_API_KEY="your_mistral_api_key"
 export DEEPSEEK_API_KEY="your_deepseek_api_key"
-export Z_API_KEY="your_zai_api_key"
+export ZAI_API_KEY="your_zai_api_key"
 ```
 
 To set the default LLM provider and models, add the following lines:

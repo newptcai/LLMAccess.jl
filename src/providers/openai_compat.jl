@@ -120,7 +120,7 @@ function call_llm(
     attach_file = "";
     kwargs...
 )
-    api_key = ENV["Z_API_KEY"]
+    api_key = ENV["ZAI_API_KEY"]
     url     = "https://api.z.ai/api/paas/v4/chat/completions"
     dry_run = get(kwargs, :dry_run, false)
     # Normalize OpenRouter-style aliases like "z-ai/glm-4.5" back to model id
