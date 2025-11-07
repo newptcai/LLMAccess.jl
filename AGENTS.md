@@ -35,7 +35,7 @@ Optional workflows:
 - Develop a local checkout: `pkg> dev /path/to/llmaccess.jl`
 
 ### Provider Configuration
-- Export API keys: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `MINIMAX_API_KEY`, `GOOGLE_API_KEY`, `MISTRAL_API_KEY`, `OPENROUTER_API_KEY`, `GROQ_API_KEY`, `DEEPSEEK_API_KEY`, `Z_API_KEY`.
+- Export API keys: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `MINIMAX_API_KEY`, `GOOGLE_API_KEY`, `MISTRAL_API_KEY`, `OPENROUTER_API_KEY`, `GROQ_API_KEY`, `DEEPSEEK_API_KEY`, `ZAI_API_KEY`.
 - Optional defaults: `DEFAULT_LLM`, `DEFAULT_TEMPERATURE`, `DEFAULT_<PROVIDER>_MODEL` (e.g., `DEFAULT_GOOGLE_MODEL="gemini-2.5-flash"`).
 - Readers: `JINA_API_KEY` powers `jina_reader`; Pandoc must be installed for `pandoc_reader`.
 - Keep secrets out of version control; prefer shell RC files or secret managers.
