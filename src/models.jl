@@ -177,11 +177,15 @@ end
 Return supported model names for Z.ai provider.
 """
 function list_llm_models(llm::ZaiLLM)
-    # Z.ai API model listing isn’t standardized publicly; hardcode known ones
-    return [
-        "glm-4.5",
-        "glm-4.5-air",
+    @debug "Listing LLM Models" llm
+    api_key = ENV["ZAI_API_KEY"]
+    headers = [
+        "Authorization" => "Bearer $api_key",
     ]
+    url = "https://api.z.ai/api/paas/v4/models"
+    response = get_request(url, headers)
+    model_list = handle_json_response(response, ["data"])
+    return [model["id"] for model in model_list]
 end
 
 """
