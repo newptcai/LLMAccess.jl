@@ -49,7 +49,7 @@ function parse_commandline(
     require_input::Bool = true
 )
     @add_arg_table! settings begin
-        "--llm", "-l"; help = "LLM provider to use (aliases: g, oa, an, mm, m, ol, oc, or, gr, ds, z)"; default = default_llm
+        "--llm", "-l"; help = "LLM provider to use (aliases: g, oa, an, mm, m, ol, oc, or, gr, ds, z, ce)"; default = default_llm
         "--model", "-m"; help = "Specific model to use"; default = default_model
         "--file", "-f"; help = "Path to input file to process"; default = ""
         "--attachment", "-a"; help = "Path to file attachment"; default = ""

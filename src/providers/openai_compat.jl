@@ -127,3 +127,19 @@ function call_llm(
     normalized_model = occursin("/", model) ? split(model, "/")[end] : model
     return make_api_request(llm, api_key, url, system_instruction, input_text, normalized_model, temperature, attach_file; dry_run=dry_run)
 end
+
+# Cerebras (OpenAI-compatible)
+function call_llm(
+    llm::CerebrasLLM,
+    system_instruction="",
+    input_text="",
+    model = get_default_model("cerebras"),
+    temperature::Float64 = get_default_temperature(),
+    attach_file = "";
+    kwargs...
+)
+    api_key = ENV["CEREBRAS_API_KEY"]
+    url     = "https://api.cerebras.ai/v1/chat/completions"
+    dry_run = get(kwargs, :dry_run, false)
+    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run)
+end

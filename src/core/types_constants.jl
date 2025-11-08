@@ -89,6 +89,13 @@ Concrete type for Z.ai's LLM (OpenAI-compatible API).
 """
 struct ZaiLLM <: OpenAICompatibleLLM end
 
+"""
+    CerebrasLLM
+
+Concrete type for Cerebras' OpenAI-compatible chat completions API.
+"""
+struct CerebrasLLM <: OpenAICompatibleLLM end
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Constants
 # ─────────────────────────────────────────────────────────────────────────────
@@ -106,6 +113,7 @@ const DEFAULT_MODELS = Dict(
     "groq"        => "qwen/qwen3-32b",
     "deepseek"    => "deepseek-chat",
     "zai"         => "glm-4.5-air",
+    "cerebras"    => "zai-glm-4.6",
 )
 
 const DEFAULT_TEMPERATURE = 1.0
@@ -160,6 +168,10 @@ const PROVIDER_ALIASES = Dict(
     # Z.ai
     "z"  => "zai",
     "za" => "zai",
+
+    # Cerebras
+    "c"  => "cerebras",
+    "ce" => "cerebras",
 )
 
 const MODEL_ALIASES = Dict(

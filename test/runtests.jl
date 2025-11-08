@@ -61,7 +61,15 @@ const Core = LLMAccess.Core
         @test Core.resolve_provider_alias("mini") == "minimax"
         @test Core.resolve_model_alias("mm2") == "MiniMax-M2"
         @test Core.resolve_model_alias("minimax") == "MiniMax-M2"
-        @test Core.get_default_model("minimax") == "MiniMax-M2"
+        expected_default = get(ENV, "DEFAULT_MINIMAX_MODEL", "MiniMax-M2")
+        @test Core.get_default_model("minimax") == expected_default
+    end
+
+    @testset "cerebras aliases and defaults" begin
+        @test Core.resolve_provider_alias("ce") == "cerebras"
+        @test Core.resolve_provider_alias("c") == "cerebras"
+        expected_default = get(ENV, "DEFAULT_CEREBRAS_MODEL", "zai-glm-4.6")
+        @test Core.get_default_model("cerebras") == expected_default
     end
 
     # Integration tests (run only when explicitly enabled)

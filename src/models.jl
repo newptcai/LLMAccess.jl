@@ -183,3 +183,14 @@ function list_llm_models(llm::ZaiLLM)
         "glm-4.5-air",
     ]
 end
+
+"""
+    list_llm_models(llm::CerebrasLLM)
+
+Return supported model ids for Cerebras' OpenAI-compatible endpoint.
+"""
+function list_llm_models(llm::CerebrasLLM)
+    return [
+        "zai-glm-4.6",
+    ]
+end

@@ -40,6 +40,7 @@ module Core
            MistralLLM,
            DeepSeekLLM,
            ZaiLLM,
+           CerebrasLLM,
            DEFAULT_MODELS,
            DEFAULT_TEMPERATURE,
            DEFAULT_LLM,

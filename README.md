@@ -1,6 +1,6 @@
 # LLMAccess
 
-LLMAccess is a Julia package designed to simplify interactions with multiple Large Language Model (LLM) APIs. It provides a unified interface to integrate models from providers such as OpenAI, Anthropic, MiniMax, Google, Ollama, Ollama Cloud, Mistral, OpenRouter, Groq, DeepSeek, and Z.ai into your Julia scripts seamlessly, plus shared CLI helpers for argument parsing and robust error handling.
+LLMAccess is a Julia package designed to simplify interactions with multiple Large Language Model (LLM) APIs. It provides a unified interface to integrate models from providers such as OpenAI, Anthropic, MiniMax, Google, Ollama, Ollama Cloud, Mistral, OpenRouter, Groq, DeepSeek, Z.ai, and Cerebras into your Julia scripts seamlessly, plus shared CLI helpers for argument parsing and robust error handling.
 
 ## Table of Contents
 
@@ -70,6 +70,7 @@ Before using LLMAccess, set the necessary API keys for the LLM providers you wan
 - `MISTRAL_API_KEY` for Mistral
 - `DEEPSEEK_API_KEY` for DeepSeek
 - `ZAI_API_KEY` for Z.ai
+- `CEREBRAS_API_KEY` for Cerebras
 
 ### Setting Environment Variables
 
@@ -88,6 +89,7 @@ export OLLAMA_API_KEY="your_ollama_cloud_api_key"
 export MISTRAL_API_KEY="your_mistral_api_key"
 export DEEPSEEK_API_KEY="your_deepseek_api_key"
 export ZAI_API_KEY="your_zai_api_key"
+export CEREBRAS_API_KEY="your_cerebras_api_key"
 ```
 
 To set the default LLM provider and models, add the following lines:
@@ -106,6 +108,8 @@ export DEFAULT_GROQ_MODEL="qwen/qwen3-32b"
 export DEFAULT_DEEPSEEK_MODEL="deepseek-chat"
 # Z.ai default model
 export DEFAULT_ZAI_MODEL="glm-4.5-air"
+# Cerebras default model
+export DEFAULT_CEREBRAS_MODEL="zai-glm-4.6"
 # Optional global default temperature (Float64)
 export DEFAULT_TEMPERATURE="1.0"
 ```
@@ -318,6 +322,7 @@ You can also use short aliases for providers via `--llm`:
 - `gr` → `groq`
 - `ds`/`d` → `deepseek`
 - `z`/`za` → `zai`
+- `ce`/`c` → `cerebras`
 
 List them from the CLI:
 
@@ -447,6 +452,7 @@ LLMAccess currently supports the following LLM providers:
 - **Groq**: Integrates with Groq's LLM services.
 - **DeepSeek**: OpenAI-compatible API access to DeepSeek's models.
 - **Z.ai**: OpenAI-compatible API access to GLM-4.5 family.
+- **Cerebras**: OpenAI-compatible Cerebras Inference models such as `zai-glm-4.6`.
 - **Anthropic**: Utilizes Anthropic's Claude models.
 - **MiniMax**: Anthropic-compatible access to MiniMax models like MiniMax-M2.
 - **Google**: Connects to Google's generative language models.

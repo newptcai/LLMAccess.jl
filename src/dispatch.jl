@@ -17,6 +17,7 @@ function get_llm_type(llm_name)
         "groq"        => GroqLLM(),
         "deepseek"    => DeepSeekLLM(),
         "zai"         => ZaiLLM(),
+        "cerebras"    => CerebrasLLM(),
     )
     get(llm_types, canonical) do
         error("Unknown LLM: $llm_name")
