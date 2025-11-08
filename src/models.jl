@@ -190,7 +190,13 @@ end
 Return supported model ids for Cerebras' OpenAI-compatible endpoint.
 """
 function list_llm_models(llm::CerebrasLLM)
-    return [
-        "zai-glm-4.6",
+    @debug "Listing LLM Models" llm
+    api_key = ENV["CEREBRAS_API_KEY"]
+    headers = [
+        "Authorization" => "Bearer $api_key",
     ]
+    url = "https://api.cerebras.ai/v1/models"
+    response = get_request(url, headers)
+    model_list = handle_json_response(response, ["data"])
+    return [model["id"] for model in model_list]
 end
