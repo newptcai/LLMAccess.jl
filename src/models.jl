@@ -34,20 +34,12 @@ end
 """
     list_llm_models(llm::MinimaxLLM)
 
-List available models from MiniMax's Anthropic-compatible API.
+Return a static list for MiniMax, which does not expose a listing API.
 """
 function list_llm_models(llm::MinimaxLLM)
     @debug "Listing LLM Models" llm
-    api_key = ENV["MINIMAX_API_KEY"]
-    headers = [
-        "content-type"      => "application/json",
-        "anthropic-version" => "2023-06-01",
-        "x-api-key"         => "$api_key",
-    ]
-    url     = "https://api.minimax.io/anthropic/v1/models"
-    response = get_request(url, headers)
-    model_list = handle_json_response(response, ["data"])
-    return [model["id"] for model in model_list]
+    # MiniMax lacks a discoverable endpoint; expose the known public model.
+    return ["minimax-m2"]
 end
 
 """
