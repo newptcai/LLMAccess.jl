@@ -6,7 +6,7 @@ using Logging
 
 function main(_)
     # Define the system prompt
-    system_instruction = ""
+    system_instruction = "Do not suggest following up questions."
 
     custom_settings = ArgParseSettings(
         prog = "ask.jl",
@@ -38,11 +38,10 @@ function main(_)
 
         # 2) Call the provider with parsed args and print the result.
         result = call_llm(system_instruction, args)
+        result = replace(result, r"\s+$"m => "")
 
         print(result)
-        if !isempty(result) && result[end] != '\n'
-            print("\n")
-        end
+        print("\n")
         nothing
     end; settings=custom_settings,
          # Tell `run_cli` how to determine debug mode. If parsing failed, `args_ref[]`
