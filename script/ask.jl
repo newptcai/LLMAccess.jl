@@ -36,8 +36,21 @@ function main(_)
         args = parse_commandline(custom_settings)
         args_ref[] = args
 
-        # 2) Call the provider with parsed args and print the result.
-        result = call_llm(system_instruction, args)
+        # 2) Validate input and prepend system instruction
+        original = String(get(args, "input_text", ""))
+        if isempty(strip(original))
+            error("no input provided; pass a question as argument, pipe from stdin, or use -f/--file")
+        end
+        instruction_user = """
+        Instructions:
+        $system_instruction
+
+        Question:
+
+        $original
+        """
+        args["input_text"] = instruction_user
+        result = call_llm("", args)
         result = replace(result, r"\s+$"m => "")
 
         print(result)
