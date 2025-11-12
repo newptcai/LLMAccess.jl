@@ -21,7 +21,8 @@ function make_api_request(
     model,
     temperature::Float64,
     attach_file;
-    dry_run::Bool = false
+    dry_run::Bool = false,
+    max_tokens = nothing
 )
     @debug "Making API request" llm system_instruction input_text model temperature attach_file
     headers = [
@@ -38,6 +39,9 @@ function make_api_request(
     end
     push!(messages, user_message)
     data = Dict("model" => model, "temperature" => temperature, "messages" => messages)
+    if max_tokens !== nothing
+        data["max_tokens"] = max_tokens
+    end
     if dry_run
         return JSON.json(data)
     end
@@ -107,7 +111,15 @@ function call_llm(
     api_key = ENV["DEEPSEEK_API_KEY"]
     url     = "https://api.deepseek.com/v1/chat/completions"
     dry_run = get(kwargs, :dry_run, false)
-    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run)
+    think = get(kwargs, :think, 0)
+
+    # For DeepSeek R1 models, use thinking budget as max_tokens if provided
+    max_tokens = nothing
+    if think != 0 && (occursin("r1", lowercase(model)) || occursin("deepseek-reasoner", lowercase(model)))
+        max_tokens = think
+    end
+
+    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, max_tokens=max_tokens)
 end
 
 # Z.ai (OpenAI-compatible)
