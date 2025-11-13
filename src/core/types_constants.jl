@@ -286,6 +286,9 @@ const MODEL_ALIASES = Dict(
     "gemma3n-e4b" => "gemma3n:e4b",
     "gemma3n-e2b" => "gemma3n:e2b",
     "oss-120b" => "gpt-oss",
+    # Shorter gpt-oss aliases
+    "oss" => "gpt-oss",
+    "oss20" => "gpt-oss:20b",
 
     # OpenAI GPT
     "4o"      => "gpt-4o",
