@@ -16,7 +16,7 @@ julia --project script/ask.jl --llm google "Hello"
 
 ## Common Flags
 
-- `--llm, -l`: Provider (`openai`, `anthropic`, `minimax`, `google`, `ollama`, `ollama_cloud`, `mistral`, `openrouter`, `groq`, `deepseek`, `zai`).
+- `--llm, -l`: Provider (`openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `deepseek`).
 - `--model, -m`: Model name (supports aliases; defaults per provider or env).
 - `--attachment, -a`: Path to file to attach (e.g., image for vision models).
 - `--file, -f`: Input file path (optional; script-specific).
@@ -40,8 +40,8 @@ julia --project script/ask.jl --llm openai -m gpt-4o-mini "Summarize this repo"
 # Use alias
 julia --project script/ask.jl --llm google -m flash "Hi"
 
-# Call MiniMax (defaults to MiniMax-M2)
-julia --project script/ask.jl --llm minimax "Give me three bullet talking points"
+# Prompt the local Ollama daemon
+julia --project script/ask.jl --llm ollama --model gemma3-4b-ollama "Give me three bullet talking points"
 
 # Attach an image (vision-enabled models)
 julia --project script/ask.jl --llm openai -m gpt-4o --attachment path/to/image.png "Describe this image"
@@ -84,7 +84,7 @@ julia --project script/ask.jl --no-normalize --llm google "“Quotes” and — 
 ## Aliases
 
 - Use short aliases for common models via `-m/--model`.
-- Use short aliases for providers via `-l/--llm` (e.g., `g` for `google`, `oa` for `openai`, `mm` for `minimax`).
+- Use short aliases for providers via `-l/--llm` (e.g., `g` for `google`, `oa` for `openai`, `ol` for `ollama`).
 - Print model aliases: `julia --project script/ask.jl --alias`.
 - Print provider aliases: `julia --project script/ask.jl --llm-alias`.
 
@@ -93,11 +93,9 @@ Common examples
 - OpenAI: `4o`, `4o-mini`, `o1`, `o1-mini`, `o3`, `o3-mini`, `o4-mini`, `4.1`, `4o-search`, `5.1`, `5.1-chat`, `5.1-codex`
 - Google: `g` (Gemini Pro), `gf` (Gemini Flash), `1.5-pro`, `1.5-flash`, `1.5-flash-8b`, `flash-lite`, `gemma3-12b`
 - Anthropic: `h` (Haiku), `s` (Sonnet), `o` (Opus), `sonnet-3.7`
-- MiniMax: `mm2`, `minimax`
 - Mistral: `m` (Medium), `ms` (Small), `ml` (Large), `mo` (OCR), `codestral`, `pix`
-- Groq: `llama-70b`, `qwen-32b`, `whisper`, `r1-70b`
 - OpenRouter: `grok-4`, `glm-4.5`, `command-r+`, `sonar-pro`, `nova-pro`
-- Ollama: `gemma3-12b-ollama`, `qwen3-14b-ollama`, `phi4-r`
-- Ollama Cloud: `gpt-oss:20b`, `gpt-oss:120b`, `kimi-k2:1t`
+- Ollama: `gemma3-12b-ollama`, `qwen3-14b-ollama`, `phi4-r`, `oss-120b`
+- DeepSeek: `r` (Reasoner), `d` (Chat), `r1-8b`
 
 See the README “Model Aliases” section for a longer list.

@@ -9,7 +9,7 @@ function call_llm(
 )
     think = get(kwargs, :think, 0)
     dry_run = get(kwargs, :dry_run, false)
-    @debug "Making API request" llm system_instruction input_text model temperature attach_file think
+    @debug "Making Ollama request" llm system_instruction input_text model temperature attach_file think
 
     url     = "http://127.0.0.1:11434/api/generate"
     headers = ["Content-Type" => "application/json"]
@@ -25,11 +25,12 @@ function call_llm(
         data["system"] = system_instruction
     end
 
+    # Any non-zero think value enables reasoning mode for Ollama
     data["think"] = think != 0
 
     if attach_file != ""
         @debug "Attaching file to Ollama request" attach_file
-        _ , base64_encoded = encode_file_to_base64(attach_file)
+        _, base64_encoded = encode_file_to_base64(attach_file)
         data["images"] = [base64_encoded]
     end
 

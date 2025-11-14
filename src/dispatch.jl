@@ -8,16 +8,11 @@ function get_llm_type(llm_name)
     llm_types = Dict(
         "openai"      => OpenAILLM(),
         "anthropic"   => AnthropicLLM(),
-        "minimax"     => MinimaxLLM(),
         "google"      => GoogleLLM(),
         "ollama"      => OllamaLLM(),
-        "ollama_cloud" => OllamaCloudLLM(),
         "mistral"     => MistralLLM(),
         "openrouter"  => OpenRouterLLM(),
-        "groq"        => GroqLLM(),
         "deepseek"    => DeepSeekLLM(),
-        "zai"         => ZaiLLM(),
-        "cerebras"    => CerebrasLLM(),
     )
     get(llm_types, canonical) do
         error("Unknown LLM: $llm_name")

@@ -1,6 +1,6 @@
 # LLMAccess
 
-LLMAccess is a Julia package designed to simplify interactions with multiple Large Language Model (LLM) APIs. It provides a unified interface to integrate models from providers such as OpenAI, Anthropic, MiniMax, Google, Ollama, Ollama Cloud, Mistral, OpenRouter, Groq, DeepSeek, Z.ai, and Cerebras into your Julia scripts seamlessly, plus shared CLI helpers for argument parsing and robust error handling.
+LLMAccess is a Julia package designed to simplify interactions with multiple Large Language Model (LLM) APIs. It provides a unified interface to integrate models from providers such as OpenAI, Anthropic, Google, Mistral, OpenRouter, DeepSeek, and Ollama into your Julia scripts seamlessly, plus shared CLI helpers for argument parsing and robust error handling.
 
 ## Table of Contents
 
@@ -13,7 +13,6 @@ LLMAccess is a Julia package designed to simplify interactions with multiple Lar
   - [Calling an LLM](#calling-an-llm)
     - [Example: OpenAI](#example-openai)
     - [Example: Google](#example-google)
-    - [Example: Z.ai](#example-zai)
   - [Model Aliases](#model-aliases)
   - [Provider Aliases](#provider-aliases)
   - [Thinking Budget (`--think`, `-k`)](#thinking-budget--think--k)
@@ -26,7 +25,7 @@ LLMAccess is a Julia package designed to simplify interactions with multiple Lar
 
 ## Features
 
-- **Multi-Provider Support**: Seamlessly interact with multiple LLM providers through a single interface, now including MiniMax's Anthropic-compatible models.
+- **Multi-Provider Support**: Seamlessly interact with multiple LLM providers through a single interface.
 - **File Attachments**: Easily attach files to API requests.
 - **Command-Line Integration**: Parse command-line arguments for flexible script execution.
 - **Model Aliases**: Use convenient shorthand names for popular models (e.g. `4o` for GPT-4o, `haiku` for Claude 3 Haiku)
@@ -62,15 +61,10 @@ Before using LLMAccess, set the necessary API keys for the LLM providers you wan
 
 - `OPENAI_API_KEY` for OpenAI
 - `OPENROUTER_API_KEY` for OpenRouter
-- `GROQ_API_KEY` for Groq
 - `ANTHROPIC_API_KEY` for Anthropic
-- `MINIMAX_API_KEY` for MiniMax
 - `GOOGLE_API_KEY` for Google
-- `OLLAMA_API_KEY` for Ollama Cloud
 - `MISTRAL_API_KEY` for Mistral
 - `DEEPSEEK_API_KEY` for DeepSeek
-- `ZAI_API_KEY` for Z.ai
-- `CEREBRAS_API_KEY` for Cerebras
 
 ### Setting Environment Variables
 
@@ -81,35 +75,22 @@ Add the following lines to your shell configuration file (e.g., `.bashrc`, `.zsh
 ```bash
 export OPENAI_API_KEY="your_openai_api_key"
 export OPENROUTER_API_KEY="your_openrouter_api_key"
-export GROQ_API_KEY="your_groq_api_key"
 export ANTHROPIC_API_KEY="your_anthropic_api_key"
-export MINIMAX_API_KEY="your_minimax_api_key"
 export GOOGLE_API_KEY="your_google_api_key"
-export OLLAMA_API_KEY="your_ollama_cloud_api_key"
 export MISTRAL_API_KEY="your_mistral_api_key"
 export DEEPSEEK_API_KEY="your_deepseek_api_key"
-export ZAI_API_KEY="your_zai_api_key"
-export CEREBRAS_API_KEY="your_cerebras_api_key"
 ```
 
 To set the default LLM provider and models, add the following lines:
 
 ```bash
-export DEFAULT_LLM="ollama"
+export DEFAULT_LLM="google"
 export DEFAULT_OPENAI_MODEL="gpt-5-mini"
 export DEFAULT_OPENROUTER_MODEL="amazon/nova-micro-v1"
 export DEFAULT_ANTHROPIC_MODEL="claude-haiku-4-5-20251001"
-export DEFAULT_MINIMAX_MODEL="MiniMax-M2"
 export DEFAULT_GOOGLE_MODEL="gemini-2.5-flash"
-export DEFAULT_OLLAMA_MODEL="gemma3:4b"
-export DEFAULT_OLLAMA_CLOUD_MODEL="gpt-oss:20b"
 export DEFAULT_MISTRAL_MODEL="mistral-small-latest"
-export DEFAULT_GROQ_MODEL="qwen/qwen3-32b"
 export DEFAULT_DEEPSEEK_MODEL="deepseek-chat"
-# Z.ai default model
-export DEFAULT_ZAI_MODEL="glm-4.5-air"
-# Cerebras default model
-export DEFAULT_CEREBRAS_MODEL="zai-glm-4.6"
 # Optional global default temperature (Float64)
 export DEFAULT_TEMPERATURE="1.0"
 ```
@@ -194,42 +175,6 @@ response = call_llm(google_llm, system_instruction, input_text)
 println("Google Response: ", response)
 ```
 
-#### Example: MiniMax
-
-```julia
-using LLMAccess
-
-# Create a MiniMax LLM instance (Anthropic-compatible endpoint)
-minimax_llm = MinimaxLLM()
-
-# Define input text and system instructions
-input_text = "Explain the main idea in one sentence."
-system_instruction = "You are concise."
-
-# Call the MiniMax LLM (defaults to MiniMax-M2)
-response = call_llm(minimax_llm, system_instruction, input_text)
-
-println("MiniMax Response: ", response)
-```
-
-#### Example: Z.ai
-
-```julia
-using LLMAccess
-
-# Create a Z.ai LLM instance
-zai_llm = ZaiLLM()
-
-# Define input text and system instructions
-input_text = "What is the capital of France?"
-system_instruction = "You are concise."
-
-# Call the Z.ai LLM (supports glm-4.5 and glm-4.5-air)
-response = call_llm(zai_llm, system_instruction, input_text; model="glm-4.5-air")
-
-println("Z.ai Response: ", response)
-```
-
 ### Model Aliases
 
 LLMAccess supports shorthand names for common models. Here are some key aliases (including new 1–2 letter shorthands):
@@ -256,8 +201,6 @@ LLMAccess supports shorthand names for common models. Here are some key aliases 
 | `haiku` | `claude-haiku-4-5-20251001` |
 | `sonnet-4.5` | `claude-sonnet-4-5-20250929` |
 | `haiku-4.5` | `claude-haiku-4-5-20251001` |
-| `mm2` | `MiniMax-M2` |
-| `minimax` | `MiniMax-M2` |
 | `magistral` | `magistral-medium-latest` |
 | `r` | `deepseek-reasoner` |
 | `d` | `deepseek-chat` |
@@ -297,12 +240,11 @@ Additional popular aliases by provider
   - Families: `codestral`, `codestral-2508`, `pix` (Pixtral 12B), `pix-large`, `saba`
   - Sizes: `ministral-3b`, `ministral-8b`
   - Dev/Magistral: `devstral-s`, `devstral-m`, `mag-s`, `mag-m`
-- Groq (`--llm groq`)
-  - `llama-70b`, `llama-8b`, `qwen-32b`, `qwen-14b`, `qwen-8b`, `whisper`, `whisper-turbo`, `r1-70b`, `r1-8b`
+- Ollama (`--llm ollama`)
+  - Local tags: `gemma3-4b-ollama`, `gemma3-12b-ollama`, `qwen3-14b-ollama`
+  - Reasoning & misc: `phi4-r`, `gemma3n-e4b`, `gemma3n-e2b`, `oss-120b`, `oss20`
 - OpenRouter (`--llm openrouter`)
   - `grok-4`, `grok-3`, `grok-3-mini`, `kimi-k2`, `kimi-dev-72b`, `glm-4.5`, `glm-4.5v`, `glm-4.5-air`, `command-r`, `command-r+`, `sonar-pro`, `sonar-reason`, `nova-micro`, `nova-lite`, `nova-pro`, `gemma3-27b-or`
-- Ollama (`--llm ollama`)
-  - `gemma3-4b-ollama`, `gemma3-12b-ollama`, `qwen3-14b-ollama`, `phi4-r`, `gemma3n-e4b`, `gemma3n-e2b`, `oss-120b`
 
 To list all available aliases from the CLI, run:
 
@@ -319,14 +261,10 @@ You can also use short aliases for providers via `--llm`:
 - `g` → `google`
 - `oa`/`o` → `openai`
 - `an`/`a` → `anthropic`
-- `mm`/`mini` → `minimax`
 - `m` → `mistral`
 - `ol` → `ollama`
 - `or` → `openrouter`
-- `gr` → `groq`
 - `ds`/`d` → `deepseek`
-- `z`/`za` → `zai`
-- `ce`/`c` → `cerebras`
 
 List them from the CLI:
 
@@ -369,8 +307,8 @@ julia --project script/ask.jl "What is 2+2?"
 # OpenAI with model alias
 julia --project script/ask.jl --llm openai --model 4o "Summarize this repo"
 
-# MiniMax default (MiniMax-M2) using provider alias
-julia --project script/ask.jl --llm mm "Give me three agenda bullets"
+# Local Ollama prompt (uses running Ollama daemon)
+julia --project script/ask.jl --llm ollama --model gemma3-4b-ollama "Give me three agenda bullets"
 
 # Generate shell commands
 julia --project script/cmd.jl --llm openai "list files changed today"
@@ -401,7 +339,7 @@ Notes:
 
 Common arguments:
 
-- `--llm, -l`: LLM provider (`openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `groq`, `deepseek`, `zai`). Defaults to `DEFAULT_LLM` or `google`.
+- `--llm, -l`: LLM provider (`openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `deepseek`). Defaults to `DEFAULT_LLM` or `google`.
 - `--model, -m`: Model name; supports aliases below. Defaults to provider’s default.
 - `--file, -f`: Path to input file to process (optional; reserved for helpers that consume files).
 - `--attachment, -a`: Path to a file to attach (e.g., image for vision APIs).
@@ -409,7 +347,7 @@ Common arguments:
 - `--debug, -d`: Enable debug logging and richer error output.
 - `--copy, -c`: Copy response to clipboard.
 - `--no-copy`: For `script/cmd.jl` only, disable default clipboard copying.
-- `--think, -k`: Enable “thinking” for providers that support it (e.g., Gemini, Claude, Ollama). For Gemini/Claude, this is a token budget (e.g., `-k 1000`). For Ollama, any non-zero enables thinking.
+- `--think, -k`: Enable “thinking” for providers that support it (e.g., Gemini, Claude, Ollama). For Gemini/Claude, this is a token budget (e.g., `-k 1000`). Any non-zero value toggles Ollama's reasoning mode. OpenAI GPT-5 models interpret it as reasoning effort.
 - `--alias`: Print all model aliases and exit.
 - `--providers`: Print supported LLM providers (valid `--llm` choices) and exit.
 - `--llm-alias`: Print provider aliases for `--llm` and exit.
@@ -424,8 +362,11 @@ Use `--dry-run` to inspect the exact JSON payload without sending a request. Thi
 Examples:
 
 ```bash
-# Ollama dry run
-julia --project script/ask.jl --llm ollama --dry-run "Hello"
+# Ollama dry run (local daemon)
+julia --project script/ask.jl --llm ollama --model gemma3-4b-ollama --dry-run "Hello"
+
+# OpenAI dry run
+julia --project script/ask.jl --llm openai --dry-run "Hello"
 
 # Google with attachment (no request made)
 julia --project script/ask.jl --llm google --attachment image.png --dry-run "describe"
@@ -459,18 +400,13 @@ The helper `LLMAccess.normalize_output_text(str)` implements the transformation 
 
 LLMAccess currently supports the following LLM providers:
 
-- **OpenAI**: Access to models like GPT-4, GPT-3.5, etc.
-- **OpenRouter**: Compatible with OpenAI's API endpoints.
-- **Groq**: Integrates with Groq's LLM services.
-- **DeepSeek**: OpenAI-compatible API access to DeepSeek's models.
-- **Z.ai**: OpenAI-compatible API access to GLM-4.5 family.
-- **Cerebras**: OpenAI-compatible Cerebras Inference models such as `zai-glm-4.6`.
-- **Anthropic**: Utilizes Anthropic's Claude models.
-- **MiniMax**: Anthropic-compatible access to MiniMax models like MiniMax-M2.
-- **Google**: Connects to Google's generative language models.
-- **Ollama**: Interfaces with Ollama's local LLM deployments.
-- **Ollama Cloud**: Calls Ollama's hosted chat API (requires `OLLAMA_API_KEY`).
-- **Mistral**: Access to Mistral's LLM offerings.
+- **OpenAI**: Access to GPT-4/5 families and the latest reasoning models.
+- **OpenRouter**: Compatible with OpenAI's API, exposing curated multi-vendor models.
+- **DeepSeek**: OpenAI-compatible access to DeepSeek-Chat and DeepSeek-Reasoner.
+- **Anthropic**: Claude Haiku/Sonnet/Opus with thinking budget controls.
+- **Google**: Gemini and Gemma families, plus Imagen/Veo media models.
+- **Ollama**: Local inference via the Ollama daemon (vision + reasoning capable).
+- **Mistral**: Native access to Mistral, Magistral, Pixtral, and OCR models.
 
 You can call providers using typed instances (e.g., `call_llm(GoogleLLM(), ...)`) or by name via `call_llm(llm_name, system_instruction, input_text; model, temperature, copy, think, dry_run)`. The name-based form does not accept attachments; use the typed method or the CLI when you need to include `--attachment`.
 

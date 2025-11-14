@@ -107,24 +107,6 @@ function call_llm(
     return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think)
 end
 
-# Groq (OpenAI-compatible, with small tweak)
-function call_llm(
-    llm::GroqLLM,
-    system_instruction="",
-    input_text="",
-    model = get_default_model("groq"),
-    temperature::Float64 = get_default_temperature(),
-    attach_file = "";
-    kwargs...
-)
-    api_key = ENV["GROQ_API_KEY"]
-    url     = "https://api.groq.com/openai/v1/chat/completions"
-    sys_instruction = attach_file != "" ? "" : system_instruction
-    dry_run = get(kwargs, :dry_run, false)
-    think = get(kwargs, :think, 0)
-    return make_api_request(llm, api_key, url, sys_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think)
-end
-
 # DeepSeek (OpenAI-compatible)
 function call_llm(
     llm::DeepSeekLLM,
@@ -147,40 +129,4 @@ function call_llm(
     end
 
     return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think, max_tokens=max_tokens)
-end
-
-# Z.ai (OpenAI-compatible)
-function call_llm(
-    llm::ZaiLLM,
-    system_instruction="",
-    input_text="",
-    model = get_default_model("zai"),
-    temperature::Float64 = get_default_temperature(),
-    attach_file = "";
-    kwargs...
-)
-    api_key = ENV["ZAI_API_KEY"]
-    url     = "https://api.z.ai/api/paas/v4/chat/completions"
-    dry_run = get(kwargs, :dry_run, false)
-    think = get(kwargs, :think, 0)
-    # Normalize OpenRouter-style aliases like "z-ai/glm-4.5" back to model id
-    normalized_model = occursin("/", model) ? split(model, "/")[end] : model
-    return make_api_request(llm, api_key, url, system_instruction, input_text, normalized_model, temperature, attach_file; dry_run=dry_run, think=think)
-end
-
-# Cerebras (OpenAI-compatible)
-function call_llm(
-    llm::CerebrasLLM,
-    system_instruction="",
-    input_text="",
-    model = get_default_model("cerebras"),
-    temperature::Float64 = get_default_temperature(),
-    attach_file = "";
-    kwargs...
-)
-    api_key = ENV["CEREBRAS_API_KEY"]
-    url     = "https://api.cerebras.ai/v1/chat/completions"
-    dry_run = get(kwargs, :dry_run, false)
-    think = get(kwargs, :think, 0)
-    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think)
 end

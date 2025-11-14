@@ -32,17 +32,6 @@ function list_llm_models(llm::AnthropicLLM)
 end
 
 """
-    list_llm_models(llm::MinimaxLLM)
-
-Return a static list for MiniMax, which does not expose a listing API.
-"""
-function list_llm_models(llm::MinimaxLLM)
-    @debug "Listing LLM Models" llm
-    # MiniMax lacks a discoverable endpoint; expose the known public model.
-    return ["minimax-m2"]
-end
-
-"""
     list_llm_models(llm::OpenRouterLLM)
 
 List available models from OpenRouter.
@@ -51,24 +40,6 @@ function list_llm_models(llm::OpenRouterLLM)
     @debug "Listing LLM Models" llm
     url = "https://openrouter.ai/api/v1/models"
     response = get_request(url)
-    model_list = handle_json_response(response, ["data"])
-    return [model["id"] for model in model_list]
-end
-
-"""
-    list_llm_models(llm::GroqLLM)
-
-List available models from Groq.
-"""
-function list_llm_models(llm::GroqLLM)
-    @debug "Listing LLM Models" llm
-    api_key = ENV["GROQ_API_KEY"]
-    headers = [
-        "Content-Type" => "application/json",
-        "Authorization" => "Bearer $api_key",
-    ]
-    url = "https://api.groq.com/openai/v1/models"
-    response = get_request(url, headers)
     model_list = handle_json_response(response, ["data"])
     return [model["id"] for model in model_list]
 end
@@ -121,7 +92,7 @@ end
 """
     list_llm_models(llm::OllamaLLM)
 
-List available models from local Ollama.
+List locally available Ollama models.
 """
 function list_llm_models(llm::OllamaLLM)
     @debug "Listing LLM Models" llm
@@ -136,63 +107,4 @@ function list_llm_models(llm::OllamaLLM)
         end
     end
     return ids
-end
-
-"""
-    list_llm_models(llm::OllamaCloudLLM)
-
-List available models from Ollama Cloud.
-"""
-function list_llm_models(llm::OllamaCloudLLM)
-    @debug "Listing LLM Models" llm
-    headers = Pair{String, String}[]
-    api_key = get(ENV, "OLLAMA_API_KEY", nothing)
-    if api_key !== nothing
-        push!(headers, "Authorization" => "Bearer $api_key")
-    end
-    url = "https://ollama.com/api/tags"
-    response = isempty(headers) ? get_request(url) : get_request(url, headers)
-    model_list = handle_json_response(response, ["models"])
-    ids = String[]
-    for entry in model_list
-        id = get(entry, "model", get(entry, "name", ""))
-        if id != ""
-            push!(ids, id)
-        end
-    end
-    return ids
-end
-
-"""
-    list_llm_models(llm::ZaiLLM)
-
-Return supported model names for Z.ai provider.
-"""
-function list_llm_models(llm::ZaiLLM)
-    @debug "Listing LLM Models" llm
-    api_key = ENV["ZAI_API_KEY"]
-    headers = [
-        "Authorization" => "Bearer $api_key",
-    ]
-    url = "https://api.z.ai/api/paas/v4/models"
-    response = get_request(url, headers)
-    model_list = handle_json_response(response, ["data"])
-    return [model["id"] for model in model_list]
-end
-
-"""
-    list_llm_models(llm::CerebrasLLM)
-
-Return supported model ids for Cerebras' OpenAI-compatible endpoint.
-"""
-function list_llm_models(llm::CerebrasLLM)
-    @debug "Listing LLM Models" llm
-    api_key = ENV["CEREBRAS_API_KEY"]
-    headers = [
-        "Authorization" => "Bearer $api_key",
-    ]
-    url = "https://api.cerebras.ai/v1/models"
-    response = get_request(url, headers)
-    model_list = handle_json_response(response, ["data"])
-    return [model["id"] for model in model_list]
 end

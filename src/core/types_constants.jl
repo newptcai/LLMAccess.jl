@@ -27,25 +27,11 @@ Concrete type for OpenRouter's LLM.
 struct OpenRouterLLM <: OpenAICompatibleLLM end
 
 """
-    GroqLLM
-
-Concrete type for Groq's LLM.
-"""
-struct GroqLLM <: OpenAICompatibleLLM end
-
-"""
     AnthropicLLM
 
 Concrete type for Anthropic's LLM (e.g., Claude).
 """
 struct AnthropicLLM <: AbstractLLM end
-
-"""
-    MinimaxLLM
-
-Concrete type for MiniMax's Anthropic-compatible LLM.
-"""
-struct MinimaxLLM <: AbstractLLM end
 
 """
     GoogleLLM
@@ -57,16 +43,9 @@ struct GoogleLLM <: AbstractLLM end
 """
     OllamaLLM
 
-Concrete type for Ollama's LLM.
+Concrete type for Ollama's local LLM.
 """
 struct OllamaLLM <: AbstractLLM end
-
-"""
-    OllamaCloudLLM
-
-Concrete type for Ollama Cloud's hosted LLM service.
-"""
-struct OllamaCloudLLM <: AbstractLLM end
 
 """
     MistralLLM
@@ -82,20 +61,6 @@ Concrete type for DeepSeek's LLM (OpenAI-compatible API).
 """
 struct DeepSeekLLM <: OpenAICompatibleLLM end
 
-"""
-    ZaiLLM
-
-Concrete type for Z.ai's LLM (OpenAI-compatible API).
-"""
-struct ZaiLLM <: OpenAICompatibleLLM end
-
-"""
-    CerebrasLLM
-
-Concrete type for Cerebras' OpenAI-compatible chat completions API.
-"""
-struct CerebrasLLM <: OpenAICompatibleLLM end
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Constants
 # ─────────────────────────────────────────────────────────────────────────────
@@ -105,15 +70,10 @@ const DEFAULT_MODELS = Dict(
     "openai"      => "gpt-5-mini",
     "openrouter"  => "amazon/nova-micro-v1",
     "anthropic"   => "claude-haiku-4-5-20251001",
-    "minimax"     => "MiniMax-M2",
     "google"      => "gemini-2.5-flash",
     "ollama"      => "gemma3:4b",
-    "ollama_cloud" => "gpt-oss:20b",
     "mistral"     => "mistral-small-latest",
-    "groq"        => "qwen/qwen3-32b",
     "deepseek"    => "deepseek-chat",
-    "zai"         => "glm-4.5-air",
-    "cerebras"    => "zai-glm-4.6",
 )
 
 const DEFAULT_TEMPERATURE = 1.0
@@ -138,10 +98,6 @@ const PROVIDER_ALIASES = Dict(
     "a"  => "anthropic",
     "an" => "anthropic",
 
-    # MiniMax
-    "mm" => "minimax",
-    "mini" => "minimax",
-
     # Google
     "g"  => "google",
 
@@ -150,28 +106,13 @@ const PROVIDER_ALIASES = Dict(
 
     # Ollama
     "ol" => "ollama",
-    "oc" => "ollama_cloud",
-    "olc" => "ollama_cloud",
-    "ollama-cloud" => "ollama_cloud",
-    "ollamacloud" => "ollama_cloud",
 
     # OpenRouter
     "or" => "openrouter",
 
-    # Groq
-    "gr" => "groq",
-
     # DeepSeek
     "d"  => "deepseek",
     "ds" => "deepseek",
-
-    # Z.ai
-    "z"  => "zai",
-    "za" => "zai",
-
-    # Cerebras
-    "c"  => "cerebras",
-    "ce" => "cerebras",
 )
 
 const MODEL_ALIASES = Dict(
@@ -249,17 +190,6 @@ const MODEL_ALIASES = Dict(
     "r1" => "deepseek-reasoner",
     "v3" => "deepseek-chat",
 
-    # Groq-hosted common models
-    "llama-70b" => "llama-3.3-70b-versatile",
-    "llama-8b"  => "llama-3.1-8b-instant",
-    "whisper" => "whisper-large-v3",
-    "whisper-turbo" => "whisper-large-v3-turbo",
-    "qwen-32b" => "qwen/qwen3-32b",
-    "qwen-14b" => "qwen/qwen3-14b",
-    "qwen-8b"  => "qwen/qwen3-8b",
-    "r1-70b" => "deepseek-r1-distill-llama-70b",
-    "r1-8b"  => "deepseek-r1-distill-llama-8b",
-
     # OpenRouter popular slugs
     "grok-4" => "x-ai/grok-4",
     "grok-3" => "x-ai/grok-3",
@@ -277,7 +207,6 @@ const MODEL_ALIASES = Dict(
     "nova-lite" => "amazon/nova-lite-v1",
     "nova-pro" => "amazon/nova-pro-v1",
     "gemma3-27b-or" => "google/gemma-3-27b-it",
-
     # Ollama local models
     "gemma3-4b-ollama" => "gemma3:4b",
     "gemma3-12b-ollama" => "gemma3:12b",
@@ -318,8 +247,4 @@ const MODEL_ALIASES = Dict(
     "4o-search" => "gpt-4o-search-preview",
     "4o-mini-search" => "gpt-4o-mini-search-preview",
     "4o-transcribe" => "gpt-4o-transcribe",
-
-    # MiniMax
-    "mm2" => "MiniMax-M2",
-    "minimax" => "MiniMax-M2",
 )

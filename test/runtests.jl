@@ -56,21 +56,6 @@ const Core = LLMAccess.Core
         @test LLMAccess.is_anthropic_thinking_model("gpt-4o") == false
         @test LLMAccess.is_anthropic_thinking_model("gemini-1.5-pro") == false
     end
-    @testset "minimax aliases and defaults" begin
-        @test Core.resolve_provider_alias("mm") == "minimax"
-        @test Core.resolve_provider_alias("mini") == "minimax"
-        @test Core.resolve_model_alias("mm2") == "MiniMax-M2"
-        @test Core.resolve_model_alias("minimax") == "MiniMax-M2"
-        expected_default = get(ENV, "DEFAULT_MINIMAX_MODEL", "MiniMax-M2")
-        @test Core.get_default_model("minimax") == expected_default
-    end
-
-    @testset "cerebras aliases and defaults" begin
-        @test Core.resolve_provider_alias("ce") == "cerebras"
-        @test Core.resolve_provider_alias("c") == "cerebras"
-        expected_default = get(ENV, "DEFAULT_CEREBRAS_MODEL", "zai-glm-4.6")
-        @test Core.get_default_model("cerebras") == expected_default
-    end
 
     # Integration tests (run only when explicitly enabled)
     if get(ENV, "LLMACCESS_RUN_INTEGRATION", "0") == "1"
@@ -91,11 +76,9 @@ const Core = LLMAccess.Core
         test_llm(get_llm_type("google"))
         test_llm(get_llm_type("openai"))
         test_llm(get_llm_type("anthropic"))
-        test_llm(get_llm_type("minimax"))
         test_llm(get_llm_type("mistral"))
         test_llm(get_llm_type("ollama"))
         test_llm(get_llm_type("openrouter"))
-        test_llm(get_llm_type("groq"))
         test_llm(get_llm_type("deepseek"))
 
         # Test specific Google model

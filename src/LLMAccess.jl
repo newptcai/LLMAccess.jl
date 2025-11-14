@@ -31,16 +31,11 @@ module Core
            OpenAICompatibleLLM,
            OpenAILLM,
            OpenRouterLLM,
-           GroqLLM,
            AnthropicLLM,
-           MinimaxLLM,
            GoogleLLM,
            OllamaLLM,
-           OllamaCloudLLM,
            MistralLLM,
            DeepSeekLLM,
-           ZaiLLM,
-           CerebrasLLM,
            DEFAULT_MODELS,
            DEFAULT_TEMPERATURE,
            DEFAULT_LLM,
@@ -69,11 +64,9 @@ module Providers
 
     include("providers/openai_compat.jl")
     include("providers/anthropic.jl")
-    include("providers/minimax.jl")
     include("providers/google.jl")
     include("providers/mistral.jl")
     include("providers/ollama.jl")
-    include("providers/ollama_cloud.jl")
 
     export call_llm
 end # module Providers
