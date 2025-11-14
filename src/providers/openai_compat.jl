@@ -8,7 +8,7 @@ function call_llm(llm::AbstractLLM; kwargs...)
 end
 
 """
-    make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=false)
+    make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=false, think=0, max_tokens=nothing)
 
 Prepare and send an OpenAI-compatible chat.completions request and return text.
 """
@@ -22,9 +22,10 @@ function make_api_request(
     temperature::Float64,
     attach_file;
     dry_run::Bool = false,
+    think::Int = 0,
     max_tokens = nothing
 )
-    @debug "Making API request" llm system_instruction input_text model temperature attach_file
+    @debug "Making API request" llm system_instruction input_text model temperature attach_file think
     headers = [
         "Content-Type" => "application/json",
         "Authorization" => "Bearer $api_key",
@@ -39,8 +40,31 @@ function make_api_request(
     end
     push!(messages, user_message)
     data = Dict("model" => model, "temperature" => temperature, "messages" => messages)
+
+    # Handle max_tokens if provided
     if max_tokens !== nothing
         data["max_tokens"] = max_tokens
+    end
+
+    # Handle reasoning effort for GPT-5 models
+    if occursin("gpt-5", lowercase(model)) || startswith(lowercase(model), "o")
+        reasoning_effort = think == 0 ? "none" :
+                          think == 1 ? "minimal" :
+                          think == 2 ? "low" :
+                          think == 3 ? "medium" : "high"
+
+        # GPT-5.1 supports none, low, medium, high (no minimal)
+        if occursin("gpt-5.1", lowercase(model)) && reasoning_effort == "minimal"
+            reasoning_effort = "low"
+        end
+
+        # GPT-5-pro only supports high
+        if occursin("gpt-5-pro", lowercase(model))
+            reasoning_effort = "high"
+        end
+
+        data["reasoning"] = Dict("effort" => reasoning_effort)
+        @debug "Setting reasoning effort" model reasoning_effort think
     end
     if dry_run
         return JSON.json(data)
@@ -62,7 +86,8 @@ function call_llm(
     api_key = ENV["OPENAI_API_KEY"]
     url     = "https://api.openai.com/v1/chat/completions"
     dry_run = get(kwargs, :dry_run, false)
-    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run)
+    think = get(kwargs, :think, 0)
+    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think)
 end
 
 # OpenRouter
@@ -78,7 +103,8 @@ function call_llm(
     api_key = ENV["OPENROUTER_API_KEY"]
     url     = "https://openrouter.ai/api/v1/chat/completions"
     dry_run = get(kwargs, :dry_run, false)
-    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run)
+    think = get(kwargs, :think, 0)
+    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think)
 end
 
 # Groq (OpenAI-compatible, with small tweak)
@@ -95,7 +121,8 @@ function call_llm(
     url     = "https://api.groq.com/openai/v1/chat/completions"
     sys_instruction = attach_file != "" ? "" : system_instruction
     dry_run = get(kwargs, :dry_run, false)
-    return make_api_request(llm, api_key, url, sys_instruction, input_text, model, temperature, attach_file; dry_run=dry_run)
+    think = get(kwargs, :think, 0)
+    return make_api_request(llm, api_key, url, sys_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think)
 end
 
 # DeepSeek (OpenAI-compatible)
@@ -119,7 +146,7 @@ function call_llm(
         max_tokens = think
     end
 
-    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, max_tokens=max_tokens)
+    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think, max_tokens=max_tokens)
 end
 
 # Z.ai (OpenAI-compatible)
@@ -135,9 +162,10 @@ function call_llm(
     api_key = ENV["ZAI_API_KEY"]
     url     = "https://api.z.ai/api/paas/v4/chat/completions"
     dry_run = get(kwargs, :dry_run, false)
+    think = get(kwargs, :think, 0)
     # Normalize OpenRouter-style aliases like "z-ai/glm-4.5" back to model id
     normalized_model = occursin("/", model) ? split(model, "/")[end] : model
-    return make_api_request(llm, api_key, url, system_instruction, input_text, normalized_model, temperature, attach_file; dry_run=dry_run)
+    return make_api_request(llm, api_key, url, system_instruction, input_text, normalized_model, temperature, attach_file; dry_run=dry_run, think=think)
 end
 
 # Cerebras (OpenAI-compatible)
@@ -153,5 +181,6 @@ function call_llm(
     api_key = ENV["CEREBRAS_API_KEY"]
     url     = "https://api.cerebras.ai/v1/chat/completions"
     dry_run = get(kwargs, :dry_run, false)
-    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run)
+    think = get(kwargs, :think, 0)
+    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think)
 end

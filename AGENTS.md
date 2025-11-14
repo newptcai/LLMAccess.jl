@@ -10,7 +10,7 @@ This document consolidates the guidance previously spread across `AGENTS.md`, `C
 ### Key Features
 - **Multi-provider dispatch:** Concrete `Provider` types share the `AbstractLLM` hierarchy; OpenAI-compatible services reuse `OpenAICompatibleLLM`.
 - **Model alias resolution:** Shorthands (e.g., `4o-mini`, `flash`) map to full model IDs via `resolve_model_alias`.
-- **Thinking mode:** Google Gemini, Anthropic Claude Sonnet/Opus, and Ollama support adjustable thinking budgets or toggles via `--think/-k`.
+- **Thinking mode:** Google Gemini, Anthropic Claude Sonnet/Opus, OpenAI GPT-5, and Ollama support adjustable thinking budgets or toggles via `--think/-k`.
 - **Attachment handling:** Provider-specific encoders support inline/base64 image uploads with correct MIME metadata.
 - **Robust error reporting:** HTTP failures are parsed into actionable messages; `--debug/-d` emits verbose diagnostics.
 
@@ -45,8 +45,8 @@ Optional workflows:
 # Ask a question with Google Gemini
 julia --project script/ask.jl --llm google "Hello"
 
-# Generate commands with OpenAI GPT-4o Mini
-julia --project script/cmd.jl --llm openai --model 4o-mini "list files changed today"
+# Generate commands with OpenAI GPT-5.1
+julia --project script/cmd.jl --llm openai --model 5.1 "list files changed today"
 
 # Bypass the LLM and test command/clipboard flow
 julia --project script/cmd.jl --cmd 'echo hi'
@@ -57,7 +57,7 @@ Common flags:
 - `--model/-m` model override (aliases supported)
 - `--attachment/-a` attach files for multimodal requests
 - `--temperature/-t` sampling control
-- `--think/-k` provider-specific thinking budget or toggle
+- `--think/-k` provider-specific thinking budget or toggle (0-4 for GPT-5 models)
 - `--debug/-d` verbose logging
 - `--copy/-c` copy responses to the clipboard
 - `--alias/-A` list all model aliases and exit
@@ -92,4 +92,5 @@ Common flags:
 - Model alias listings help verify available shorthands: `julia --project script/ask.jl -A`.
 - Groq omits system instructions when attachments are provided to satisfy API requirements.
 - Ollama treats any non-zero `--think` value as enabling thinking mode.
+- GPT-5.1 uses reasoning effort levels 0-4: 0=none (default), 1=minimal→low, 2=low, 3=medium, 4=high.
 - `script/cmd.jl` always copies trimmed command output; confirm clipboard access on your platform.

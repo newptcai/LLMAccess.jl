@@ -268,6 +268,10 @@ LLMAccess supports shorthand names for common models. Here are some key aliases 
 | `3.5` | `gpt-3.5-turbo` |
 | `5` | `gpt-5` |
 | `5-mini` | `gpt-5-mini` |
+| `5.1` | `gpt-5.1` |
+| `5.1-chat` | `gpt-5.1-chat-latest` |
+| `5.1-codex` | `gpt-5.1-codex` |
+| `5.1-codex-mini` | `gpt-5.1-codex-mini` |
 
 Use these aliases anywhere you would specify a model name. For example:
 
@@ -281,7 +285,7 @@ Additional popular aliases by provider
 - OpenAI (`--llm openai`)
   - `o1`, `o1-mini`, `o1-pro`, `o3`, `o3-mini`, `o3-mini-high`, `o4-mini`
   - `4.1`, `4.1-mini`, `4.1-nano`, `4o-audio`, `4o-rt`, `4o-search`, `4o-mini-search`, `4o-transcribe`
-  - `5-chat`, `5-nano`
+  - `5-chat`, `5-nano`, `5.1`, `5.1-chat`, `5.1-codex`, `5.1-codex-mini`
 - Google (`--llm google`)
   - `pro` (Gemini 2.5 Pro), `flash-lite` (Gemini 2.5 Flash Lite)
   - `1.5-pro`, `1.5-flash`, `1.5-flash-8b`, `2.0-flash`
@@ -337,8 +341,16 @@ julia --project script/ask.jl --llm-alias
   - Claude Sonnet: `0` (disabled)
   - DeepSeek Reasoner: `0` (not used by API)
   - Mistral/Magistral: `0` (not used by API)
-- Pass an explicit value to override (e.g., `-k 1000`).
-- Providers that don’t support “thinking” ignore this option.
+  - GPT-5.1: `0` (none reasoning effort)
+- **GPT-5 & O-Series Models:** Use levels 0-4:
+  - `0`: none reasoning (GPT-5.1 default, optimal for latency-sensitive tasks)
+  - `1`: minimal reasoning
+  - `2`: low reasoning
+  - `3`: medium reasoning
+  - `4`: high reasoning
+- **GPT-5.1 Specifics:** Supports none, low, medium, high (no minimal)
+- Pass an explicit value to override (e.g., `-k 2` for low reasoning).
+- Providers that don't support "thinking" ignore this option.
 
 ### CLI Scripts
 

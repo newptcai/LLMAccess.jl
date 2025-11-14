@@ -24,7 +24,7 @@ julia --project script/ask.jl --llm google "Hello"
 - `--debug, -d`: Enable debug logging and verbose error output.
 - `--copy, -c`: Copy response to clipboard (if supported by script).
 - `--no-copy`: For `script/cmd.jl` only, disable the default clipboard copying.
-- `--think, -k`: Thinking budget for supported providers (e.g., Gemini, Claude).
+- `--think, -k`: Thinking budget for supported providers (e.g., Gemini, Claude, GPT-5).
 - `--alias`: Print all model aliases and exit.
 - `--llm-alias`: Print provider aliases for `--llm` and exit.
 - `--providers`: Print supported LLM providers (valid `--llm` choices) and exit.
@@ -90,7 +90,7 @@ julia --project script/ask.jl --no-normalize --llm google "“Quotes” and — 
 
 Common examples
 
-- OpenAI: `4o`, `4o-mini`, `o1`, `o1-mini`, `o3`, `o3-mini`, `o4-mini`, `4.1`, `4o-search`
+- OpenAI: `4o`, `4o-mini`, `o1`, `o1-mini`, `o3`, `o3-mini`, `o4-mini`, `4.1`, `4o-search`, `5.1`, `5.1-chat`, `5.1-codex`
 - Google: `g` (Gemini Pro), `gf` (Gemini Flash), `1.5-pro`, `1.5-flash`, `1.5-flash-8b`, `flash-lite`, `gemma3-12b`
 - Anthropic: `h` (Haiku), `s` (Sonnet), `o` (Opus), `sonnet-3.7`
 - MiniMax: `mm2`, `minimax`

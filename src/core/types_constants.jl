@@ -299,6 +299,10 @@ const MODEL_ALIASES = Dict(
     # Additional OpenAI families
     "5-nano" => "gpt-5-nano",
     "5-chat" => "gpt-5-chat-latest",
+    "5.1" => "gpt-5.1",
+    "5.1-chat" => "gpt-5.1-chat-latest",
+    "5.1-codex" => "gpt-5.1-codex",
+    "5.1-codex-mini" => "gpt-5.1-codex-mini",
     "o1" => "o1",
     "o1-mini" => "o1-mini",
     "o1-pro" => "o1-pro",
