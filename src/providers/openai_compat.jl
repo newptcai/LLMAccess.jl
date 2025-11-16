@@ -27,11 +27,26 @@ function make_api_request(
     schema_content::String = ""
 )
     @debug "Making API request" llm system_instruction input_text model temperature attach_file think schema_content
+    
+    current_input_text = input_text
+
+    # gpt-oss workaround
+    if occursin("gpt-oss", lowercase(model)) && !isempty(schema_content)
+        current_input_text = """
+        $current_input_text
+
+        Use the provided JSON schema for your reply:
+        ```
+        $schema_content
+        ```
+        """
+    end
+
     headers = [
         "Content-Type" => "application/json",
         "Authorization" => "Bearer $api_key",
     ]
-    text_data = Dict("type" => "text", "text" => input_text)
+    text_data = Dict("type" => "text", "text" => current_input_text)
     content = attach_file != "" ? [text_data, encode_file_to_base64(llm, attach_file)] : [text_data]
     user_message   = Dict("role" => "user", "content" => content)
     system_message = Dict("role" => "system", "content" => system_instruction)
@@ -43,7 +58,7 @@ function make_api_request(
     data = Dict("model" => model, "temperature" => temperature, "messages" => messages)
 
     # Handle schema if provided
-    if !isempty(schema_content)
+    if !occursin("gpt-oss", lowercase(model)) && !isempty(schema_content)
         schema_parsed = try
             JSON.parse(schema_content)
         catch e
