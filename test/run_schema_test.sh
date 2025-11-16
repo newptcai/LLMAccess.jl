@@ -41,11 +41,14 @@ TEST_SCHEMA='{
 # Run the command
 # julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm mistral --schema "$TEST_SCHEMA" "$PROMPT" | jq
 
-# Run the command for openrouter
-julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm openrouter --model "openai/gpt-4.1-nano" --schema "$TEST_SCHEMA" "$PROMPT" | jq
+# Run the command gpt models for openrouter
+# julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm openrouter --model "openai/gpt-4.1-nano" --schema "$TEST_SCHEMA" "$PROMPT" | jq
+
+# Run the command for gpt-oss models via openrouter
+# julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm openrouter --model "openai/gpt-oss-20b:free" --schema "$TEST_SCHEMA" "$PROMPT" | jq
 
 # Run the command for anthropic
-# julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm anthropic --model "claude-sonnet-4.5" --schema "$TEST_SCHEMA" "$PROMPT" | jq
+# julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm anthropic --model "claude-sonnet-4-5-20250929" --schema "$TEST_SCHEMA" "$PROMPT" | jq
 
 # Run the command for deepseek
-# julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm deepseek --model "deepseek-chat" --schema "$TEST_SCHEMA" "$PROMPT" | jq
+julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" -d --llm deepseek --model "deepseek-chat" --schema "$TEST_SCHEMA" "$PROMPT" | jq
