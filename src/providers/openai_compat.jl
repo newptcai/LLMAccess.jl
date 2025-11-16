@@ -29,6 +29,7 @@ function make_api_request(
     @debug "Making API request" llm system_instruction input_text model temperature attach_file think schema_content
     
     current_input_text = input_text
+    add_deepseek_response_format = false
 
     # gpt-oss workaround
     if occursin("gpt-oss", lowercase(model)) && !isempty(schema_content)
@@ -40,6 +41,17 @@ function make_api_request(
         $schema_content
         ```
         """
+    # DeepSeek workaround
+    elseif llm isa DeepSeekLLM && !isempty(schema_content)
+        current_input_text = """
+        $current_input_text
+
+        Use the provided JSON schema for your reply:
+        ```
+        $schema_content
+        ```
+        """
+        add_deepseek_response_format = true
     end
 
     headers = [
@@ -57,14 +69,16 @@ function make_api_request(
     push!(messages, user_message)
     data = Dict("model" => model, "temperature" => temperature, "messages" => messages)
 
-    # Handle schema if provided
-    if !occursin("gpt-oss", lowercase(model)) && !isempty(schema_content)
+    # Handle schema if provided (for non-gpt-oss and non-DeepSeek models)
+    if !occursin("gpt-oss", lowercase(model)) && !(llm isa DeepSeekLLM) && !isempty(schema_content)
         schema_parsed = try
             JSON.parse(schema_content)
         catch e
             error("Failed to parse schema content: $e")
         end
         data["response_format"] = Dict("type" => "json_schema", "json_schema" => schema_parsed)
+    elseif add_deepseek_response_format # For DeepSeek
+        data["response_format"] = Dict("type" => "json_object")
     end
 
     # Handle max_tokens if provided

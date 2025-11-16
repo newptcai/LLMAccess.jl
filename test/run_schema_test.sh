@@ -51,4 +51,4 @@ TEST_SCHEMA='{
 # julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm anthropic --model "claude-sonnet-4-5-20250929" --schema "$TEST_SCHEMA" "$PROMPT" | jq
 
 # Run the command for deepseek
-julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" -d --llm deepseek --model "deepseek-chat" --schema "$TEST_SCHEMA" "$PROMPT" | jq
+julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm deepseek --model "deepseek-chat" --schema "$TEST_SCHEMA" "$PROMPT"
