@@ -343,6 +343,8 @@ Common arguments:
 - `--model, -m`: Model name; supports aliases below. Defaults to provider’s default.
 - `--file, -f`: Path to input file to process (optional; reserved for helpers that consume files).
 - `--attachment, -a`: Path to a file to attach (e.g., image for vision APIs).
+- `--schema-file`: Path to a JSON schema file for the response.
+- `--schema`: JSON schema for the response as a string.
 - `--temperature, -t`: Sampling temperature (default: 1.0).
 - `--debug, -d`: Enable debug logging and richer error output.
 - `--copy, -c`: Copy response to clipboard.

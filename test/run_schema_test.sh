@@ -15,10 +15,10 @@ ASK_JL_SCRIPT="$PROJECT_ROOT/script/ask.jl"
 TEST_SCHEMA="$PROJECT_ROOT/test/test_schema.json"
 
 # Define the prompt
-PROMPT="I recently read To Kill a Mockingbird by Harper Lee."
+PROMPT="Who wrote To Kill a Mockingbird?"
 
 # Run the command
-julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm mistral --schema "$TEST_SCHEMA" "$PROMPT"
+julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm mistral --schema-file "$TEST_SCHEMA" "$PROMPT"
 
 # Run the command for openrouter
-julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm openrouter --model "openai/gpt-oss-20b:free" --schema "$TEST_SCHEMA" "$PROMPT"
+julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm openrouter --model "openai/gpt-oss-20b:free" --schema-file "$TEST_SCHEMA" "$PROMPT"

@@ -53,7 +53,8 @@ function parse_commandline(
         "--model", "-m"; help = "Specific model to use"; default = default_model
         "--file", "-f"; help = "Path to input file to process"; default = ""
         "--attachment", "-a"; help = "Path to file attachment"; default = ""
-        "--schema"; help = "Path to a JSON schema file for the response"; default = ""
+        "--schema-file"; help = "Path to a JSON schema file for the response"; default = ""
+        "--schema"; help = "JSON schema for the response as a string"; default = ""
         "--temperature", "-t"; help = "Sampling temperature (0.0-2.0)"; arg_type = Float64; default = get_default_temperature()
         "--debug", "-d"; help = "Enable debug logging"; action = :store_true
         "--copy", "-c"; help = "Copy response to clipboard"; action = :store_true
@@ -90,6 +91,18 @@ function parse_commandline(
         println.(providers)
         exit(0)
     end
+
+    if !isempty(args["schema"]) && !isempty(args["schema-file"])
+        error("Both --schema and --schema-file cannot be provided at the same time.")
+    end
+
+    schema_content = ""
+    if !isempty(args["schema"])
+        schema_content = args["schema"]
+    elseif !isempty(args["schema-file"])
+        schema_content = read(args["schema-file"], String)
+    end
+    args["schema_content"] = schema_content
 
     if isnothing(args["input_text"]) && require_input
         args["input_text"] = chomp(read(stdin, String))

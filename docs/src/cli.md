@@ -20,6 +20,8 @@ julia --project script/ask.jl --llm google "Hello"
 - `--model, -m`: Model name (supports aliases; defaults per provider or env).
 - `--attachment, -a`: Path to file to attach (e.g., image for vision models).
 - `--file, -f`: Input file path (optional; script-specific).
+- `--schema-file`: Path to a JSON schema file for the response.
+- `--schema`: JSON schema for the response as a string.
 - `--temperature, -t`: Sampling temperature (Float64; default 1.0 unless overridden by env).
 - `--debug, -d`: Enable debug logging and verbose error output.
 - `--copy, -c`: Copy response to clipboard (if supported by script).

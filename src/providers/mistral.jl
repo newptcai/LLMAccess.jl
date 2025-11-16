@@ -106,12 +106,12 @@ function call_llm(
         "messages"    => messages,
     )
 
-    schema_file = get(kwargs, :schema, "")
-    if !isempty(schema_file)
+    schema_content_raw = get(kwargs, :schema_content, "")
+    if !isempty(schema_content_raw)
         schema_content = try
-            JSON.parse(read(schema_file, String))
+            JSON.parse(schema_content_raw)
         catch e
-            error("Failed to parse schema file '$schema_file': $e")
+            error("Failed to parse schema content: $e")
         end
         data["response_format"] = Dict("type" => "json_schema", "json_schema" => schema_content)
     end

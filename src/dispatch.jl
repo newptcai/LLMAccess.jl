@@ -72,7 +72,7 @@ function call_llm(system_instruction, args::Dict)
     model       = resolve_model_alias(args["model"])
     temperature = args["temperature"]
     attach_file = haskey(args, "attachment") ? args["attachment"] : ""
-    schema_file = haskey(args, "schema") ? args["schema"] : ""
+    schema_content = haskey(args, "schema_content") ? args["schema_content"] : ""
     copy        = args["copy"]
     think       = args["think"]
     dry_run     = get(args, "dry_run", false)
@@ -84,8 +84,8 @@ function call_llm(system_instruction, args::Dict)
     if dry_run
         kwargs[:dry_run] = true
     end
-    if !isempty(schema_file)
-        kwargs[:schema] = schema_file
+    if !isempty(schema_content)
+        kwargs[:schema_content] = schema_content
     end
 
     result = call_llm(llm_type, system_instruction, input_text, model, temperature, attach_file; kwargs...)
