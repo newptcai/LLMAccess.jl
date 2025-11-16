@@ -21,4 +21,7 @@ PROMPT="Who wrote To Kill a Mockingbird?"
 julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm mistral --schema-file "$TEST_SCHEMA" "$PROMPT"
 
 # Run the command for openrouter
-julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm openrouter --model "openai/gpt-oss-20b:free" --schema-file "$TEST_SCHEMA" "$PROMPT"
+julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm openrouter --model "openai/gpt-oss-120b" --schema-file "$TEST_SCHEMA" "$PROMPT"
+
+# Run the command for anthropic
+julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm anthropic --model "claude-sonnet-4.5" --schema-file "$TEST_SCHEMA" "$PROMPT"

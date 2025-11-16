@@ -253,6 +253,58 @@ function is_anthropic_thinking_model(model_name::String)
 end
 
 """
+    is_anthropic_schema_model(model_name::String)
+
+Check if an Anthropic model supports structured outputs by name and version.
+"""
+function is_anthropic_schema_model(model_name::String)
+    m1 = match(r"claude-(sonnet|opus)-([0-9]+(?:[\.\-][0-9]+)?)-", model_name)
+    if m1 !== nothing
+        type = m1.captures[1]
+        version_str = replace(m1.captures[2], "-" => ".")
+        version = tryparse(Float64, version_str)
+        if version !== nothing
+            if type == "sonnet" && version >= 4.5
+                return true
+            end
+            if type == "opus" && version >= 4.1
+                return true
+            end
+        end
+    end
+    m2 = match(r"claude-([0-9]+(?:[\.\-][0-9]+)?)-(sonnet|opus)-", model_name)
+    if m2 !== nothing
+        version_str = replace(m2.captures[1], "-" => ".")
+        type = m2.captures[2]
+        version = tryparse(Float64, version_str)
+        if version !== nothing
+            if type == "sonnet" && version >= 4.5
+                return true
+            end
+            if type == "opus" && version >= 4.1
+                return true
+            end
+        end
+    end
+    # check for model names without date
+    m3 = match(r"claude-(sonnet|opus)-([0-9]+\.[0-9]+)", model_name)
+    if m3 !== nothing
+        type = m3.captures[1]
+        version = tryparse(Float64, m3.captures[2])
+        if version !== nothing
+            if type == "sonnet" && version >= 4.5
+                return true
+            end
+            if type == "opus" && version >= 4.1
+                return true
+            end
+        end
+    end
+    return false
+end
+
+
+"""
     encode_file_to_base64(file_path)
 
 Read a file and return `(mime_type, base64_string)`.

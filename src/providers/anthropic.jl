@@ -42,8 +42,22 @@ function call_llm(
         data["temperature"] = 1.0
     end
 
+    schema_content_raw = get(kwargs, :schema_content, "")
+    if !isempty(schema_content_raw)
+        if !is_anthropic_schema_model(model)
+            error("The model '$model' does not support structured outputs (JSON schema).")
+        end
+        push!(headers, "anthropic-beta" => "structured-outputs-2025-11-13")
+        schema_content = try
+            JSON.parse(schema_content_raw)
+        catch e
+            error("Failed to parse schema content: $e")
+        end
+        data["output_format"] = Dict("type" => "json_schema", "schema" => schema_content)
+    end
+
     if dry_run
-        return JSON.json(data)
+        return JSON.json(Dict("headers" => headers, "data" => data))
     end
 
     response = post_request(url, headers, data)
@@ -51,6 +65,16 @@ function call_llm(
     try
         response_data = JSON.parse(String(response.body))
         content_array = get(response_data, "content", [])
+
+        if !isempty(schema_content_raw)
+            json_element_index = findfirst(item -> get(item, "type", "") == "json", content_array)
+            if !isnothing(json_element_index)
+                return JSON.json(get(content_array[json_element_index], "value", ""))
+            else
+                throw(ErrorException("No json content found in Anthropic response when schema was requested"))
+            end
+        end
+
         text_element_index = findfirst(item -> get(item, "type", "") == "text", content_array)
         if !isnothing(text_element_index)
             return get(content_array[text_element_index], "text", "")
