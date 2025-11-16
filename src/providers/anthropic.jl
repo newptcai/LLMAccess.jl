@@ -67,11 +67,12 @@ function call_llm(
         content_array = get(response_data, "content", [])
 
         if !isempty(schema_content_raw)
-            json_element_index = findfirst(item -> get(item, "type", "") == "json", content_array)
-            if !isnothing(json_element_index)
-                return JSON.json(get(content_array[json_element_index], "value", ""))
+            text_element_index = findfirst(item -> get(item, "type", "") == "text", content_array)
+            if !isnothing(text_element_index)
+                json_string = get(content_array[text_element_index], "text", "")
+                return JSON.json(JSON.parse(json_string))
             else
-                throw(ErrorException("No json content found in Anthropic response when schema was requested"))
+                throw(ErrorException("No text content found in Anthropic response when schema was requested"))
             end
         end
 

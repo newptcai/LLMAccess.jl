@@ -43,4 +43,4 @@ ANTHROPIC_SCHEMA='{
   "type": "object",
   "additionalProperties": false
 }'
-julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm anthropic --model "claude-sonnet-4.5" --schema "$ANTHROPIC_SCHEMA" "$PROMPT" | jq
+julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" -d --llm anthropic --model "claude-sonnet-4-5-20250929" --schema "$ANTHROPIC_SCHEMA" "$PROMPT" | jq
