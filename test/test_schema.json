@@ -1,0 +1,23 @@
+{
+    "schema": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "authors": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Authors",
+          "type": "array"
+        }
+      },
+      "required": ["name", "authors"],
+      "title": "Book",
+      "type": "object",
+      "additionalProperties": false
+    },
+    "name": "book",
+    "strict": true
+}

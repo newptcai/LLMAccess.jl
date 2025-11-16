@@ -53,6 +53,7 @@ function parse_commandline(
         "--model", "-m"; help = "Specific model to use"; default = default_model
         "--file", "-f"; help = "Path to input file to process"; default = ""
         "--attachment", "-a"; help = "Path to file attachment"; default = ""
+        "--schema"; help = "Path to a JSON schema file for the response"; default = ""
         "--temperature", "-t"; help = "Sampling temperature (0.0-2.0)"; arg_type = Float64; default = get_default_temperature()
         "--debug", "-d"; help = "Enable debug logging"; action = :store_true
         "--copy", "-c"; help = "Copy response to clipboard"; action = :store_true
