@@ -49,6 +49,7 @@ module Core
            resolve_model_alias,
            default_think_for_model,
            is_anthropic_thinking_model,
+           is_anthropic_schema_model,
            encode_file_to_base64,
            post_request,
            get_request,
@@ -106,7 +107,7 @@ end # module Dispatch
 
 using .Dispatch: call_llm, get_llm_type
 using .Models: list_llm_models
-using .Core: get_llm_list, is_anthropic_thinking_model, normalize_output_text
+using .Core: get_llm_list, is_anthropic_thinking_model, is_anthropic_schema_model, normalize_output_text
 using .CLI: parse_commandline, run_cli, create_default_settings
 using .Readers: jina_reader, pandoc_reader
 
