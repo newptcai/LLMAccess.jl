@@ -48,12 +48,19 @@ function call_llm(
             error("The model '$model' does not support structured outputs (JSON schema).")
         end
         push!(headers, "anthropic-beta" => "structured-outputs-2025-11-13")
-        schema_content = try
+        schema_parsed = try
             JSON.parse(schema_content_raw)
         catch e
             error("Failed to parse schema content: $e")
         end
-        data["output_format"] = Dict("type" => "json_schema", "schema" => schema_content)
+        
+        final_schema = if haskey(schema_parsed, "schema")
+            schema_parsed["schema"]
+        else
+            schema_parsed
+        end
+
+        data["output_format"] = Dict("type" => "json_schema", "schema" => final_schema)
     end
 
     if dry_run
