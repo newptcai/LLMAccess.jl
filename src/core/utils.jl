@@ -205,6 +205,9 @@ function default_think_for_model(model_name::String)::Int
     if startswith(m, "mistral-")
         return 0
     end
+    if occursin("gpt-oss", m)
+        return 1
+    end
     # GPT-5.1 models default to "none" reasoning effort for latency-sensitive use cases
     if occursin("gpt-5.1", m)
         return 0

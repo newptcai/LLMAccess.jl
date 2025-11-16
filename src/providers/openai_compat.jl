@@ -23,9 +23,10 @@ function make_api_request(
     attach_file;
     dry_run::Bool = false,
     think::Int = 0,
-    max_tokens = nothing
+    max_tokens = nothing,
+    schema::String = ""
 )
-    @debug "Making API request" llm system_instruction input_text model temperature attach_file think
+    @debug "Making API request" llm system_instruction input_text model temperature attach_file think schema
     headers = [
         "Content-Type" => "application/json",
         "Authorization" => "Bearer $api_key",
@@ -40,6 +41,16 @@ function make_api_request(
     end
     push!(messages, user_message)
     data = Dict("model" => model, "temperature" => temperature, "messages" => messages)
+
+    # Handle schema if provided
+    if !isempty(schema)
+        schema_content = try
+            JSON.parse(read(schema, String))
+        catch e
+            error("Failed to parse schema file '$schema': $e")
+        end
+        data["response_format"] = Dict("type" => "json_schema", "json_schema" => schema_content)
+    end
 
     # Handle max_tokens if provided
     if max_tokens !== nothing
@@ -87,7 +98,8 @@ function call_llm(
     url     = "https://api.openai.com/v1/chat/completions"
     dry_run = get(kwargs, :dry_run, false)
     think = get(kwargs, :think, 0)
-    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think)
+    schema = get(kwargs, :schema, "")
+    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think, schema=schema)
 end
 
 # OpenRouter
@@ -104,7 +116,8 @@ function call_llm(
     url     = "https://openrouter.ai/api/v1/chat/completions"
     dry_run = get(kwargs, :dry_run, false)
     think = get(kwargs, :think, 0)
-    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think)
+    schema = get(kwargs, :schema, "")
+    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think, schema=schema)
 end
 
 # DeepSeek (OpenAI-compatible)
@@ -121,6 +134,7 @@ function call_llm(
     url     = "https://api.deepseek.com/v1/chat/completions"
     dry_run = get(kwargs, :dry_run, false)
     think = get(kwargs, :think, 0)
+    schema = get(kwargs, :schema, "")
 
     # For DeepSeek R1 models, use thinking budget as max_tokens if provided
     max_tokens = nothing
@@ -128,5 +142,5 @@ function call_llm(
         max_tokens = think
     end
 
-    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think, max_tokens=max_tokens)
+    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think, max_tokens=max_tokens, schema=schema)
 end

@@ -19,3 +19,6 @@ PROMPT="I recently read To Kill a Mockingbird by Harper Lee."
 
 # Run the command
 julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm mistral --schema "$TEST_SCHEMA" "$PROMPT"
+
+# Run the command for openrouter
+julia --project="$PROJECT_ROOT" "$ASK_JL_SCRIPT" --llm openrouter --model "openai/gpt-oss-20b:free" --schema "$TEST_SCHEMA" "$PROMPT"
