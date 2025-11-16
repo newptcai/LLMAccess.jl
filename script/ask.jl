@@ -6,7 +6,7 @@ using Logging
 
 function main(_)
     # Define the system prompt
-    system_instruction = "Do not suggest following up questions."
+    system_instruction = "Answer the above question concisely and do not suggest following up questions."
 
     custom_settings = ArgParseSettings(
         prog = "ask.jl",
@@ -42,13 +42,14 @@ function main(_)
             error("no input provided; pass a question as argument, pipe from stdin, or use -f/--file")
         end
         instruction_user = """
-        Instructions:
-        $system_instruction
-
         Question:
 
         $original
+
+        Instructions:
+        $system_instruction
         """
+
         args["input_text"] = instruction_user
         result = call_llm("", args)
         result = replace(result, r"\s+$"m => "")
