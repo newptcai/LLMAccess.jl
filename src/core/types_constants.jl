@@ -92,11 +92,9 @@ Examples:
 const PROVIDER_ALIASES = Dict(
     # OpenAI
     "o"  => "openai",
-    "oa" => "openai",
 
     # Anthropic
     "a"  => "anthropic",
-    "an" => "anthropic",
 
     # Google
     "g"  => "google",
@@ -112,7 +110,6 @@ const PROVIDER_ALIASES = Dict(
 
     # DeepSeek
     "d"  => "deepseek",
-    "ds" => "deepseek",
 )
 
 const MODEL_ALIASES = Dict(
