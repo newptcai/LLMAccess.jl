@@ -7,7 +7,7 @@ function call_llm(
     attach_file = "";
     kwargs...
 )
-    think = get(kwargs, :think, 0)
+    think = get(kwargs, :think, ThinkNone)
     dry_run = get(kwargs, :dry_run, false)
     @debug "Making Ollama request" llm system_instruction input_text model temperature attach_file think
 
@@ -25,8 +25,8 @@ function call_llm(
         data["system"] = system_instruction
     end
 
-    # Any non-zero think value enables reasoning mode for Ollama
-    data["think"] = think != 0
+    # Any non-ThinkNone value enables reasoning mode for Ollama
+    data["think"] = think != ThinkNone
 
     if attach_file != ""
         @debug "Attaching file to Ollama request" attach_file

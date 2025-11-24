@@ -22,7 +22,7 @@ function make_api_request(
     temperature::Float64,
     attach_file;
     dry_run::Bool = false,
-    think::Int = 0,
+    think::ThinkLevel = ThinkNone,
     max_tokens = nothing,
     schema_content::String = ""
 )
@@ -88,10 +88,17 @@ function make_api_request(
 
     # Handle reasoning effort for GPT-5 models
     if occursin("gpt-5", lowercase(model)) || startswith(lowercase(model), "o")
-        reasoning_effort = think == 0 ? "none" :
-                          think == 1 ? "minimal" :
-                          think == 2 ? "low" :
-                          think == 3 ? "medium" : "high"
+        reasoning_effort = if think == ThinkNone
+            "none"
+        elseif think == ThinkMinimal
+            "minimal"
+        elseif think == ThinkMedium
+            "medium"
+        elseif think == ThinkHigh || think == ThinkAutomatic
+            "high"
+        else
+            "none"
+        end
 
         # GPT-5.1 supports none, low, medium, high (no minimal)
         if occursin("gpt-5.1", lowercase(model)) && reasoning_effort == "minimal"
@@ -126,7 +133,7 @@ function call_llm(
     api_key = ENV["OPENAI_API_KEY"]
     url     = "https://api.openai.com/v1/chat/completions"
     dry_run = get(kwargs, :dry_run, false)
-    think = get(kwargs, :think, 0)
+    think = get(kwargs, :think, ThinkNone)
     schema_content = get(kwargs, :schema_content, "")
     return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think, schema_content=schema_content)
 end
@@ -144,7 +151,7 @@ function call_llm(
     api_key = ENV["OPENROUTER_API_KEY"]
     url     = "https://openrouter.ai/api/v1/chat/completions"
     dry_run = get(kwargs, :dry_run, false)
-    think = get(kwargs, :think, 0)
+    think = get(kwargs, :think, ThinkNone)
     schema_content = get(kwargs, :schema_content, "")
     return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think, schema_content=schema_content)
 end
@@ -162,13 +169,21 @@ function call_llm(
     api_key = ENV["DEEPSEEK_API_KEY"]
     url     = "https://api.deepseek.com/v1/chat/completions"
     dry_run = get(kwargs, :dry_run, false)
-    think = get(kwargs, :think, 0)
+    think = get(kwargs, :think, ThinkNone)
     schema_content = get(kwargs, :schema_content, "")
 
     # For DeepSeek R1 models, use thinking budget as max_tokens if provided
     max_tokens = nothing
-    if think != 0 && (occursin("r1", lowercase(model)) || occursin("deepseek-reasoner", lowercase(model)))
-        max_tokens = think
+    if think != ThinkNone && (occursin("r1", lowercase(model)) || occursin("deepseek-reasoner", lowercase(model)))
+        max_tokens = if think == ThinkMinimal
+            1024
+        elseif think == ThinkMedium
+            2048
+        elseif think == ThinkHigh || think == ThinkAutomatic
+            4096
+        else
+            nothing
+        end
     end
 
     return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think, max_tokens=max_tokens, schema_content=schema_content)

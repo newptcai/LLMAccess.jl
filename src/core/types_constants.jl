@@ -245,3 +245,13 @@ const MODEL_ALIASES = Dict(
     "4o-mini-search" => "gpt-4o-mini-search-preview",
     "4o-transcribe" => "gpt-4o-transcribe",
 )
+
+@enum ThinkLevel begin
+    ThinkAutomatic = -1
+    ThinkNone      = 0
+    ThinkMinimal   = 1
+    ThinkMedium    = 2
+    ThinkHigh      = 4
+end
+export ThinkLevel, ThinkAutomatic, ThinkNone, ThinkMinimal, ThinkMedium, ThinkHigh
+

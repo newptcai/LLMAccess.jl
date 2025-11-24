@@ -42,9 +42,7 @@ function call_llm(
     selected_model = resolve_model_alias(model_to_resolve)
 
     kwargs = Dict{Symbol, Any}()
-    if think != 0
-        kwargs[:think] = think
-    end
+    kwargs[:think] = ThinkLevel(think)
     if dry_run
         kwargs[:dry_run] = true
     end
@@ -78,9 +76,7 @@ function call_llm(system_instruction, args::Dict)
     dry_run     = get(args, "dry_run", false)
 
     kwargs = Dict{Symbol, Any}()
-    if think != 0
-        kwargs[:think] = think
-    end
+    kwargs[:think] = ThinkLevel(think)
     if dry_run
         kwargs[:dry_run] = true
     end

@@ -187,35 +187,35 @@ function resolve_model_alias(model_name)
 end
 
 """
-    default_think_for_model(model_name::String) :: Int
+    default_think_for_model(model_name::String) :: ThinkLevel
 
 Suggest a default `--think/-k` based on the model.
 """
-function default_think_for_model(model_name::String)::Int
+function default_think_for_model(model_name::String)::ThinkLevel
     m = lowercase(model_name)
     if startswith(m, "gemini-")
-        return -1
+        return ThinkAutomatic
     end
     if occursin("claude-sonnet-", m) || occursin("-sonnet-", m)
-        return 0
+        return ThinkNone
     end
     if occursin("deepseek-reasoner", m)
-        return 0
+        return ThinkNone
     end
     if startswith(m, "mistral-")
-        return 0
+        return ThinkNone
     end
     if occursin("gpt-oss", m)
-        return 1
+        return ThinkMinimal
     end
     if startswith(m, "openai/gpt-")
-        return 1
+        return ThinkMinimal
     end
     # GPT-5.1 models default to "none" reasoning effort for latency-sensitive use cases
     if occursin("gpt-5.1", m)
-        return 0
+        return ThinkNone
     end
-    return 0
+    return ThinkNone
 end
 
 """
@@ -224,34 +224,34 @@ end
 Check if an Anthropic model supports the 'thinking' feature by name and version.
 """
 function is_anthropic_thinking_model(model_name::String)
-    m1 = match(r"claude-(sonnet|opus)-([0-9]+(?:[\.\-][0-9]+)?)-", model_name)
+    m1 = match(r"claude-(sonnet|opus)-([0-9]+(?:[\.\-][0-9]+)?)(?:-|$)", model_name)
+    m2 = match(r"claude-([0-9]+(?:[\.\-][0-9]+)?)-(sonnet|opus)(?:-|$)", model_name)
+
+    type = nothing
+    version = nothing
+
     if m1 !== nothing
         type = m1.captures[1]
         version_str = replace(m1.captures[2], "-" => ".")
         version = tryparse(Float64, version_str)
-        if version !== nothing
-            if type == "sonnet" && version >= 3.7
-                return true
-            end
-            if type == "opus" && version >= 4
-                return true
-            end
-        end
-    end
-    m2 = match(r"claude-([0-9]+(?:[\.\-][0-9]+)?)-(sonnet|opus)-", model_name)
-    if m2 !== nothing
+    elseif m2 !== nothing
         version_str = replace(m2.captures[1], "-" => ".")
         type = m2.captures[2]
         version = tryparse(Float64, version_str)
-        if version !== nothing
-            if type == "sonnet" && version >= 3.7
-                return true
-            end
-            if type == "opus" && version >= 4
-                return true
-            end
+    end
+
+    if version !== nothing && type !== nothing
+        if type == "sonnet" && version >= 3.7
+            return true
+        end
+        if type == "opus" && version >= 4.0
+            return true
+        end
+        if type == "haiku" && version >= 4.5
+            return true
         end
     end
+
     return false
 end
 

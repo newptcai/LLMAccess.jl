@@ -7,6 +7,11 @@ function call_llm(
     attach_file = "";
     kwargs...
 )
+    think = get(kwargs, :think, ThinkNone)
+    if think != ThinkNone && !occursin("magistral", lowercase(model))
+        error("The selected Mistral model '$model' does not support thinking. Only 'magistral-...' models do. Use --think 0 or choose a different model.")
+    end
+
     @debug "Making API request" llm system_instruction input_text model temperature attach_file
     dry_run = get(kwargs, :dry_run, false)
 
@@ -105,6 +110,11 @@ function call_llm(
         "temperature" => temperature,
         "messages"    => messages,
     )
+
+    if think != ThinkNone && occursin("magistral", lowercase(model))
+        @debug "Enabling reasoning mode for Magistral model"
+        data["prompt_mode"] = "reasoning"
+    end
 
     schema_content_raw = get(kwargs, :schema_content, "")
     if !isempty(schema_content_raw)

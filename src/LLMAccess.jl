@@ -41,6 +41,7 @@ module Core
            DEFAULT_LLM,
            PROVIDER_ALIASES,
            MODEL_ALIASES,
+           ThinkLevel, ThinkAutomatic, ThinkNone, ThinkMinimal, ThinkMedium, ThinkHigh,
            get_default_llm,
            get_default_temperature,
            get_llm_list,

@@ -7,7 +7,7 @@ function call_llm(
     attach_file = "";
     kwargs...
 )
-    think = get(kwargs, :think, 0)
+    think = get(kwargs, :think, ThinkNone)
     dry_run = get(kwargs, :dry_run, false)
     @debug "Making API request" llm system_instruction input_text model temperature attach_file think
 
@@ -34,12 +34,25 @@ function call_llm(
         data["system"] = system_instruction
     end
 
-    if is_anthropic_thinking_model(model) && think != 0
-        thinking_budget = think <= 1024 ? 1024 : think
-        @debug "Adding thinking budget to Anthropic request" thinking_budget
-        data["thinking"] = Dict("type" => "enabled", "budget_tokens" => thinking_budget)
-        data["max_tokens"] = ceil(Int, thinking_budget * 1.25)
-        data["temperature"] = 1.0
+    if is_anthropic_thinking_model(model) && think != ThinkNone
+        thinking_budget = if think == ThinkMinimal
+            1024
+        elseif think == ThinkMedium
+            2048
+        elseif think == ThinkHigh
+            4096
+        elseif think == ThinkAutomatic
+            1024 # Sensible default
+        else
+            0 # Should not happen with validation
+        end
+        
+        if thinking_budget > 0
+            @debug "Adding thinking budget to Anthropic request" thinking_budget
+            data["thinking"] = Dict("type" => "enabled", "budget_tokens" => thinking_budget)
+            data["max_tokens"] = ceil(Int, thinking_budget * 1.25)
+            data["temperature"] = 1.0
+        end
     end
 
     schema_content_raw = get(kwargs, :schema_content, "")
