@@ -25,7 +25,7 @@ function call_llm(
 
     data = Dict(
         "model"       => model,
-        "max_tokens"  => 4096,
+        "max_tokens"  => 8192,
         "temperature" => temperature,
         "messages"    => [ Dict("role" => "user", "content" => content) ],
     )

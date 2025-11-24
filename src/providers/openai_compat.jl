@@ -86,8 +86,8 @@ function make_api_request(
         data["max_tokens"] = max_tokens
     end
 
-    # Handle reasoning effort for GPT-5 models
-    if occursin("gpt-5", lowercase(model)) || startswith(lowercase(model), "o")
+    # Handle reasoning effort for GPT-5 and gpt-oss models
+    if occursin("gpt-5", lowercase(model)) || startswith(lowercase(model), "o") || occursin("gpt-oss", lowercase(model))
         reasoning_effort = if think == ThinkNone
             "none"
         elseif think == ThinkMinimal
