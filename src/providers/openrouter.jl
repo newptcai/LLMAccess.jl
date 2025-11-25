@@ -15,7 +15,8 @@ function call_llm(
     api_key = ENV["OPENROUTER_API_KEY"]
     url     = "https://openrouter.ai/api/v1/chat/completions"
     dry_run = get(kwargs, :dry_run, false)
-    think = get(kwargs, :think, 0)
+    think_level = get(kwargs, :think, ThinkNone)
+    think = Int(think_level)
     schema_content = get(kwargs, :schema_content, "")
 
     @debug "Making OpenRouter API request" system_instruction input_text model temperature attach_file think schema_content
@@ -54,12 +55,16 @@ function call_llm(
         reasoning_config = Dict()
 
         # Set max_tokens for reasoning (Anthropic-style)
-        reasoning_config["max_tokens"] = think * 1000  # Convert think level to tokens
+        # reasoning_config["max_tokens"] = think * 1000  # Convert think level to tokens
 
         # Set effort level (OpenAI-style)
-        effort = think == 1 ? "minimal" :
-                 think == 2 ? "low" :
-                 think == 3 ? "medium" : "high"
+        effort = if think == 1
+            "minimal"
+        elseif think == 2
+            "medium"
+        else
+            "high"
+        end
         reasoning_config["effort"] = effort
 
         # Enable reasoning

@@ -205,12 +205,6 @@ function default_think_for_model(model_name::String)::ThinkLevel
     if startswith(m, "mistral-")
         return ThinkNone
     end
-    if occursin("gpt-oss", m)
-        return ThinkMinimal
-    end
-    if startswith(m, "openai/gpt-")
-        return ThinkMinimal
-    end
     # GPT-5.1 models default to "none" reasoning effort for latency-sensitive use cases
     if occursin("gpt-5.1", m)
         return ThinkNone
