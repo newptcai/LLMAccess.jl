@@ -163,10 +163,10 @@ const MODEL_ALIASES = Dict(
     # 1–2 letter shorthands
     "h" => "claude-haiku-4-5-20251001",
     "s" => "claude-sonnet-4-5-20250929",
-    "o" => "claude-opus-4-1-20250805",
+    "o" => "claude-opus-4-5-20251101",
 
     "sonnet" => "claude-sonnet-4-5-20250929",
-    "opus"   => "claude-opus-4-1-20250805",
+    "opus"   => "claude-opus-4-5-20251101",
     "haiku"  => "claude-haiku-4-5-20251001",
     # Specific versioned Anthropic aliases
     "sonnet-4.5" => "claude-sonnet-4-5-20250929",
@@ -178,6 +178,7 @@ const MODEL_ALIASES = Dict(
     "haiku-3.5"  => "claude-3-5-haiku-20241022",
     "opus-4"     => "claude-opus-4-20250514",
     "opus-4.1"   => "claude-opus-4-1-20250805",
+    "opus-4.5"   => "claude-opus-4-5-20251101",
 
     # DeepSeek
     # 1–2 letter shorthands
