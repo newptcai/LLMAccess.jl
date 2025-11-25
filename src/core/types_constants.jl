@@ -24,7 +24,7 @@ struct OpenAILLM <: OpenAICompatibleLLM end
 
 Concrete type for OpenRouter's LLM.
 """
-struct OpenRouterLLM <: OpenAICompatibleLLM end
+struct OpenRouterLLM <: AbstractLLM end
 
 """
     AnthropicLLM

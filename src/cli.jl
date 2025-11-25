@@ -130,9 +130,19 @@ function parse_commandline(
     begin
         resolved_model = resolve_model_alias(args["model"])
         suggested_think = default_think_for_model(resolved_model)
+<<<<<<< HEAD
         if args["think"] == 0 && suggested_think != ThinkNone
             args["think"] = Int(suggested_think)
+=======
+        # Apply model-based default only if --think flag was not provided (sentinel value -999)
+        if args["think"] == -999
+            args["think"] = suggested_think
+>>>>>>> 7d451b4 (feat: Add OpenRouter reasoning support with dual configuration)
             @debug "parse_commandline: Applying model-based default think" resolved_model suggested_think
+        end
+        # Convert sentinel value to 0 for consistency
+        if args["think"] == -999
+            args["think"] = 0
         end
     end
 

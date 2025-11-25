@@ -65,6 +65,7 @@ module Providers
     using JSON
 
     include("providers/openai_compat.jl")
+    include("providers/openrouter.jl")
     include("providers/anthropic.jl")
     include("providers/google.jl")
     include("providers/mistral.jl")
@@ -108,7 +109,7 @@ end # module Dispatch
 
 using .Dispatch: call_llm, get_llm_type
 using .Models: list_llm_models
-using .Core: get_llm_list, is_anthropic_thinking_model, is_anthropic_schema_model, normalize_output_text
+using .Core: get_llm_list, is_anthropic_thinking_model, is_anthropic_schema_model, normalize_output_text, OpenRouterLLM
 using .CLI: parse_commandline, run_cli, create_default_settings
 using .Readers: jina_reader, pandoc_reader
 
