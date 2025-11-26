@@ -16,7 +16,7 @@ function call_llm(
     url     = "https://openrouter.ai/api/v1/chat/completions"
     dry_run = get(kwargs, :dry_run, false)
     think_level = get(kwargs, :think, ThinkNone)
-    think = Int(think_level)
+
     schema_content = get(kwargs, :schema_content, "")
 
     @debug "Making OpenRouter API request" system_instruction input_text model temperature attach_file think schema_content
@@ -51,28 +51,32 @@ function call_llm(
     end
 
     # Handle OpenRouter reasoning configuration
-    if think > 0
+    if think_level != ThinkNone
         reasoning_config = Dict()
 
-        # Set max_tokens for reasoning (Anthropic-style)
-        # reasoning_config["max_tokens"] = think * 1000  # Convert think level to tokens
-
         # Set effort level (OpenAI-style)
-        effort = if think == 1
+        effort = if think_level == ThinkMinimal
             "minimal"
-        elseif think == 2
+        elseif think_level == ThinkLow
+            "low"
+        elseif think_level == ThinkMedium
             "medium"
-        else
+        elseif think_level == ThinkHigh || think_level == ThinkAutomatic
             "high"
+        else
+            "none" # Should not be reached
         end
-        reasoning_config["effort"] = effort
 
-        # Enable reasoning
-        reasoning_config["enabled"] = true
-        reasoning_config["exclude"] = false  # Include reasoning tokens in response
+        if effort != "none"
+            reasoning_config["effort"] = effort
 
-        data["reasoning"] = reasoning_config
-        @debug "Setting OpenRouter reasoning configuration" reasoning_config think
+            # Enable reasoning
+            reasoning_config["enabled"] = true
+            reasoning_config["exclude"] = false  # Include reasoning tokens in response
+
+            data["reasoning"] = reasoning_config
+            @debug "Setting OpenRouter reasoning configuration" reasoning_config think_level
+        end
     end
 
     if dry_run

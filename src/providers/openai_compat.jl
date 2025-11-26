@@ -92,6 +92,8 @@ function make_api_request(
             "none"
         elseif think == ThinkMinimal
             "minimal"
+        elseif think == ThinkLow
+            "low"
         elseif think == ThinkMedium
             "medium"
         elseif think == ThinkHigh || think == ThinkAutomatic
@@ -159,7 +161,7 @@ function call_llm(
     if think != ThinkNone && (occursin("r1", lowercase(model)) || occursin("deepseek-reasoner", lowercase(model)))
         max_tokens = if think == ThinkMinimal
             1024
-        elseif think == ThinkMedium
+        elseif think == ThinkLow
             2048
         elseif think == ThinkHigh || think == ThinkAutomatic
             4096

@@ -58,7 +58,7 @@ function parse_commandline(
         "--temperature", "-t"; help = "Sampling temperature (0.0-2.0)"; arg_type = Float64; default = get_default_temperature()
         "--debug", "-d"; help = "Enable debug logging"; action = :store_true
         "--copy", "-c"; help = "Copy response to clipboard"; action = :store_true
-        "--think", "-k"; help = "Reasoning level: -1=auto, 0=none, 1=minimal, 2=medium, 4=high."; arg_type = Int; default = 0
+        "--think", "-k";            help = "Reasoning level: -1=auto, 0=none, 1=minimal, 2=low, 3=medium, 4=high."; arg_type = Int; default = 0
         "--no-normalize"; help = "Disable punctuation normalization (dashes/quotes)"; dest_name = "no_normalize"; action = :store_true
         "--alias"; help = "Print all model aliases and exit"; action = :store_true
         "--providers"; help = "Print supported LLM providers (valid --llm choices) and exit"; action = :store_true
@@ -70,7 +70,7 @@ function parse_commandline(
     args = parse_args(settings)
     
     let think_level = args["think"]
-        allowed_levels = [-1, 0, 1, 2, 4]
+        allowed_levels = [-1, 0, 1, 2, 3, 4]
         if !(think_level in allowed_levels)
             println(stderr, "Invalid --think/-k value: got $(think_level), expected one of $(allowed_levels)")
             exit(2)

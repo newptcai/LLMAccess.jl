@@ -251,8 +251,9 @@ const MODEL_ALIASES = Dict(
     ThinkAutomatic = -1
     ThinkNone      = 0
     ThinkMinimal   = 1
-    ThinkMedium    = 2
+    ThinkLow       = 2
+    ThinkMedium    = 3
     ThinkHigh      = 4
 end
-export ThinkLevel, ThinkAutomatic, ThinkNone, ThinkMinimal, ThinkMedium, ThinkHigh
+export ThinkLevel, ThinkAutomatic, ThinkNone, ThinkMinimal, ThinkLow, ThinkMedium, ThinkHigh
 

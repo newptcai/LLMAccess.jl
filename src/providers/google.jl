@@ -23,7 +23,7 @@ function call_llm(
     if think != ThinkNone
         thinking_budget = if think == ThinkMinimal
             1024
-        elseif think == ThinkMedium
+        elseif think == ThinkLow
             2048
         elseif think == ThinkHigh
             4096
