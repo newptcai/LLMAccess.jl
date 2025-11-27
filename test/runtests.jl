@@ -78,6 +78,7 @@ const Core = LLMAccess.Core
         test_llm(get_llm_type("anthropic"))
         test_llm(get_llm_type("mistral"))
         test_llm(get_llm_type("ollama"))
+        test_llm(get_llm_type("ollama_cloud"))
         test_llm(get_llm_type("openrouter"))
         test_llm(get_llm_type("deepseek"))
 

@@ -3,14 +3,14 @@
 This document consolidates the guidance previously spread across `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md`. Use it as the single reference for repository structure, development workflow, and LLM-specific behaviors.
 
 ## Project Overview
-- `LLMAccess.jl` is a Julia package offering a unified interface to multiple LLM providers (OpenAI, Anthropic, Google, Mistral, OpenRouter, DeepSeek, Ollama).
+- `LLMAccess.jl` is a Julia package offering a unified interface to multiple LLM providers (OpenAI, Anthropic, Google, Mistral, OpenRouter, DeepSeek, Ollama, Ollama Cloud).
 - The package ships CLI utilities in `script/` for common tasks such as Q&A, command generation, and echo testing.
 - A modular architecture keeps provider-specific logic isolated while exposing a consistent API (`call_llm`) across backends.
 
 ### Key Features
 - **Multi-provider dispatch:** Concrete `Provider` types share the `AbstractLLM` hierarchy; OpenAI-compatible services reuse `OpenAICompatibleLLM`.
 - **Model alias resolution:** Shorthands (e.g., `4o-mini`, `flash`) map to full model IDs via `resolve_model_alias`.
-- **Thinking mode:** Google Gemini, Anthropic Claude Sonnet/Opus, OpenAI GPT-5, and Ollama support adjustable thinking budgets/toggles via `--think/-k`.
+- **Thinking mode:** Google Gemini, Anthropic Claude Sonnet/Opus, OpenAI GPT-5, and Ollama (local + cloud) support adjustable thinking budgets/toggles via `--think/-k`.
 - **Attachment handling:** Provider-specific encoders support inline/base64 image uploads with correct MIME metadata.
 - **Robust error reporting:** HTTP failures are parsed into actionable messages; `--debug/-d` emits verbose diagnostics.
 
@@ -35,7 +35,7 @@ Optional workflows:
 - Develop a local checkout: `pkg> dev /path/to/llmaccess.jl`
 
 ### Provider Configuration
-- Export API keys: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `MISTRAL_API_KEY`, `OPENROUTER_API_KEY`, `DEEPSEEK_API_KEY`. (Ollama connects to the local daemon and does not require an API key.)
+- Export API keys: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `MISTRAL_API_KEY`, `OPENROUTER_API_KEY`, `DEEPSEEK_API_KEY`, `OLLAMA_API_KEY` (cloud only). The local Ollama daemon does not require a key.
 - Optional defaults: `DEFAULT_LLM`, `DEFAULT_TEMPERATURE`, `DEFAULT_<PROVIDER>_MODEL` (e.g., `DEFAULT_GOOGLE_MODEL="gemini-2.5-flash"`).
 - Readers: `JINA_API_KEY` powers `jina_reader`; Pandoc must be installed for `pandoc_reader`.
 - Keep secrets out of version control; prefer shell RC files or secret managers.
@@ -53,11 +53,11 @@ julia --project script/cmd.jl --cmd 'echo hi'
 ```
 
 Common flags:
-- `--llm/-l` provider selection
+- `--llm/-l` provider selection (`openai`, `anthropic`, `google`, `ollama`, `ollama_cloud`, `mistral`, `openrouter`, `deepseek`)
 - `--model/-m` model override (aliases supported)
 - `--attachment/-a` attach files for multimodal requests
 - `--temperature/-t` sampling control
-- `--think/-k` provider-specific thinking budget or toggle (0-4 for GPT-5 models)
+- `--think/-k` provider-specific thinking budget or toggle (0-4 for GPT-5 models; any non-zero value enables Ollama/Ollama Cloud reasoning)
 - `--debug/-d` verbose logging
 - `--copy/-c` copy responses to the clipboard
 - `--alias/-A` list all model aliases and exit
@@ -90,6 +90,6 @@ Common flags:
 
 ## Additional Tips
 - Model alias listings help verify available shorthands: `julia --project script/ask.jl -A`.
-- Any non-zero `--think` value enables reasoning mode for Ollama.
+- Any non-zero `--think` value enables reasoning mode for Ollama (local + cloud).
 - GPT-5.1 uses reasoning effort levels 0-4: 0=none (default), 1=minimal→low, 2=low, 3=medium, 4=high.
 - `script/cmd.jl` always copies trimmed command output; confirm clipboard access on your platform.

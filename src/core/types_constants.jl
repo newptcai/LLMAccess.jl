@@ -41,11 +41,25 @@ Concrete type for Google's LLM (e.g., PaLM/Gemini).
 struct GoogleLLM <: AbstractLLM end
 
 """
+    AbstractOllamaLLM
+
+Common supertype for Ollama providers (local daemon and hosted cloud).
+"""
+abstract type AbstractOllamaLLM <: AbstractLLM end
+
+"""
     OllamaLLM
 
 Concrete type for Ollama's local LLM.
 """
-struct OllamaLLM <: AbstractLLM end
+struct OllamaLLM <: AbstractOllamaLLM end
+
+"""
+    OllamaCloudLLM
+
+Concrete type for Ollama Cloud's hosted LLM.
+"""
+struct OllamaCloudLLM <: AbstractOllamaLLM end
 
 """
     MistralLLM
@@ -72,6 +86,7 @@ const DEFAULT_MODELS = Dict(
     "anthropic"   => "claude-haiku-4-5-20251001",
     "google"      => "gemini-2.5-flash",
     "ollama"      => "gemma3:4b",
+    "ollama_cloud" => "gpt-oss:120b",
     "mistral"     => "mistral-small-latest",
     "deepseek"    => "deepseek-chat",
 )
@@ -104,6 +119,11 @@ const PROVIDER_ALIASES = Dict(
 
     # Ollama
     "ol" => "ollama",
+
+    # Ollama Cloud
+    "oc" => "ollama_cloud",
+    "ollama-cloud" => "ollama_cloud",
+    "ollamacloud" => "ollama_cloud",
 
     # OpenRouter
     "or" => "openrouter",
@@ -230,6 +250,8 @@ const MODEL_ALIASES = Dict(
     "5.1-chat" => "gpt-5.1-chat-latest",
     "5.1-codex" => "gpt-5.1-codex",
     "5.1-codex-mini" => "gpt-5.1-codex-mini",
+    "oss-120b" => "gpt-oss:120b",
+    "oss120b" => "gpt-oss:120b",
     "o1" => "o1",
     "o1-mini" => "o1-mini",
     "o1-pro" => "o1-pro",
@@ -256,4 +278,3 @@ const MODEL_ALIASES = Dict(
     ThinkHigh      = 4
 end
 export ThinkLevel, ThinkAutomatic, ThinkNone, ThinkMinimal, ThinkLow, ThinkMedium, ThinkHigh
-

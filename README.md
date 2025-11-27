@@ -1,6 +1,6 @@
 # LLMAccess
 
-LLMAccess is a Julia package designed to simplify interactions with multiple Large Language Model (LLM) APIs. It provides a unified interface to integrate models from providers such as OpenAI, Anthropic, Google, Mistral, OpenRouter, DeepSeek, and Ollama into your Julia scripts seamlessly, plus shared CLI helpers for argument parsing and robust error handling.
+LLMAccess is a Julia package designed to simplify interactions with multiple Large Language Model (LLM) APIs. It provides a unified interface to integrate models from providers such as OpenAI, Anthropic, Google, Mistral, OpenRouter, DeepSeek, Ollama, and Ollama Cloud into your Julia scripts seamlessly, plus shared CLI helpers for argument parsing and robust error handling.
 
 ## Table of Contents
 
@@ -65,6 +65,7 @@ Before using LLMAccess, set the necessary API keys for the LLM providers you wan
 - `GOOGLE_API_KEY` for Google
 - `MISTRAL_API_KEY` for Mistral
 - `DEEPSEEK_API_KEY` for DeepSeek
+- `OLLAMA_API_KEY` for Ollama Cloud (local Ollama uses the daemon on 127.0.0.1:11434 and does not require a key)
 
 ### Setting Environment Variables
 
@@ -89,6 +90,8 @@ export DEFAULT_OPENAI_MODEL="gpt-5-mini"
 export DEFAULT_OPENROUTER_MODEL="amazon/nova-micro-v1"
 export DEFAULT_ANTHROPIC_MODEL="claude-haiku-4-5-20251001"
 export DEFAULT_GOOGLE_MODEL="gemini-2.5-flash"
+export DEFAULT_OLLAMA_MODEL="gemma3:4b"
+export DEFAULT_OLLAMA_CLOUD_MODEL="gpt-oss:120b"
 export DEFAULT_MISTRAL_MODEL="mistral-small-latest"
 export DEFAULT_DEEPSEEK_MODEL="deepseek-chat"
 # Optional global default temperature (Float64)
@@ -215,6 +218,7 @@ LLMAccess supports shorthand names for common models. Here are some key aliases 
 | `5.1-chat` | `gpt-5.1-chat-latest` |
 | `5.1-codex` | `gpt-5.1-codex` |
 | `5.1-codex-mini` | `gpt-5.1-codex-mini` |
+| `oss-120b` | `gpt-oss:120b` |
 
 Use these aliases anywhere you would specify a model name. For example:
 
@@ -243,6 +247,8 @@ Additional popular aliases by provider
 - Ollama (`--llm ollama`)
   - Local tags: `gemma3-4b-ollama`, `gemma3-12b-ollama`, `qwen3-14b-ollama`
   - Reasoning & misc: `phi4-r`, `gemma3n-e4b`, `gemma3n-e2b`, `oss-120b`, `oss20`
+- Ollama Cloud (`--llm ollama_cloud`)
+  - Hosted tags: `gpt-oss:120b`, `gpt-oss:8b`
 - OpenRouter (`--llm openrouter`)
   - `grok-4`, `grok-3`, `grok-3-mini`, `kimi-k2`, `kimi-dev-72b`, `glm-4.5`, `glm-4.5v`, `glm-4.5-air`, `command-r`, `command-r+`, `sonar-pro`, `sonar-reason`, `nova-micro`, `nova-lite`, `nova-pro`, `gemma3-27b-or`
 
@@ -263,6 +269,7 @@ You can also use short aliases for providers via `--llm`:
 - `an`/`a` → `anthropic`
 - `m` → `mistral`
 - `ol` → `ollama`
+- `oc` → `ollama_cloud`
 - `or` → `openrouter`
 - `ds`/`d` → `deepseek`
 
@@ -310,6 +317,9 @@ julia --project script/ask.jl --llm openai --model 4o "Summarize this repo"
 # Local Ollama prompt (uses running Ollama daemon)
 julia --project script/ask.jl --llm ollama --model gemma3-4b-ollama "Give me three agenda bullets"
 
+# Hosted Ollama Cloud prompt (requires OLLAMA_API_KEY)
+julia --project script/ask.jl --llm ollama_cloud --model gpt-oss:120b "Share a quick tip about Julia"
+
 # Generate shell commands
 julia --project script/cmd.jl --llm openai "list files changed today"
 
@@ -339,7 +349,7 @@ Notes:
 
 Common arguments:
 
-- `--llm, -l`: LLM provider (`openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `deepseek`). Defaults to `DEFAULT_LLM` or `google`.
+- `--llm, -l`: LLM provider (`openai`, `anthropic`, `google`, `ollama`, `ollama_cloud`, `mistral`, `openrouter`, `deepseek`). Defaults to `DEFAULT_LLM` or `google`.
 - `--model, -m`: Model name; supports aliases below. Defaults to provider’s default.
 - `--file, -f`: Path to input file to process (optional; reserved for helpers that consume files).
 - `--attachment, -a`: Path to a file to attach (e.g., image for vision APIs).
@@ -349,7 +359,7 @@ Common arguments:
 - `--debug, -d`: Enable debug logging and richer error output.
 - `--copy, -c`: Copy response to clipboard.
 - `--no-copy`: For `script/cmd.jl` only, disable default clipboard copying.
-- `--think, -k`: Enable “thinking” for providers that support it (e.g., Gemini, Claude, Ollama). For Gemini/Claude, this is a token budget (e.g., `-k 1000`). Any non-zero value toggles Ollama's reasoning mode. OpenAI GPT-5 models interpret it as reasoning effort.
+- `--think, -k`: Enable “thinking” for providers that support it (e.g., Gemini, Claude, Ollama, Ollama Cloud). For Gemini/Claude, this is a token budget (e.g., `-k 1000`). Any non-zero value toggles Ollama's reasoning mode. OpenAI GPT-5 models interpret it as reasoning effort.
 - `--alias`: Print all model aliases and exit.
 - `--providers`: Print supported LLM providers (valid `--llm` choices) and exit.
 - `--llm-alias`: Print provider aliases for `--llm` and exit.
@@ -366,6 +376,9 @@ Examples:
 ```bash
 # Ollama dry run (local daemon)
 julia --project script/ask.jl --llm ollama --model gemma3-4b-ollama --dry-run "Hello"
+
+# Ollama Cloud dry run
+julia --project script/ask.jl --llm ollama_cloud --model gpt-oss:120b --dry-run "Hello"
 
 # OpenAI dry run
 julia --project script/ask.jl --llm openai --dry-run "Hello"
@@ -408,6 +421,7 @@ LLMAccess currently supports the following LLM providers:
 - **Anthropic**: Claude Haiku/Sonnet/Opus with thinking budget controls.
 - **Google**: Gemini and Gemma families, plus Imagen/Veo media models.
 - **Ollama**: Local inference via the Ollama daemon (vision + reasoning capable).
+- **Ollama Cloud**: Hosted inference on ollama.com with API key-protected access to the public tags catalog.
 - **Mistral**: Native access to Mistral, Magistral, Pixtral, and OCR models.
 
 You can call providers using typed instances (e.g., `call_llm(GoogleLLM(), ...)`) or by name via `call_llm(llm_name, system_instruction, input_text; model, temperature, copy, think, dry_run)`. The name-based form does not accept attachments; use the typed method or the CLI when you need to include `--attachment`.

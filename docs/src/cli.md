@@ -16,7 +16,7 @@ julia --project script/ask.jl --llm google "Hello"
 
 ## Common Flags
 
-- `--llm, -l`: Provider (`openai`, `anthropic`, `google`, `ollama`, `mistral`, `openrouter`, `deepseek`).
+- `--llm, -l`: Provider (`openai`, `anthropic`, `google`, `ollama`, `ollama_cloud`, `mistral`, `openrouter`, `deepseek`).
 - `--model, -m`: Model name (supports aliases; defaults per provider or env).
 - `--attachment, -a`: Path to file to attach (e.g., image for vision models).
 - `--file, -f`: Input file path (optional; script-specific).
@@ -26,7 +26,7 @@ julia --project script/ask.jl --llm google "Hello"
 - `--debug, -d`: Enable debug logging and verbose error output.
 - `--copy, -c`: Copy response to clipboard (if supported by script).
 - `--no-copy`: For `script/cmd.jl` only, disable the default clipboard copying.
-- `--think, -k`: Thinking budget for supported providers (e.g., Gemini, Claude, GPT-5).
+- `--think, -k`: Thinking budget for supported providers (e.g., Gemini, Claude, GPT-5). Any non-zero value toggles reasoning for Ollama (local + cloud).
 - `--alias`: Print all model aliases and exit.
 - `--llm-alias`: Print provider aliases for `--llm` and exit.
 - `--providers`: Print supported LLM providers (valid `--llm` choices) and exit.
@@ -44,6 +44,9 @@ julia --project script/ask.jl --llm google -m flash "Hi"
 
 # Prompt the local Ollama daemon
 julia --project script/ask.jl --llm ollama --model gemma3-4b-ollama "Give me three bullet talking points"
+
+# Prompt Ollama Cloud (hosted API; requires OLLAMA_API_KEY)
+julia --project script/ask.jl --llm ollama_cloud --model gpt-oss:120b "Share a fun fact"
 
 # Attach an image (vision-enabled models)
 julia --project script/ask.jl --llm openai -m gpt-4o --attachment path/to/image.png "Describe this image"
@@ -86,7 +89,7 @@ julia --project script/ask.jl --no-normalize --llm google "“Quotes” and — 
 ## Aliases
 
 - Use short aliases for common models via `-m/--model`.
-- Use short aliases for providers via `-l/--llm` (e.g., `g` for `google`, `oa` for `openai`, `ol` for `ollama`).
+- Use short aliases for providers via `-l/--llm` (e.g., `g` for `google`, `oa` for `openai`, `ol` for `ollama`, `oc` for `ollama_cloud`).
 - Print model aliases: `julia --project script/ask.jl --alias`.
 - Print provider aliases: `julia --project script/ask.jl --llm-alias`.
 
@@ -98,6 +101,7 @@ Common examples
 - Mistral: `m` (Medium), `ms` (Small), `ml` (Large), `mo` (OCR), `codestral`, `pix`
 - OpenRouter: `grok-4`, `glm-4.5`, `command-r+`, `sonar-pro`, `nova-pro`
 - Ollama: `gemma3-12b-ollama`, `qwen3-14b-ollama`, `phi4-r`, `oss-120b`
+- Ollama Cloud: `gpt-oss:120b`
 - DeepSeek: `r` (Reasoner), `d` (Chat), `r1-8b`
 
 See the README “Model Aliases” section for a longer list.

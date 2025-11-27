@@ -33,7 +33,9 @@ module Core
            OpenRouterLLM,
            AnthropicLLM,
            GoogleLLM,
+           AbstractOllamaLLM,
            OllamaLLM,
+           OllamaCloudLLM,
            MistralLLM,
            DeepSeekLLM,
            DEFAULT_MODELS,
@@ -109,7 +111,13 @@ end # module Dispatch
 
 using .Dispatch: call_llm, get_llm_type
 using .Models: list_llm_models
-using .Core: get_llm_list, is_anthropic_thinking_model, is_anthropic_schema_model, normalize_output_text, OpenRouterLLM
+using .Core: get_llm_list,
+             is_anthropic_thinking_model,
+             is_anthropic_schema_model,
+             normalize_output_text,
+             OpenRouterLLM,
+             OllamaLLM,
+             OllamaCloudLLM
 using .CLI: parse_commandline, run_cli, create_default_settings
 using .Readers: jina_reader, pandoc_reader
 

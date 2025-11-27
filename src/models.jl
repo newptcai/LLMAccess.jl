@@ -96,7 +96,15 @@ List locally available Ollama models.
 """
 function list_llm_models(llm::OllamaLLM)
     @debug "Listing LLM Models" llm
-    url     = "http://127.0.0.1:11434/api/tags"
+    return _list_ollama_models("http://127.0.0.1:11434/api/tags")
+end
+
+function list_llm_models(llm::OllamaCloudLLM)
+    @debug "Listing LLM Models" llm
+    return _list_ollama_models("https://ollama.com/api/tags")
+end
+
+function _list_ollama_models(url)
     response = get_request(url)
     model_list = handle_json_response(response, ["models"])
     ids = String[]

@@ -1,6 +1,6 @@
 # LLMAccess.jl
 
-LLMAccess.jl provides a lightweight, composable interface and CLI to interact with multiple LLM providers (OpenAI, Anthropic, Google, Mistral, OpenRouter, DeepSeek, Ollama) from Julia.
+LLMAccess.jl provides a lightweight, composable interface and CLI to interact with multiple LLM providers (OpenAI, Anthropic, Google, Mistral, OpenRouter, DeepSeek, Ollama, Ollama Cloud) from Julia.
 
 - Flexible provider abstraction with typed methods
 - Sensible defaults via environment variables
@@ -60,6 +60,7 @@ julia --project script/ask.jl --alias
 julia --project script/ask.jl --llm-alias
 julia --project script/ask.jl --llm deepseek --model r1 "Outline a reasoning trace"
 julia --project script/ask.jl --llm ollama --model gemma3-4b-ollama "Summarize this file"
+julia --project script/ask.jl --llm ollama_cloud --model gpt-oss:120b "Explain this snippet"
 
 Note: `script/cmd.jl` copies the generated command to your clipboard by default. Use `--no-copy` to disable copying for that script, or `--cmd 'your command'` to bypass the LLM and still use the copy/execute flow.
 ```
@@ -68,8 +69,8 @@ Note: `script/cmd.jl` copies the generated command to your clipboard by default.
 
 Configure API keys and defaults via environment variables (examples):
 
-- `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `MISTRAL_API_KEY`, `OPENROUTER_API_KEY`, `DEEPSEEK_API_KEY` (Ollama connects to the local daemon and does not require an API key.)
-- `DEFAULT_LLM`, `DEFAULT_OPENAI_MODEL`, `DEFAULT_GOOGLE_MODEL`, etc.
+- `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `MISTRAL_API_KEY`, `OPENROUTER_API_KEY`, `DEEPSEEK_API_KEY`, `OLLAMA_API_KEY` (cloud only; the local daemon does not require a key.)
+- `DEFAULT_LLM`, `DEFAULT_OPENAI_MODEL`, `DEFAULT_GOOGLE_MODEL`, `DEFAULT_OLLAMA_MODEL`, `DEFAULT_OLLAMA_CLOUD_MODEL`, etc.
 - `DEFAULT_TEMPERATURE`
 
 Refer to README for full details.
