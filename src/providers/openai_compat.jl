@@ -31,11 +31,8 @@ function get_default_think_level(::Type{GroqLLM}, model::String)
 end
 
 function get_default_think_level(::Type{CerebrasLLM}, model::String)
-    # Cerebras gpt-oss-120b: use medium reasoning by default (per docs)
-    if occursin("gpt-oss-120b", lowercase(model))
-        return ThinkMedium
-    end
-
+    # Cerebras gpt-oss-120b: documentation says medium is default
+    # but API doesn't support reasoning yet, so disable for now
     return ThinkNone
 end
 
