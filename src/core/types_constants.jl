@@ -75,6 +75,34 @@ Concrete type for DeepSeek's LLM (OpenAI-compatible API).
 """
 struct DeepSeekLLM <: OpenAICompatibleLLM end
 
+"""
+    CerebrasLLM
+
+Concrete type for Cerebras's LLM (OpenAI-compatible API).
+"""
+struct CerebrasLLM <: OpenAICompatibleLLM end
+
+"""
+    GroqLLM
+
+Concrete type for Groq's LLM (OpenAI-compatible API).
+"""
+struct GroqLLM <: OpenAICompatibleLLM end
+
+"""
+    CerebrasLLM
+
+Concrete type for Cerebras's LLM (OpenAI-compatible API).
+"""
+struct CerebrasLLM <: OpenAICompatibleLLM end
+
+"""
+    GroqLLM
+
+Concrete type for Groq's LLM (OpenAI-compatible API).
+"""
+struct GroqLLM <: OpenAICompatibleLLM end
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Constants
 # ─────────────────────────────────────────────────────────────────────────────
@@ -89,6 +117,8 @@ const DEFAULT_MODELS = Dict(
     "ollama_cloud" => "gpt-oss:120b",
     "mistral"     => "mistral-small-latest",
     "deepseek"    => "deepseek-chat",
+    "cerebras"    => "gpt-oss-120b",
+    "groq"        => "openai/gpt-oss-120b",
 )
 
 const DEFAULT_TEMPERATURE = 1.0
@@ -130,6 +160,12 @@ const PROVIDER_ALIASES = Dict(
 
     # DeepSeek
     "d"  => "deepseek",
+
+    # Cerebras
+    "c"  => "cerebras",
+
+    # Groq
+    "gr" => "groq",
 )
 
 const MODEL_ALIASES = Dict(

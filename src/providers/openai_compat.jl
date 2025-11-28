@@ -172,3 +172,39 @@ function call_llm(
 
     return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think, max_tokens=max_tokens, schema_content=schema_content)
 end
+
+# Cerebras (OpenAI-compatible)
+function call_llm(
+    llm::CerebrasLLM,
+    system_instruction="",
+    input_text="",
+    model = get_default_model("cerebras"),
+    temperature::Float64 = get_default_temperature(),
+    attach_file = "";
+    kwargs...
+)
+    api_key = ENV["CEREBRAS_API_KEY"]
+    url     = "https://api.cerebras.ai/v1/chat/completions"
+    dry_run = get(kwargs, :dry_run, false)
+    think = get(kwargs, :think, ThinkNone)
+    schema_content = get(kwargs, :schema_content, "")
+    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think, schema_content=schema_content)
+end
+
+# Groq (OpenAI-compatible)
+function call_llm(
+    llm::GroqLLM,
+    system_instruction="",
+    input_text="",
+    model = get_default_model("groq"),
+    temperature::Float64 = get_default_temperature(),
+    attach_file = "";
+    kwargs...
+)
+    api_key = ENV["GROQ_API_KEY"]
+    url     = "https://api.groq.com/openai/v1/chat/completions" # Assuming standard OpenAI compatible endpoint
+    dry_run = get(kwargs, :dry_run, false)
+    think = get(kwargs, :think, ThinkNone)
+    schema_content = get(kwargs, :schema_content, "")
+    return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think, schema_content=schema_content)
+end

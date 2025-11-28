@@ -77,6 +77,34 @@ Common flags:
 - Leverage `@debug` logging for introspection when `--debug` is enabled.
 - When adding providers or features, emulate existing provider structures and reuse shared helpers.
 
+### Adding New OpenAI-Compatible Providers
+To add a new provider that is compatible with the OpenAI API, follow these steps:
+
+1.  **Define Structs and Default Models (`src/core/types_constants.jl`):**
+    *   Create a new concrete `struct` that subtypes `OpenAICompatibleLLM` (e.g., `struct MyNewLLM <: OpenAICompatibleLLM end`).
+    *   Add the new struct to the `export` list within the `Core` module in `src/LLMAccess.jl`.
+    *   Update the `DEFAULT_MODELS` dictionary to include a default model for your new provider (e.g., `\"mynewllm\" => \"default-model-name\"`).
+    *   Optionally, add aliases for your provider to the `PROVIDER_ALIASES` dictionary (e.g., `\"mn\" => \"mynewllm\"`).
+
+2.  **Register Provider (`src/dispatch.jl`):**
+    *   Add an entry to the `llm_types` dictionary within the `get_llm_type` function, mapping the provider's canonical string name to an instance of its struct (e.g., `\"mynewllm\" => MyNewLLM()`).
+
+3.  **Implement `call_llm` Method (`src/providers/openai_compat.jl`):**
+    *   Create a new `call_llm` method that dispatches on your new provider's struct type (e.g., `function call_llm(llm::MyNewLLM, ...) end`).
+    *   Inside this method, define how to retrieve the API key (e.g., `ENV["MYNEWLLM_API_KEY"]`) and the base URL for the API endpoint (e.g., `\"https://api.mynewllm.com/v1/chat/completions\"`).
+    *   Call `make_api_request` with the appropriate parameters.
+
+4.  **Add Integration Tests (`test/runtests.jl`):**
+    *   In the `if get(ENV, "LLMACCESS_RUN_INTEGRATION", "0") == "1"` block, add `test_llm(get_llm_type(\"mynewllm\"))` to ensure basic functionality.
+
+5.  **Update Documentation:**
+    *   Modify `README.md` to include your new provider in the "Configuration" section (API key, default model environment variables), "Provider Aliases," and "Supported LLM Providers" sections.
+    *   Update `docs/src/cli.md` to reflect new provider flags and aliases.
+
+6.  **Rebuild Documentation (if necessary):**
+    *   If you've added new docstrings, rebuild the documentation using the standard Julia `Documenter.jl` workflow.
+
+
 ## Testing
 - Unit tests live in `test/runtests.jl`; split additional files and include them as needed.
 - Keep fast tests near helper functions; gate API-calling integration tests behind environment checks (e.g., `LLMACCESS_RUN_INTEGRATION=1`).

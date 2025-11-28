@@ -38,6 +38,8 @@ module Core
            OllamaCloudLLM,
            MistralLLM,
            DeepSeekLLM,
+           CerebrasLLM,
+           GroqLLM,
            DEFAULT_MODELS,
            DEFAULT_TEMPERATURE,
            DEFAULT_LLM,

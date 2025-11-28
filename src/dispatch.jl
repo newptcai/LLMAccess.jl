@@ -14,6 +14,8 @@ function get_llm_type(llm_name)
         "mistral"     => MistralLLM(),
         "openrouter"  => OpenRouterLLM(),
         "deepseek"    => DeepSeekLLM(),
+        "cerebras"    => CerebrasLLM(),
+        "groq"        => GroqLLM(),
     )
     get(llm_types, canonical) do
         error("Unknown LLM: $llm_name")

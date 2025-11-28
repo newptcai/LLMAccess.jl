@@ -81,6 +81,8 @@ const Core = LLMAccess.Core
         test_llm(get_llm_type("ollama_cloud"))
         test_llm(get_llm_type("openrouter"))
         test_llm(get_llm_type("deepseek"))
+        test_llm(get_llm_type("cerebras"))
+        test_llm(get_llm_type("groq"))
 
         # Test specific Google model
         println("Testing Google model flash")

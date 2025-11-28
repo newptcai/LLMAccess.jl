@@ -65,6 +65,8 @@ Before using LLMAccess, set the necessary API keys for the LLM providers you wan
 - `GOOGLE_API_KEY` for Google
 - `MISTRAL_API_KEY` for Mistral
 - `DEEPSEEK_API_KEY` for DeepSeek
+- `CEREBRAS_API_KEY` for Cerebras
+- `GROQ_API_KEY` for Groq
 - `OLLAMA_API_KEY` for Ollama Cloud (local Ollama uses the daemon on 127.0.0.1:11434 and does not require a key)
 
 ### Setting Environment Variables
@@ -80,6 +82,8 @@ export ANTHROPIC_API_KEY="your_anthropic_api_key"
 export GOOGLE_API_KEY="your_google_api_key"
 export MISTRAL_API_KEY="your_mistral_api_key"
 export DEEPSEEK_API_KEY="your_deepseek_api_key"
+export CEREBRAS_API_KEY="your_cerebras_api_key"
+export GROQ_API_KEY="your_groq_api_key"
 ```
 
 To set the default LLM provider and models, add the following lines:
@@ -94,6 +98,8 @@ export DEFAULT_OLLAMA_MODEL="gemma3:4b"
 export DEFAULT_OLLAMA_CLOUD_MODEL="gpt-oss:120b"
 export DEFAULT_MISTRAL_MODEL="mistral-small-latest"
 export DEFAULT_DEEPSEEK_MODEL="deepseek-chat"
+export DEFAULT_CEREBRAS_MODEL="gpt-oss-120b"
+export DEFAULT_GROQ_MODEL="openai/gpt-oss-120b"
 # Optional global default temperature (Float64)
 export DEFAULT_TEMPERATURE="1.0"
 ```
@@ -272,6 +278,8 @@ You can also use short aliases for providers via `--llm`:
 - `oc` → `ollama_cloud`
 - `or` → `openrouter`
 - `ds`/`d` → `deepseek`
+- `c` → `cerebras`
+- `gr` → `groq`
 
 List them from the CLI:
 
@@ -418,6 +426,8 @@ LLMAccess currently supports the following LLM providers:
 - **OpenAI**: Access to GPT-4/5 families and the latest reasoning models.
 - **OpenRouter**: Compatible with OpenAI's API, exposing curated multi-vendor models.
 - **DeepSeek**: OpenAI-compatible access to DeepSeek-Chat and DeepSeek-Reasoner.
+- **Cerebras**: OpenAI-compatible access to Cerebras models.
+- **Groq**: OpenAI-compatible access to Groq models (very fast inference).
 - **Anthropic**: Claude Haiku/Sonnet/Opus with thinking budget controls.
 - **Google**: Gemini and Gemma families, plus Imagen/Veo media models.
 - **Ollama**: Local inference via the Ollama daemon (vision + reasoning capable).

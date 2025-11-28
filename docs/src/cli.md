@@ -16,7 +16,7 @@ julia --project script/ask.jl --llm google "Hello"
 
 ## Common Flags
 
-- `--llm, -l`: Provider (`openai`, `anthropic`, `google`, `ollama`, `ollama_cloud`, `mistral`, `openrouter`, `deepseek`).
+- `--llm, -l`: Provider (`openai`, `anthropic`, `google`, `ollama`, `ollama_cloud`, `mistral`, `openrouter`, `deepseek`, `cerebras`, `groq`).
 - `--model, -m`: Model name (supports aliases; defaults per provider or env).
 - `--attachment, -a`: Path to file to attach (e.g., image for vision models).
 - `--file, -f`: Input file path (optional; script-specific).
@@ -89,7 +89,7 @@ julia --project script/ask.jl --no-normalize --llm google "“Quotes” and — 
 ## Aliases
 
 - Use short aliases for common models via `-m/--model`.
-- Use short aliases for providers via `-l/--llm` (e.g., `g` for `google`, `oa` for `openai`, `ol` for `ollama`, `oc` for `ollama_cloud`).
+- Use short aliases for providers via `-l/--llm` (e.g., `g` for `google`, `oa` for `openai`, `ol` for `ollama`, `oc` for `ollama_cloud`, `c` for `cerebras`, `gr` for `groq`).
 - Print model aliases: `julia --project script/ask.jl --alias`.
 - Print provider aliases: `julia --project script/ask.jl --llm-alias`.
 
