@@ -144,17 +144,17 @@ const Core = LLMAccess.Core
                                                                                                                                                                                                 
             # Test case 2: -k with value                                                                                                                                                        
             empty!(ARGS)                                                                                                                                                                        
-            push!(ARGS, "-k", "1500")                                                                                                                                                           
+            push!(ARGS, "-k", "3")                                                                                                                                                           
             settings = LLMAccess.create_default_settings()                                                                                                                                      
             parsed_args = LLMAccess.parse_commandline(settings, require_input=false)                                                                                                            
-            @test parsed_args["think"] == 1500                                                                                                                                                  
+            @test parsed_args["think"] == 3                                                                                                                                                  
                                                                                                                                                                                                 
             # Test case 3: --think with value                                                                                                                                                   
             empty!(ARGS)                                                                                                                                                                        
-            push!(ARGS, "--think", "500")                                                                                                                                                       
+            push!(ARGS, "--think", "4")                                                                                                                                                       
             settings = LLMAccess.create_default_settings()                                                                                                                                      
             parsed_args = LLMAccess.parse_commandline(settings, require_input=false)                                                                                                            
-            @test parsed_args["think"] == 500                                                                                                                                                   
+            @test parsed_args["think"] == 4                                                                                                                                                   
                                                                                                                                                                                                 
             # Test case 4: -k with negative value                                                                                                                                                   
             empty!(ARGS)                                                                                                                                                                        
@@ -165,10 +165,10 @@ const Core = LLMAccess.Core
                                                                                                                                                                                                 
             # Test case 5: Positional argument should still be parsed                                                                                                                           
             empty!(ARGS)                                                                                                                                                                        
-            push!(ARGS, "--think", "750", "my prompt")                                                                                                                                          
+            push!(ARGS, "--think", "2", "my prompt")                                                                                                                                          
             settings = LLMAccess.create_default_settings()                                                                                                                                      
             parsed_args = LLMAccess.parse_commandline(settings, require_input=false)                                                                                                            
-            @test parsed_args["think"] == 750                                                                                                                                                   
+            @test parsed_args["think"] == 2                                                                                                                                                   
             @test parsed_args["input_text"] == "my prompt"                                                                                                                                      
 
             # Test case 6: --no-normalize should set no_normalize

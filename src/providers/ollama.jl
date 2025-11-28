@@ -61,8 +61,9 @@ function _call_ollama_backend(
 )
     think_level = get(kwargs, :think, ThinkNone)
     dry_run = get(kwargs, :dry_run, false)
+    schema_content = get(kwargs, :schema_content, "")
     provider_label = mode == :cloud ? "Ollama Cloud" : "Ollama"
-    @debug "Making $(provider_label) request" system_instruction input_text model temperature attach_file think_level
+    @debug "Making $(provider_label) request" system_instruction input_text model temperature attach_file think_level schema_content
 
     payload = _build_ollama_payload(
         mode,
@@ -72,6 +73,7 @@ function _call_ollama_backend(
         temperature,
         attach_file,
         think_level,
+        schema_content,
     )
 
     if dry_run
@@ -92,12 +94,25 @@ function _build_ollama_payload(
     temperature,
     attach_file,
     think_level::ThinkLevel,
+    schema_content,
 )
     data = Dict{String, Any}()
     data["model"] = model
     data["stream"] = false
     data["think"] = think_level != ThinkNone
     data["options"] = Dict("temperature" => temperature)
+
+    if !isempty(schema_content)
+        if schema_content == "json"
+            data["format"] = "json"
+        else
+            try
+                data["format"] = JSON.parse(schema_content)
+            catch
+                data["format"] = schema_content
+            end
+        end
+    end
 
     maybe_image = _maybe_encode_ollama_image(attach_file)
 
