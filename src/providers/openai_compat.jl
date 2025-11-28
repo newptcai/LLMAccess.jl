@@ -55,7 +55,39 @@ function get_reasoning_effort(llm::T, think::ThinkLevel, model::String) where T 
     return nothing  # default for providers that don't support reasoning
 end
 
-function get_reasoning_effort(llm::GroqLLM, think::ThinkLevel, model::String)
+"""
+    get_reasoning_parameter_name(llm::GroqLLM)
+
+Get the parameter name for reasoning effort for Groq.
+"""
+function get_reasoning_parameter_name(llm::GroqLLM)
+    return "reasoning"
+end
+
+"""
+    get_reasoning_parameter_name(llm::CerebrasLLM)
+
+Get the parameter name for reasoning effort for Cerebras.
+"""
+function get_reasoning_parameter_name(llm::CerebrasLLM)
+    return "reasoning_effort"
+end
+
+"""
+    get_reasoning_parameter_name(llm::T) where T <: AbstractLLM
+
+Get the parameter name for reasoning effort for other providers.
+"""
+function get_reasoning_parameter_name(llm::T) where T <: AbstractLLM
+    return "reasoning"
+end
+
+"""
+    get_reasoning_effort_value(llm::GroqLLM, think::ThinkLevel, model::String)
+
+Get reasoning effort value for Groq models.
+"""
+function get_reasoning_effort_value(llm::GroqLLM, think::ThinkLevel, model::String)
     # Qwen models: support "none", "default", "low", "medium", "high"
     if occursin("qwen", lowercase(model))
         if think == ThinkNone
@@ -83,7 +115,12 @@ function get_reasoning_effort(llm::GroqLLM, think::ThinkLevel, model::String)
     return nothing
 end
 
-function get_reasoning_effort(llm::CerebrasLLM, think::ThinkLevel, model::String)
+"""
+    get_reasoning_effort_value(llm::CerebrasLLM, think::ThinkLevel, model::String)
+
+Get reasoning effort value for Cerebras models.
+"""
+function get_reasoning_effort_value(llm::CerebrasLLM, think::ThinkLevel, model::String)
     # Cerebras reasoning effort is only available for gpt-oss-120b model
     # Available values: "low" (minimal), "medium" (moderate, default), "high" (extensive)
     if occursin("gpt-oss-120b", lowercase(model))
@@ -103,7 +140,12 @@ function get_reasoning_effort(llm::CerebrasLLM, think::ThinkLevel, model::String
     return nothing  # Cerebras doesn't support reasoning for other models
 end
 
-function get_reasoning_effort(llm::OpenAICompatibleLLM, think::ThinkLevel, model::String)
+"""
+    get_reasoning_effort_value(llm::OpenAICompatibleLLM, think::ThinkLevel, model::String)
+
+Get reasoning effort value for OpenAI-compatible providers.
+"""
+function get_reasoning_effort_value(llm::OpenAICompatibleLLM, think::ThinkLevel, model::String)
     # This handles OpenAI, DeepSeek (OpenAI-compatible)
     reasoning_effort = if think == ThinkNone
         "none"
@@ -212,16 +254,17 @@ function make_api_request(
     end
 
     # Handle reasoning effort using type-dispatched functions
-    reasoning_effort = get_reasoning_effort(llm, think, model)
-    if reasoning_effort !== nothing
+    reasoning_effort_value = get_reasoning_effort_value(llm, think, model)
+    if reasoning_effort_value !== nothing
+        param_name = get_reasoning_parameter_name(llm)
         if llm isa CerebrasLLM
             # Cerebras uses "reasoning_effort" field directly
-            data["reasoning_effort"] = reasoning_effort
+            data[param_name] = reasoning_effort_value
         else
             # Other providers use "reasoning" object with "effort" field
-            data["reasoning"] = Dict("effort" => reasoning_effort)
+            data[param_name] = Dict("effort" => reasoning_effort_value)
         end
-        @debug "Setting reasoning effort" model reasoning_effort think
+        @debug "Setting reasoning effort" model reasoning_effort_value think
     end
     if dry_run
         return JSON.json(data)
