@@ -84,9 +84,23 @@ function get_reasoning_effort(llm::GroqLLM, think::ThinkLevel, model::String)
 end
 
 function get_reasoning_effort(llm::CerebrasLLM, think::ThinkLevel, model::String)
-    # Cerebras documentation mentions reasoning effort for gpt-oss-120b model
-    # but current API doesn't support it yet - return nothing for all cases
-    return nothing
+    # Cerebras reasoning effort is only available for gpt-oss-120b model
+    # Available values: "low" (minimal), "medium" (moderate, default), "high" (extensive)
+    if occursin("gpt-oss-120b", lowercase(model))
+        if think == ThinkNone
+            return "medium"  # use default medium reasoning even when think=0
+        else
+            return if think == ThinkMinimal || think == ThinkLow
+                "low"
+            elseif think == ThinkMedium
+                "medium"  # default
+            else  # ThinkHigh, ThinkAutomatic
+                "high"
+            end
+        end
+    end
+
+    return nothing  # Cerebras doesn't support reasoning for other models
 end
 
 function get_reasoning_effort(llm::OpenAICompatibleLLM, think::ThinkLevel, model::String)
@@ -200,7 +214,13 @@ function make_api_request(
     # Handle reasoning effort using type-dispatched functions
     reasoning_effort = get_reasoning_effort(llm, think, model)
     if reasoning_effort !== nothing
-        data["reasoning"] = Dict("effort" => reasoning_effort)
+        if llm isa CerebrasLLM
+            # Cerebras uses "reasoning_effort" field directly
+            data["reasoning_effort"] = reasoning_effort
+        else
+            # Other providers use "reasoning" object with "effort" field
+            data["reasoning"] = Dict("effort" => reasoning_effort)
+        end
         @debug "Setting reasoning effort" model reasoning_effort think
     end
     if dry_run
