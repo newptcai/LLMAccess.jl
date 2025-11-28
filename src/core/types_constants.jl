@@ -89,20 +89,6 @@ Concrete type for Groq's LLM (OpenAI-compatible API).
 """
 struct GroqLLM <: OpenAICompatibleLLM end
 
-"""
-    CerebrasLLM
-
-Concrete type for Cerebras's LLM (OpenAI-compatible API).
-"""
-struct CerebrasLLM <: OpenAICompatibleLLM end
-
-"""
-    GroqLLM
-
-Concrete type for Groq's LLM (OpenAI-compatible API).
-"""
-struct GroqLLM <: OpenAICompatibleLLM end
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Constants
 # ─────────────────────────────────────────────────────────────────────────────

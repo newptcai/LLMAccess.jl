@@ -8,6 +8,105 @@ function call_llm(llm::AbstractLLM; kwargs...)
 end
 
 """
+    get_default_think_level(::Type{T}, model::String) where T <: AbstractLLM
+
+Get the default thinking level for a given provider and model.
+"""
+function get_default_think_level(::Type{T}, model::String) where T <: AbstractLLM
+    return ThinkNone  # default for most providers
+end
+
+function get_default_think_level(::Type{GroqLLM}, model::String)
+    # Qwen models: use minimal reasoning by default (maps to "default")
+    if occursin("qwen", lowercase(model))
+        return ThinkMinimal
+    end
+
+    # gpt-oss models: use low reasoning by default
+    if occursin("gpt-oss", lowercase(model))
+        return ThinkLow
+    end
+
+    return ThinkNone
+end
+
+function get_default_think_level(::Type{OpenAILLM}, model::String)
+    # GPT-5 and O1 models: use minimal reasoning by default
+    if occursin("gpt-5", lowercase(model)) || startswith(lowercase(model), "o")
+        return ThinkMinimal
+    end
+
+    return ThinkNone
+end
+
+"""
+    get_reasoning_effort(llm::T, think::ThinkLevel, model::String) where T <: AbstractLLM
+
+Get reasoning effort for a specific provider, think level, and model.
+Returns nothing if reasoning parameter should be omitted entirely.
+"""
+function get_reasoning_effort(llm::T, think::ThinkLevel, model::String) where T <: AbstractLLM
+    return nothing  # default for providers that don't support reasoning
+end
+
+function get_reasoning_effort(llm::GroqLLM, think::ThinkLevel, model::String)
+    # Qwen models: support "none", "default", "low", "medium", "high"
+    if occursin("qwen", lowercase(model))
+        if think == ThinkNone
+            return "none"      # disable reasoning
+        else
+            return "default"    # let Qwen reason
+        end
+    end
+
+    # gpt-oss models: support "low", "medium", "high"
+    if occursin("gpt-oss", lowercase(model))
+        if think == ThinkNone
+            return nothing      # omit parameter entirely
+        else
+            return if think == ThinkMinimal || think == ThinkLow
+                "low"
+            elseif think == ThinkMedium
+                "medium"
+            else  # ThinkHigh, ThinkAutomatic
+                "high"
+            end
+        end
+    end
+
+    return nothing
+end
+
+function get_reasoning_effort(llm::OpenAICompatibleLLM, think::ThinkLevel, model::String)
+    # This handles OpenAI, DeepSeek, Cerebras (OpenAI-compatible)
+    reasoning_effort = if think == ThinkNone
+        "none"
+    elseif think == ThinkMinimal
+        "minimal"
+    elseif think == ThinkLow
+        "low"
+    elseif think == ThinkMedium
+        "medium"
+    elseif think == ThinkHigh || think == ThinkAutomatic
+        "high"
+    else
+        "none"
+    end
+
+    # GPT-5.1 supports none, low, medium, high (no minimal)
+    if occursin("gpt-5.1", lowercase(model)) && reasoning_effort == "minimal"
+        reasoning_effort = "low"
+    end
+
+    # GPT-5-pro only supports high
+    if occursin("gpt-5-pro", lowercase(model))
+        reasoning_effort = "high"
+    end
+
+    return reasoning_effort
+end
+
+"""
     make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=false, think=0, max_tokens=nothing)
 
 Prepare and send an OpenAI-compatible chat.completions request and return text.
@@ -86,32 +185,9 @@ function make_api_request(
         data["max_tokens"] = max_tokens
     end
 
-    # Handle reasoning effort for GPT-5 and gpt-oss models
-    if occursin("gpt-5", lowercase(model)) || startswith(lowercase(model), "o") || occursin("gpt-oss", lowercase(model))
-        reasoning_effort = if think == ThinkNone
-            "none"
-        elseif think == ThinkMinimal
-            "minimal"
-        elseif think == ThinkLow
-            "low"
-        elseif think == ThinkMedium
-            "medium"
-        elseif think == ThinkHigh || think == ThinkAutomatic
-            "high"
-        else
-            "none"
-        end
-
-        # GPT-5.1 supports none, low, medium, high (no minimal)
-        if occursin("gpt-5.1", lowercase(model)) && reasoning_effort == "minimal"
-            reasoning_effort = "low"
-        end
-
-        # GPT-5-pro only supports high
-        if occursin("gpt-5-pro", lowercase(model))
-            reasoning_effort = "high"
-        end
-
+    # Handle reasoning effort using type-dispatched functions
+    reasoning_effort = get_reasoning_effort(llm, think, model)
+    if reasoning_effort !== nothing
         data["reasoning"] = Dict("effort" => reasoning_effort)
         @debug "Setting reasoning effort" model reasoning_effort think
     end
@@ -135,7 +211,9 @@ function call_llm(
     api_key = ENV["OPENAI_API_KEY"]
     url     = "https://api.openai.com/v1/chat/completions"
     dry_run = get(kwargs, :dry_run, false)
-    think = get(kwargs, :think, ThinkNone)
+    think = get(kwargs, :think) do
+        get_default_think_level(OpenAILLM, model)
+    end
     schema_content = get(kwargs, :schema_content, "")
     return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think, schema_content=schema_content)
 end
@@ -204,7 +282,9 @@ function call_llm(
     api_key = ENV["GROQ_API_KEY"]
     url     = "https://api.groq.com/openai/v1/chat/completions" # Assuming standard OpenAI compatible endpoint
     dry_run = get(kwargs, :dry_run, false)
-    think = get(kwargs, :think, ThinkNone)
+    think = get(kwargs, :think) do
+        get_default_think_level(GroqLLM, model)
+    end
     schema_content = get(kwargs, :schema_content, "")
     return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think, schema_content=schema_content)
 end
