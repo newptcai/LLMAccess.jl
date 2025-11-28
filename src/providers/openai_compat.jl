@@ -30,6 +30,15 @@ function get_default_think_level(::Type{GroqLLM}, model::String)
     return ThinkNone
 end
 
+function get_default_think_level(::Type{CerebrasLLM}, model::String)
+    # Cerebras gpt-oss-120b: use medium reasoning by default (per docs)
+    if occursin("gpt-oss-120b", lowercase(model))
+        return ThinkMedium
+    end
+
+    return ThinkNone
+end
+
 function get_default_think_level(::Type{OpenAILLM}, model::String)
     # GPT-5 and O1 models: use minimal reasoning by default
     if occursin("gpt-5", lowercase(model)) || startswith(lowercase(model), "o")
@@ -77,8 +86,28 @@ function get_reasoning_effort(llm::GroqLLM, think::ThinkLevel, model::String)
     return nothing
 end
 
+function get_reasoning_effort(llm::CerebrasLLM, think::ThinkLevel, model::String)
+    # Cerebras only supports reasoning effort for gpt-oss-120b model
+    # Available values: "low", "medium" (default), "high"
+    if occursin("gpt-oss-120b", lowercase(model))
+        if think == ThinkNone
+            return nothing  # omit parameter entirely when no reasoning requested
+        else
+            return if think == ThinkMinimal || think == ThinkLow
+                "low"
+            elseif think == ThinkMedium
+                "medium"  # default
+            else  # ThinkHigh, ThinkAutomatic
+                "high"
+            end
+        end
+    end
+
+    return nothing  # Cerebras doesn't support reasoning for other models
+end
+
 function get_reasoning_effort(llm::OpenAICompatibleLLM, think::ThinkLevel, model::String)
-    # This handles OpenAI, DeepSeek, Cerebras (OpenAI-compatible)
+    # This handles OpenAI, DeepSeek (OpenAI-compatible)
     reasoning_effort = if think == ThinkNone
         "none"
     elseif think == ThinkMinimal
@@ -264,7 +293,9 @@ function call_llm(
     api_key = ENV["CEREBRAS_API_KEY"]
     url     = "https://api.cerebras.ai/v1/chat/completions"
     dry_run = get(kwargs, :dry_run, false)
-    think = get(kwargs, :think, ThinkNone)
+    think = get(kwargs, :think) do
+        get_default_think_level(CerebrasLLM, model)
+    end
     schema_content = get(kwargs, :schema_content, "")
     return make_api_request(llm, api_key, url, system_instruction, input_text, model, temperature, attach_file; dry_run=dry_run, think=think, schema_content=schema_content)
 end

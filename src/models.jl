@@ -79,6 +79,13 @@ end
 
 List available models from DeepSeek.
 """
+function list_llm_models(llm::DeepSeekLLM)
+    @debug "Listing LLM Models" llm
+    api_key = ENV["DEEPSEEK_API_KEY"]
+    headers = ["Authorization" => "Bearer $api_key"]
+    url     = "https://api.deepseek.com/v1/models" # Assuming OpenAI-compatible models endpoint
+    response = get_request(url, headers)
+    model_list = handle_json_response(response, ["data"])
     return [model["id"] for model in model_list]
 end
 
