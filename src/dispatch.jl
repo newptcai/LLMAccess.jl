@@ -72,6 +72,13 @@ function call_llm(system_instruction, args::Dict)
     temperature = args["temperature"]
     attach_file = haskey(args, "attachment") ? args["attachment"] : ""
     schema_content = haskey(args, "schema_content") ? args["schema_content"] : ""
+    if isempty(schema_content) && haskey(args, "schema")
+        schema_content = args["schema"]
+    end
+    if isempty(schema_content) && haskey(args, "scheme")
+        @warn "The argument 'scheme' is deprecated or misspelled; please use 'schema' or 'schema_content'."
+        schema_content = args["scheme"]
+    end
     copy        = args["copy"]
     think       = args["think"]
     dry_run     = get(args, "dry_run", false)
