@@ -84,6 +84,17 @@ const Core = LLMAccess.Core
         test_llm(get_llm_type("cerebras"))
         test_llm(get_llm_type("groq"))
 
+        @testset "list_llm_models" begin
+            println("Testing list_llm_models for Cerebras")
+            cerebras_models = LLMAccess.list_llm_models(get_llm_type("cerebras"))
+            @test isa(cerebras_models, Vector{String})
+            @test !isempty(cerebras_models)
+
+            println("Testing list_llm_models for Groq")
+            groq_models = LLMAccess.list_llm_models(get_llm_type("groq"))
+            @test isa(groq_models, Vector{String})
+            @test !isempty(groq_models)
+        end
         # Test specific Google model
         println("Testing Google model flash")
         google_flash_response = LLMAccess.call_llm(

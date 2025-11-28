@@ -79,11 +79,34 @@ end
 
 List available models from DeepSeek.
 """
-function list_llm_models(llm::DeepSeekLLM)
+    return [model["id"] for model in model_list]
+end
+
+"""
+    list_llm_models(llm::CerebrasLLM)
+
+List available models from Cerebras.
+"""
+function list_llm_models(llm::CerebrasLLM)
     @debug "Listing LLM Models" llm
-    api_key = ENV["DEEPSEEK_API_KEY"]
+    api_key = ENV["CEREBRAS_API_KEY"]
     headers = ["Authorization" => "Bearer $api_key"]
-    url     = "https://api.deepseek.com/v1/models"
+    url     = "https://api.cerebras.ai/v1/models" # Assuming OpenAI-compatible models endpoint
+    response = get_request(url, headers)
+    model_list = handle_json_response(response, ["data"])
+    return [model["id"] for model in model_list]
+end
+
+"""
+    list_llm_models(llm::GroqLLM)
+
+List available models from Groq.
+"""
+function list_llm_models(llm::GroqLLM)
+    @debug "Listing LLM Models" llm
+    api_key = ENV["GROQ_API_KEY"]
+    headers = ["Authorization" => "Bearer $api_key"]
+    url     = "https://api.groq.com/openai/v1/models"
     response = get_request(url, headers)
     model_list = handle_json_response(response, ["data"])
     return [model["id"] for model in model_list]
