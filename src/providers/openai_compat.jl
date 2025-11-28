@@ -61,7 +61,7 @@ end
 Get the parameter name for reasoning effort for Groq.
 """
 function get_reasoning_parameter_name(llm::GroqLLM)
-    return "reasoning"
+    return "reasoning_effort"
 end
 
 """
@@ -97,18 +97,16 @@ function get_reasoning_effort_value(llm::GroqLLM, think::ThinkLevel, model::Stri
         end
     end
 
-    # gpt-oss models: support "low", "medium", "high"
+    # gpt-oss models: support "low", "medium", "high" (no "none")
     if occursin("gpt-oss", lowercase(model))
-        if think == ThinkNone
-            return nothing      # omit parameter entirely
-        else
-            return if think == ThinkMinimal || think == ThinkLow
-                "low"
-            elseif think == ThinkMedium
-                "medium"
-            else  # ThinkHigh, ThinkAutomatic
-                "high"
-            end
+        return if think == ThinkNone
+            "medium"  # use default for gpt-oss when no reasoning requested
+        elseif think == ThinkMinimal || think == ThinkLow
+            "low"
+        elseif think == ThinkMedium
+            "medium"
+        else  # ThinkHigh, ThinkAutomatic
+            "high"
         end
     end
 
@@ -257,8 +255,8 @@ function make_api_request(
     reasoning_effort_value = get_reasoning_effort_value(llm, think, model)
     if reasoning_effort_value !== nothing
         param_name = get_reasoning_parameter_name(llm)
-        if llm isa CerebrasLLM
-            # Cerebras uses "reasoning_effort" field directly
+        if llm isa CerebrasLLM || llm isa GroqLLM
+            # Cerebras and Groq use "reasoning_effort" field directly
             data[param_name] = reasoning_effort_value
         else
             # Other providers use "reasoning" object with "effort" field
