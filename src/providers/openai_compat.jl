@@ -56,6 +56,61 @@ function get_reasoning_effort(llm::T, think::ThinkLevel, model::String) where T 
 end
 
 """
+    map_think_to_effort(think::ThinkLevel)
+
+Map generic `ThinkLevel` values to the standard effort strings.
+"""
+function map_think_to_effort(think::ThinkLevel)
+    if think == ThinkNone
+        return "none"
+    elseif think == ThinkMinimal
+        return "minimal"
+    elseif think == ThinkLow
+        return "low"
+    elseif think == ThinkMedium
+        return "medium"
+    else
+        return "high"  # ThinkHigh, ThinkAutomatic
+    end
+end
+
+"""
+    gpt_oss_reasoning_effort(think::ThinkLevel)
+
+Convert `ThinkLevel` to the closest gpt-oss effort value.
+"""
+function gpt_oss_reasoning_effort(think::ThinkLevel)
+    return if think == ThinkNone || think == ThinkAutomatic
+        nothing  # omit reasoning for gpt-oss when think is disabled or automatic
+    elseif think == ThinkMinimal || think == ThinkLow
+        "low"
+    elseif think == ThinkMedium
+        "medium"
+    else  # ThinkHigh
+        "high"
+    end
+end
+
+"""
+    qwen_reasoning_effort(think::ThinkLevel)
+
+Convert `ThinkLevel` to Qwen's supported reasoning values.
+"""
+function qwen_reasoning_effort(think::ThinkLevel)
+    if think == ThinkNone
+        return "none"
+    elseif think == ThinkAutomatic
+        return "default"
+    elseif think == ThinkMinimal || think == ThinkLow
+        return "low"
+    elseif think == ThinkMedium
+        return "medium"
+    else
+        return "high"
+    end
+end
+
+"""
     get_reasoning_parameter_name(llm::GroqLLM)
 
 Get the parameter name for reasoning effort for Groq.
@@ -88,26 +143,15 @@ end
 Get reasoning effort value for Groq models.
 """
 function get_reasoning_effort_value(llm::GroqLLM, think::ThinkLevel, model::String)
+    m = lowercase(model)
     # Qwen models: support "none", "default", "low", "medium", "high"
-    if occursin("qwen", lowercase(model))
-        if think == ThinkNone
-            return "none"      # disable reasoning
-        else
-            return "default"    # let Qwen reason
-        end
+    if occursin("qwen", m)
+        return qwen_reasoning_effort(think)
     end
 
     # gpt-oss models: support "low", "medium", "high" (no "none")
-    if occursin("gpt-oss", lowercase(model))
-        return if think == ThinkNone
-            "medium"  # use default for gpt-oss when no reasoning requested
-        elseif think == ThinkMinimal || think == ThinkLow
-            "low"
-        elseif think == ThinkMedium
-            "medium"
-        else  # ThinkHigh, ThinkAutomatic
-            "high"
-        end
+    if occursin("gpt-oss", m)
+        return gpt_oss_reasoning_effort(think)
     end
 
     return nothing
@@ -122,17 +166,7 @@ function get_reasoning_effort_value(llm::CerebrasLLM, think::ThinkLevel, model::
     # Cerebras reasoning effort is only available for gpt-oss-120b model
     # Available values: "low" (minimal), "medium" (moderate, default), "high" (extensive)
     if occursin("gpt-oss-120b", lowercase(model))
-        if think == ThinkNone
-            return "medium"  # use default medium reasoning even when think=0
-        else
-            return if think == ThinkMinimal || think == ThinkLow
-                "low"
-            elseif think == ThinkMedium
-                "medium"  # default
-            else  # ThinkHigh, ThinkAutomatic
-                "high"
-            end
-        end
+        return gpt_oss_reasoning_effort(think)
     end
 
     return nothing  # Cerebras doesn't support reasoning for other models
@@ -144,28 +178,28 @@ end
 Get reasoning effort value for OpenAI-compatible providers.
 """
 function get_reasoning_effort_value(llm::OpenAICompatibleLLM, think::ThinkLevel, model::String)
-    # This handles OpenAI, DeepSeek (OpenAI-compatible)
-    reasoning_effort = if think == ThinkNone
-        "none"
-    elseif think == ThinkMinimal
-        "minimal"
-    elseif think == ThinkLow
-        "low"
-    elseif think == ThinkMedium
-        "medium"
-    elseif think == ThinkHigh || think == ThinkAutomatic
-        "high"
-    else
-        "none"
+    m = lowercase(model)
+
+    # gpt-oss models: omit reasoning when ThinkNone
+    if occursin("gpt-oss", m)
+        return gpt_oss_reasoning_effort(think)
+    end
+
+    # Base mapping for OpenAI-compatible providers
+    reasoning_effort = map_think_to_effort(think)
+
+    # GPT-5 family: use "low" when ThinkNone is given
+    if occursin("gpt-5", m) && think == ThinkNone
+        reasoning_effort = "low"
     end
 
     # GPT-5.1 supports none, low, medium, high (no minimal)
-    if occursin("gpt-5.1", lowercase(model)) && reasoning_effort == "minimal"
+    if occursin("gpt-5.1", m) && reasoning_effort == "minimal"
         reasoning_effort = "low"
     end
 
     # GPT-5-pro only supports high
-    if occursin("gpt-5-pro", lowercase(model))
+    if occursin("gpt-5-pro", m)
         reasoning_effort = "high"
     end
 
