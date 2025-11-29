@@ -69,6 +69,7 @@ function main(_)
     system_instruction = """
     You convert visual documents into clean Markdown.
     Strip headers/footers when obvious, preserve tables, and avoid commentary.
+    Prefer markdown headings instead of bold text.
     """
 
     user_prompt = """
