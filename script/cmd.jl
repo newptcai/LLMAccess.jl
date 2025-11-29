@@ -231,7 +231,7 @@ function main(_)
     @add_arg_table! custom_settings begin
         "--cmd"; help = "Direct command to use instead of calling LLM"; metavar = "CMD"; default = ""
         "--no-copy"; help = "Do not copy the generated command to the clipboard"; dest_name = "no_copy"; action = :store_true
-        "-n", "--non-iteractive"; help = "Print the command without prompting to run it"; dest_name = "non_iteractive"; action = :store_true
+        "-n", "--non-interactive"; help = "Print the command without prompting to run it"; dest_name = "non_iteractive"; action = :store_true
     end
 
     # Mirror ask.jl: delegate error handling and Ctrl+C to run_cli_with_args

@@ -113,6 +113,7 @@ To add a new provider that is compatible with the OpenAI API, follow these steps
 
 ## Commit & PR Practices
 - Use Conventional Commit style with optional emoji scopes (e.g., `✨ (script/cmd.jl): Add dry-run flag hint`).
+- For bug fixes, increment the patch version (e.g., `1.47.0` to `1.47.1`) in both `Project.toml` and relevant CLI scripts (e.g., `script/wl.jl`).
 - PRs should explain purpose, include before/after behavior, and reference issues when relevant.
 - Add or update tests alongside behavioral changes; refresh documentation for user-facing updates.
 

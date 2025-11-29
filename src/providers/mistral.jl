@@ -61,7 +61,20 @@ function call_llm(
         catch e
             error("Failed to parse schema content: $e")
         end
-        data["response_format"] = Dict("type" => "json_schema", "json_schema" => schema_content)
+
+        # Mistral requires specific structure for json_schema: {name, schema, strict}
+        # If the provided content looks like a raw schema (has "type" or "properties"), wrap it.
+        formatted_schema = if !haskey(schema_content, "schema") && (haskey(schema_content, "type") || haskey(schema_content, "properties"))
+             Dict(
+                "name" => "output_schema",
+                "schema" => schema_content,
+                "strict" => true
+            )
+        else
+            schema_content
+        end
+
+        data["response_format"] = Dict("type" => "json_schema", "json_schema" => formatted_schema)
     end
 
     if dry_run

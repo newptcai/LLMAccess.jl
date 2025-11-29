@@ -194,6 +194,7 @@ function run_llm_definitions(word_to_lookup, args)
                         "example" => Dict("type" => "string", "description" => "Short example sentence"),
                     ),
                     "required" => ["pos", "definition"],
+                    "additionalProperties" => false,
                 ),
             ),
             "synonyms" => Dict(
@@ -202,6 +203,7 @@ function run_llm_definitions(word_to_lookup, args)
             ),
         ),
         "required" => ["definitions", "synonyms"],
+        "additionalProperties" => false,
     )
 
     system_instruction = """
@@ -228,6 +230,8 @@ function run_llm_definitions(word_to_lookup, args)
     end
     
     payload = strip_triple_backticks(raw_output)
+    # Basic sanitization: remove control chars that aren't \n, \r, \t
+    payload = replace(payload, r"[\x00-\x08\x0B\x0C\x0E-\x1F]" => "")
     parsed = JSON.parse(payload)
 
     senses = []
@@ -305,7 +309,7 @@ function main(_)
           wl.jl --list
         """,
         add_version = true,
-        version = "v2.0.0",
+        version = "v2.0.1",
         preformatted_description = true,
         preformatted_epilog = true,
     )
