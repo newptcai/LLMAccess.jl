@@ -309,11 +309,19 @@ julia --project script/ask.jl --llm-alias
 
 LLMAccess ships with runnable scripts and shared CLI helpers: `parse_commandline` for consistent flags and `run_cli` for robust error handling (usage errors, Ctrl+C, debug traces).
 
-- `script/ask.jl`: General-purpose Q&A.
-- `script/cmd.jl`: Generate bash commands (prints, copies to clipboard by default, and can execute after confirmation). Supports `--cmd CMD` to bypass the LLM. Use `--no-copy` to disable clipboard copying for this script. When a prompt contains `{{FILE}}` (or the shorthand `{{F}}`), the placeholder expands to the `-f/--file` path (multiple occurrences allowed). Use `{{FILE|cmd}}`/`{{F|cmd}}` to run a shell snippet (executed via `bash -lc`) where the path is piped on STDIN and exposed as `$FILE_PLACEHOLDER`. For quick tweaks without shell one-liners, prefix the helper with a colon (`:`) to call built-ins like `{{F|:ext=pdf}}`, `{{F|:basename}}`, `{{F|:dirname}}`, `{{F|:stem}}`, or `{{F|:ext}}`.
+#### **`script/ask.jl`**
+
+General-purpose Q&A.
+
+#### **`script/cmd.jl`**
+
+Generate bash commands (prints, copies to clipboard by default, and can execute after confirmation). Supports `--cmd CMD` to bypass the LLM. Use `--no-copy` to disable clipboard copying for this script. When a prompt contains `{{FILE}}` (or the shorthand `{{F}}`), the placeholder expands to the `-f/--file` path (multiple occurrences allowed). Use `{{FILE|cmd}}`/`{{F|cmd}}` to run a shell snippet (executed via `bash -lc`) where the path is piped on STDIN and exposed as `$FILE_PLACEHOLDER`. For quick tweaks without shell one-liners, prefix the helper with a colon (`:`) to call built-ins like `{{F|:ext=pdf}}`, `{{F|:basename}}`, `{{F|:dirname}}`, `{{F|:stem}}`, or `{{F|:ext}}`.
 
 The `:` shortcuts understand `basename`, `dirname`, `stem`/`without-ext`, `ext`, and `remove-ext`. `:ext` returns the current extension when used alone, or replaces it when passed an argument (you can use `{{F|:ext pdf}}` or the compact `{{F|:ext=pdf}}`; omit the dot to have it added automatically, or pass an empty string to drop the extension entirely). The legacy `path:` prefix is still accepted for older prompts, but `:` is preferred going forward.
-- `script/echo.jl`: Echo utility for validating responses.
+
+#### **`script/echo.jl`**
+
+Echo utility for validating responses.
 
 Examples:
 
@@ -343,22 +351,30 @@ julia --project script/cmd.jl --cmd 'echo hi'
 julia --project script/ask.jl --llm openai --model 4o --attachment ~/Downloads/example.webp "What's in this picture?"
 ```
 
-#### Mistral OCR
+#### **`script/ocr.jl`**
 
-Use Mistral's OCR models with the dedicated endpoint by selecting `mistral-ocr-latest` (or the alias `ocr`). An attachment is required.
+Use the dedicated OCR script to convert images or PDFs into Markdown. It defaults to the Mistral OCR endpoint (`--llm mistral` / `--model mistral-ocr-latest`, alias `ocr`), but you can target any supported provider/model combo if it understands OCR attachments. Always pass an attachment via `-a/--attachment`; otherwise the script exits with an error.
 
 ```bash
-# Dry run (inspect JSON payload only)
-julia --project script/ask.jl --llm mistral --model ocr --attachment ./page.jpg --dry-run "extract"
+# Preview the JSON payload without calling the API
+julia --project script/ocr.jl -a ./scan.pdf --dry-run
 
-# Real request
-julia --project script/ask.jl --llm mistral --model ocr --attachment ./page.jpg "extract"
+# Write Markdown output to a file
+julia --project script/ocr.jl -a ./page.jpg -o page.md
+
+# Override provider/model and enable higher reasoning effort
+julia --project script/ocr.jl -a ./diagram.png -l openai -m 4o -k 3
 ```
 
-Notes:
-- Routes to `https://api.mistral.ai/v1/ocr` with `document.image_url` as a `data:` URL.
-- Ignores system instruction and temperature.
-- Prefers `pages[*].markdown` in the response; falls back to text fields.
+Key flags:
+
+- `-o/--output`: write the OCR result to a file instead of stdout.
+- `-l/--llm`, `-m/--model`: pick the provider/model (default `mistral-ocr-latest`).
+- `-a/--attachment`: path to the image/PDF (required).
+- `-k/--think`: reasoning level (-1 auto, 0 none, 1-4 minimal→high) for providers that support it.
+- `--alias`, `--providers`, `--llm-alias`: introspection helpers shared with other scripts.
+
+Implementation details mirror the older `ask.jl` workflow: requests hit `https://api.mistral.ai/v1/ocr` with the attachment encoded as a `data:` URL, temperature is ignored, and responses prioritize `pages[*].markdown` before falling back to text fields.
 
 Common arguments:
 
