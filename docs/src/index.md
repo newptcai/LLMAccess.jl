@@ -56,14 +56,14 @@ CLI examples (see also the CLI page):
 ```bash
 julia --project script/ask.jl --llm google "Hello"
 julia --project script/cmd.jl --llm openai "list files changed today"
-julia --project script/cmd.jl -f ./script/example.sh --llm openai "Review {{F|sed 's/\\.sh$/.md/'}}"
+julia --project script/cmd.jl -f ./script/example.sh --llm openai "Review {{F|:ext=md}}"
 julia --project script/ask.jl --alias
 julia --project script/ask.jl --llm-alias
 julia --project script/ask.jl --llm deepseek --model r1 "Outline a reasoning trace"
 julia --project script/ask.jl --llm ollama --model gemma3-4b-ollama "Summarize this file"
 julia --project script/ask.jl --llm ollama_cloud --model gpt-oss:120b "Explain this snippet"
 
-Note: `script/cmd.jl` copies the generated command to your clipboard by default. Use `--no-copy` to disable copying for that script, or `--cmd 'your command'` to bypass the LLM and still use the copy/execute flow. Prompts can reference `{{FILE}}`/`{{F}}` (and `{{FILE|cmd}}`/`{{F|cmd}}`) to embed the `-f/--file` path or pipe it through a short shell snippet, with the value available on STDIN and as `$FILE_PLACEHOLDER`.
+Note: `script/cmd.jl` copies the generated command to your clipboard by default. Use `--no-copy` to disable copying for that script, or `--cmd 'your command'` to bypass the LLM and still use the copy/execute flow. Prompts can reference `{{FILE}}`/`{{F}}` (and `{{FILE|cmd}}`/`{{F|cmd}}`) to embed the `-f/--file` path or pipe it through a short shell snippet, with the value available on STDIN and as `$FILE_PLACEHOLDER`. To avoid external helpers for common tweaks, prefix helpers with `:` such as `{{F|:ext=pdf}}`, `{{F|:basename}}`, `{{F|:dirname}}`, `{{F|:stem}}`, `{{F|:ext}}`, or `{{F|:remove-ext}}`. The legacy `path:` prefix is still supported for older prompts.
 ```
 
 ## Configuration

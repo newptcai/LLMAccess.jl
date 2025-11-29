@@ -121,7 +121,7 @@ To add a new provider that is compatible with the OpenAI API, follow these steps
 - Any non-zero `--think` value enables reasoning mode for Ollama (local + cloud).
 - GPT-5.1 uses reasoning effort levels 0-4: 0=none (default), 1=minimal→low, 2=low, 3=medium, 4=high.
 - `script/cmd.jl` always copies trimmed command output; confirm clipboard access on your platform.
-- `script/cmd.jl` recognizes `{{FILE}}`/`{{F}}` placeholders (plus the `|cmd` variant) to inject the `-f/--file` path or run a short `bash -lc` snippet with the original path available via STDIN and `$FILE_PLACEHOLDER`.
+- `script/cmd.jl` recognizes `{{FILE}}`/`{{F}}` placeholders (plus the `|cmd` variant) to inject the `-f/--file` path or run a short `bash -lc` snippet with the original path available via STDIN and `$FILE_PLACEHOLDER`. Built-in `:` helpers (`:basename`, `:dirname`, `:stem`/`:without-ext`, `:ext`, `:ext=<new>`, `:remove-ext`) avoid spinning up subshells for simple manipulations (the legacy `path:` prefix still works, but `:` is preferred).
 - When a CLI should hide unused shared flags or replace them with custom options, pass `omit_args = [...]` into `parse_commandline` via `run_cli_with_args` (see `script/cmd.jl` omitting `--copy` in favor of `--no-copy` and skipping `--no-normalize`).
 
 ## TODO

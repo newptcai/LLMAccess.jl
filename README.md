@@ -310,7 +310,9 @@ julia --project script/ask.jl --llm-alias
 LLMAccess ships with runnable scripts and shared CLI helpers: `parse_commandline` for consistent flags and `run_cli` for robust error handling (usage errors, Ctrl+C, debug traces).
 
 - `script/ask.jl`: General-purpose Q&A.
-- `script/cmd.jl`: Generate bash commands (prints, copies to clipboard by default, and can execute after confirmation). Supports `--cmd CMD` to bypass the LLM. Use `--no-copy` to disable clipboard copying for this script. When a prompt contains `{{FILE}}` (or the shorthand `{{F}}`), the placeholder expands to the `-f/--file` path (multiple occurrences allowed). Use `{{FILE|cmd}}`/`{{F|cmd}}` to run a shell snippet (executed via `bash -lc`) where the path is piped on STDIN and exposed as `$FILE_PLACEHOLDER`.
+- `script/cmd.jl`: Generate bash commands (prints, copies to clipboard by default, and can execute after confirmation). Supports `--cmd CMD` to bypass the LLM. Use `--no-copy` to disable clipboard copying for this script. When a prompt contains `{{FILE}}` (or the shorthand `{{F}}`), the placeholder expands to the `-f/--file` path (multiple occurrences allowed). Use `{{FILE|cmd}}`/`{{F|cmd}}` to run a shell snippet (executed via `bash -lc`) where the path is piped on STDIN and exposed as `$FILE_PLACEHOLDER`. For quick tweaks without shell one-liners, prefix the helper with a colon (`:`) to call built-ins like `{{F|:ext=pdf}}`, `{{F|:basename}}`, `{{F|:dirname}}`, `{{F|:stem}}`, or `{{F|:ext}}`.
+
+The `:` shortcuts understand `basename`, `dirname`, `stem`/`without-ext`, `ext`, and `remove-ext`. `:ext` returns the current extension when used alone, or replaces it when passed an argument (you can use `{{F|:ext pdf}}` or the compact `{{F|:ext=pdf}}`; omit the dot to have it added automatically, or pass an empty string to drop the extension entirely). The legacy `path:` prefix is still accepted for older prompts, but `:` is preferred going forward.
 - `script/echo.jl`: Echo utility for validating responses.
 
 Examples:
@@ -331,8 +333,8 @@ julia --project script/ask.jl --llm ollama_cloud --model gpt-oss:120b "Share a q
 # Generate shell commands
 julia --project script/cmd.jl --llm openai "list files changed today"
 
-# Inject a file path (and tweak its extension via sed)
-julia --project script/cmd.jl -f ./script/example.sh --llm openai "Review {{F|sed 's/\\.sh$/.md/'}}"
+# Inject a file path (and tweak its extension via the built-in helper)
+julia --project script/cmd.jl -f ./script/example.sh --llm openai "Review {{F|:ext=md}}"
 
 # Bypass the LLM and still get copy/execute flow
 julia --project script/cmd.jl --cmd 'echo hi'

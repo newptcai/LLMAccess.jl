@@ -5,7 +5,9 @@ LLMAccess includes simple scripts in the `script/` directory for quick interacti
 ## Scripts
 
 - `script/ask.jl`: Send a prompt and print the model response.
-- `script/cmd.jl`: Generate a shell command, copy it to clipboard by default, and optionally execute after confirmation. Supports `--cmd CMD` to bypass the LLM and still use the copy/execute flow. Use `--no-copy` to disable clipboard copying for this script. Prompts can reference `{{FILE}}` (or the shorthand `{{F}}`) to inject the `-f/--file` path, or `{{FILE|cmd}}`/`{{F|cmd}}` to run a shell snippet (`bash -lc`) where the original path is piped via STDIN and exposed as `$FILE_PLACEHOLDER`.
+- `script/cmd.jl`: Generate a shell command, copy it to clipboard by default, and optionally execute after confirmation. Supports `--cmd CMD` to bypass the LLM and still use the copy/execute flow. Use `--no-copy` to disable clipboard copying for this script. Prompts can reference `{{FILE}}` (or the shorthand `{{F}}`) to inject the `-f/--file` path, or `{{FILE|cmd}}`/`{{F|cmd}}` to run a shell snippet (`bash -lc`) where the original path is piped via STDIN and exposed as `$FILE_PLACEHOLDER`. For simple tweaks, prefix the helper name with a colon to call built-ins such as `{{F|:ext=pdf}}`, `{{F|:basename}}`, `{{F|:dirname}}`, `{{F|:stem}}`, `{{F|:ext}}`, or `{{F|:remove-ext}}`. They avoid the need for sed/awk by handling basic path manipulations inline.
+
+The built-in helpers currently cover `basename`, `dirname`, `stem`/`without-ext`, `ext`, and `remove-ext`. `:ext` returns the extension when used alone; pass a new value (using either a space or `=`) to replace it, and omit the dot to have it added automatically. Providing an empty value is equivalent to dropping the extension entirely. The older `path:` prefix remains available for compatibility, but `:` is the preferred shorthand.
 - `script/echo.jl`: Simple echo utility using the library.
 
 Run with the project environment:
@@ -67,8 +69,8 @@ julia --project script/ask.jl --llm-alias
 # Generate shell commands
 julia --project script/cmd.jl --llm openai "list files changed today"
 
-# Inject a file path (and tweak its extension via sed)
-julia --project script/cmd.jl -f ./script/example.sh --llm openai "Review {{F|sed 's/\\.sh$/.md/'}}"
+# Inject a file path (and tweak its extension via the built-in helper)
+julia --project script/cmd.jl -f ./script/example.sh --llm openai "Review {{F|:ext=md}}"
 
 # Bypass the LLM and still get copy/execute flow
 julia --project script/cmd.jl --cmd 'echo hi'

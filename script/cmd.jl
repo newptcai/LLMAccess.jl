@@ -6,6 +6,132 @@ using InteractiveUtils: clipboard
 
 const FILE_PLACEHOLDER_PATTERN = r"\{\{(FILE|F)(?:\|([^}]+))?\}\}"
 
+const FILE_SHORTCUT_PREFIX = ":"
+const LEGACY_PATH_SHORTCUT_PREFIX = "path:"
+
+const FILE_SHORTCUT_ALIASES = Dict(
+    "basename" => :basename,
+    "base" => :basename,
+    "filename" => :basename,
+    "dirname" => :dirname,
+    "dir" => :dirname,
+    "stem" => :stem,
+    "name" => :stem,
+    "without-ext" => :stem,
+    "no-ext" => :stem,
+    "ext" => :extension,
+    "extension" => :extension,
+    "with-ext" => :extension,
+    "change-ext" => :extension,
+    "replace-ext" => :extension,
+    "set-ext" => :extension,
+    "drop-ext" => :remove_ext,
+    "remove-ext" => :remove_ext,
+    "rm-ext" => :remove_ext,
+)
+
+const FILE_SHORTCUT_DESCRIPTIONS = Dict(
+    :basename => "Strip directories and return only the filename",
+    :dirname => "Return only the directory portion of the path",
+    :stem => "Filename without its last extension",
+    :extension => "Return the last extension (with the leading dot). Pass a value to replace it (e.g., :ext=pdf)",
+    :remove_ext => "Drop the last extension entirely",
+)
+
+function normalize_extension(ext::AbstractString)
+    stripped = strip(ext)
+    isempty(stripped) && return ""
+    return startswith(stripped, ".") ? stripped : "." * stripped
+end
+
+function list_file_shortcuts()
+    grouped = Dict{Symbol,Vector{String}}()
+    for (alias, op) in FILE_SHORTCUT_ALIASES
+        push!(get!(grouped, op, String[]), alias)
+    end
+    buf = IOBuffer()
+    for pair in sort!(collect(grouped); by = p -> string(p.first))
+        op = pair.first
+        names = sort(pair.second)
+        desc = get(FILE_SHORTCUT_DESCRIPTIONS, op, "")
+        println(buf, "  :$(names[1]) -> $desc (aliases: $(join(names, ", ")))")
+    end
+    return String(take!(buf))
+end
+
+function list_file_shortcuts_aliases()
+    aliases = String[]
+    for (k, v) in FILE_SHORTCUT_ALIASES
+        push!(aliases, "  $k -> $v")
+    end
+    return join(aliases, "\n")
+end
+
+function apply_file_shortcut(op::Symbol, args, file_path::AbstractString)
+    rooted = abspath(file_path)
+    basename_root, ext = splitext(basename(rooted))
+    rooted_base, _ = splitext(rooted)
+    if op == :basename
+        isempty(args) || error("':basename' does not take arguments")
+        return basename(rooted)
+    elseif op == :dirname
+        isempty(args) || error("':dirname' does not take arguments")
+        return dirname(rooted)
+    elseif op == :stem
+        isempty(args) || error("':stem' does not take arguments")
+        return basename_root
+    elseif op == :extension
+        if isempty(args)
+            return ext
+        elseif length(args) == 1
+            new_ext = normalize_extension(args[1])
+            return string(rooted_base, new_ext)
+        else
+            error("':ext' takes zero or one argument")
+        end
+    elseif op == :remove_ext
+        isempty(args) || error("':remove-ext' does not take arguments")
+        return rooted_base
+    else
+        error("Unsupported file shortcut '$op'")
+    end
+end
+
+function try_file_shortcut(command::AbstractString, file_path::AbstractString)
+    stripped = strip(command)
+    spec = if startswith(stripped, FILE_SHORTCUT_PREFIX)
+        strip(stripped[length(FILE_SHORTCUT_PREFIX)+1:end])
+    elseif startswith(lowercase(stripped), LEGACY_PATH_SHORTCUT_PREFIX)
+        strip(stripped[length(LEGACY_PATH_SHORTCUT_PREFIX)+1:end])
+    else
+        return nothing
+    end
+    tokens = String[]
+    if !isempty(spec)
+        try
+            tokens = Base.shell_split(spec)
+        catch err
+            error("Failed to parse file shortcut '$command': $(sprint(showerror, err))")
+        end
+    end
+    isempty(tokens) && error("':' requires an operation name. Available shortcuts:\n$(list_file_shortcuts())")
+    op_token = tokens[1]
+    extra_args = tokens[2:end]
+    eq_index = findfirst(==('='), op_token)
+    op_name = op_token
+    inline_arg = nothing
+    if eq_index !== nothing
+        op_name = op_token[1:eq_index-1]
+        inline_arg = op_token[eq_index+1:end]
+    end
+    op_name = lowercase(strip(op_name))
+    isempty(op_name) && error("File shortcut name cannot be empty")
+    op = get(FILE_SHORTCUT_ALIASES, op_name, nothing)
+    op === nothing && error("Unknown file shortcut ':$op_name'. Available shortcuts:\n$(list_file_shortcuts())")
+    args = inline_arg === nothing ? extra_args : vcat(inline_arg, extra_args)
+    return apply_file_shortcut(op, args, file_path)
+end
+
 function run_file_placeholder_command(command::AbstractString, file_path::AbstractString)
     script = """
     set -euo pipefail
@@ -46,7 +172,12 @@ function apply_file_placeholders(input_text, file_arg)
         if length(parts) == 1 || isempty(strip(parts[2]))
             return resolved_file
         end
-        return run_file_placeholder_command(strip(parts[2]), resolved_file)
+        command = strip(parts[2])
+        path_result = try_file_shortcut(command, resolved_file)
+        if path_result !== nothing
+            return path_result
+        end
+        return run_file_placeholder_command(command, resolved_file)
     end
 
     replaced_text = replace(text, FILE_PLACEHOLDER_PATTERN => render_placeholder)
@@ -83,7 +214,13 @@ function main(_)
         Examples:
           julia --project script/cmd.jl --llm openai "list files changed today"
           julia --project script/cmd.jl -f ./deploy.sh --llm openai "Rewrite {{FILE}} to use rsync"
-          julia --project script/cmd.jl -f ./notes.txt --llm openai "Summarize {{F|sed 's/\\.txt/.md/'}} and explain the diff"
+          julia --project script/cmd.jl -f ./notes.txt --llm openai "Summarize {{F|:ext=md}} and explain the diff"
+
+        Available shortcuts:
+        $(rstrip(list_file_shortcuts()))
+
+        Shortcuts aliases:
+        $(rstrip(list_file_shortcuts_aliases()))
         """,
         add_version = true,
         version = "v1.1.0",
