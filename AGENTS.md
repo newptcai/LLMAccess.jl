@@ -123,5 +123,4 @@ To add a new provider that is compatible with the OpenAI API, follow these steps
 - `script/cmd.jl` always copies trimmed command output; confirm clipboard access on your platform.
 
 ## TODO
-- `src/providers/mistral.jl`: extract the OCR-specific path (lines ~25-90) into its own helper to isolate the alternate endpoint plus response parsing and keep the main chat pathway focused.
 - CLI scripts: wrap the repeated `args_ref` + `run_cli` boilerplate used in `script/ask.jl`, `script/cmd.jl`, and `script/echo.jl` in a common helper so each script only supplies its specific prompt/behavior.
