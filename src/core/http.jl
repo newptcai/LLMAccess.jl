@@ -1,4 +1,24 @@
 """
+    _should_dump_payloads() :: Bool
+
+Return true when the active logger would emit debug messages so we only write
+serialized payloads to disk in debug mode.
+"""
+function _should_dump_payloads()::Bool
+    logger = global_logger()
+    try
+        return Base.CoreLogging.shouldlog(logger, Logging.Debug, @__MODULE__, nothing, nothing)
+    catch
+        try
+            min_level = getproperty(logger, :min_level)
+            return min_level <= Logging.Debug
+        catch
+            return false
+        end
+    end
+end
+
+"""
     post_request(url, headers, payload)
 
 Send an HTTP POST and return the response or throw an ErrorException with details.
@@ -7,9 +27,11 @@ function post_request(url, headers, payload)
     response = nothing
     try
         @debug "Payload" payload
-        temp = "/tmp/payload.jls"
-        @debug "Saving payload to $temp"
-        serialize(temp, payload)
+        if _should_dump_payloads()
+            temp = "/tmp/payload.jls"
+            @debug "Saving payload to $temp"
+            serialize(temp, payload)
+        end
         json_payload = JSON.json(payload)
         response = HTTP.request("POST", url, headers, json_payload; proxy=get(ENV, "http_proxy", ""), status_exception=false)
     catch http_error
@@ -133,4 +155,3 @@ function extract_google_text(response::HTTP.Response)
         end
     end
 end
-
