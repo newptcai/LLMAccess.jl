@@ -28,6 +28,10 @@ function main(_)
         preformatted_epilog = true,
     )
 
+    @add_arg_table! custom_settings begin
+        "--output", "-o"; help = "Write OCR result to this file instead of stdout"; metavar = "PATH"; default = ""
+    end
+
     omitted = ["schema", "schema-file", "file", "input_text", "no_normalize"]
     run_cli_with_args(
         custom_settings;
@@ -40,9 +44,17 @@ function main(_)
 
         args["input_text"] = user_prompt
         result = call_llm(system_instruction, args)
-
         trimmed_text = replace(result, r"\s+$"m => "")
-        println(trimmed_text)
+
+        output_path = strip(String(get(args, "output", "")))
+        if isempty(output_path)
+            println(trimmed_text)
+        else
+            open(output_path, "w") do io
+                write(io, trimmed_text)
+                write(io, '\n')
+            end
+        end
         nothing
     end
 end
