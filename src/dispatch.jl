@@ -1,4 +1,49 @@
 """
+    LLMDispatchConfig
+
+Normalize dispatch options once so providers receive consistent, typed kwargs.
+"""
+struct LLMDispatchConfig
+    think::ThinkLevel
+    dry_run::Bool
+    schema_content::String
+    normalize_output::Bool
+    copy_output::Bool
+end
+
+function LLMDispatchConfig(; think::Integer = 0, dry_run::Bool = false,
+                            schema_content::AbstractString = "",
+                            normalize_output::Bool = true,
+                            copy_output::Bool = false)
+    return LLMDispatchConfig(
+        ThinkLevel(think),
+        dry_run,
+        String(schema_content),
+        normalize_output,
+        copy_output,
+    )
+end
+
+provider_kwargs(cfg::LLMDispatchConfig) =
+    if cfg.dry_run && !isempty(cfg.schema_content)
+        (think = cfg.think, dry_run = true, schema_content = cfg.schema_content)
+    elseif cfg.dry_run
+        (think = cfg.think, dry_run = true)
+    elseif !isempty(cfg.schema_content)
+        (think = cfg.think, schema_content = cfg.schema_content)
+    else
+        (think = cfg.think,)
+    end
+
+normalize_result(result::AbstractString, cfg::LLMDispatchConfig) = cfg.normalize_output ? normalize_output_text(result) : result
+
+function copy_result!(result::AbstractString, cfg::LLMDispatchConfig)
+    if !isempty(result) && cfg.copy_output
+        clipboard(result)
+    end
+end
+
+"""
     get_llm_type(llm_name)
 
 Map provider name to concrete LLM type instance.
@@ -44,20 +89,16 @@ function call_llm(
     model_to_resolve = isempty(model) ? default_model_for_llm : model
     selected_model = resolve_model_alias(model_to_resolve)
 
-    kwargs = Dict{Symbol, Any}()
-    kwargs[:think] = ThinkLevel(think)
-    if dry_run
-        kwargs[:dry_run] = true
-    end
+    cfg = LLMDispatchConfig(
+        think = think,
+        dry_run = dry_run,
+        normalize_output = normalize_output,
+        copy_output = copy,
+    )
 
-    result = call_llm(llm_type, system_instruction, input_text, selected_model, temperature; kwargs...)
-    # Normalize punctuation unless explicit opt-out
-    if normalize_output
-        result = normalize_output_text(result)
-    end
-    if !isempty(result) && copy
-        clipboard(result)
-    end
+    result = call_llm(llm_type, system_instruction, input_text, selected_model, temperature; provider_kwargs(cfg)...)
+    result = normalize_result(result, cfg)
+    copy_result!(result, cfg)
     return result
 end
 
@@ -85,23 +126,16 @@ function call_llm(system_instruction, args::Dict)
     think       = args["think"]
     dry_run     = get(args, "dry_run", false)
 
-    kwargs = Dict{Symbol, Any}()
-    kwargs[:think] = ThinkLevel(think)
-    if dry_run
-        kwargs[:dry_run] = true
-    end
-    if !isempty(schema_content)
-        kwargs[:schema_content] = schema_content
-    end
+    cfg = LLMDispatchConfig(
+        think = think,
+        dry_run = dry_run,
+        schema_content = schema_content,
+        normalize_output = !get(args, "no_normalize", false),
+        copy_output = copy,
+    )
 
-    result = call_llm(llm_type, system_instruction, input_text, model, temperature, attach_file; kwargs...)
-    # Normalize punctuation unless explicit opt-out via CLI flag
-    do_normalize = !get(args, "no_normalize", false)
-    if do_normalize
-        result = normalize_output_text(result)
-    end
-    if !isempty(result) && copy
-        clipboard(result)
-    end
+    result = call_llm(llm_type, system_instruction, input_text, model, temperature, attach_file; provider_kwargs(cfg)...)
+    result = normalize_result(result, cfg)
+    copy_result!(result, cfg)
     return result
 end
