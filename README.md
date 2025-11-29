@@ -310,7 +310,7 @@ julia --project script/ask.jl --llm-alias
 LLMAccess ships with runnable scripts and shared CLI helpers: `parse_commandline` for consistent flags and `run_cli` for robust error handling (usage errors, Ctrl+C, debug traces).
 
 - `script/ask.jl`: General-purpose Q&A.
-- `script/cmd.jl`: Generate bash commands (prints, copies to clipboard by default, and can execute after confirmation). Supports `--cmd CMD` to bypass the LLM. Use `--no-copy` to disable clipboard copying for this script.
+- `script/cmd.jl`: Generate bash commands (prints, copies to clipboard by default, and can execute after confirmation). Supports `--cmd CMD` to bypass the LLM. Use `--no-copy` to disable clipboard copying for this script. When a prompt contains `{{FILE}}` (or the shorthand `{{F}}`), the placeholder expands to the `-f/--file` path (multiple occurrences allowed). Use `{{FILE|cmd}}`/`{{F|cmd}}` to run a shell snippet (executed via `bash -lc`) where the path is piped on STDIN and exposed as `$FILE_PLACEHOLDER`.
 - `script/echo.jl`: Echo utility for validating responses.
 
 Examples:
@@ -330,6 +330,9 @@ julia --project script/ask.jl --llm ollama_cloud --model gpt-oss:120b "Share a q
 
 # Generate shell commands
 julia --project script/cmd.jl --llm openai "list files changed today"
+
+# Inject a file path (and tweak its extension via sed)
+julia --project script/cmd.jl -f ./script/example.sh --llm openai "Review {{F|sed 's/\\.sh$/.md/'}}"
 
 # Bypass the LLM and still get copy/execute flow
 julia --project script/cmd.jl --cmd 'echo hi'
@@ -359,7 +362,7 @@ Common arguments:
 
 - `--llm, -l`: LLM provider (`openai`, `anthropic`, `google`, `ollama`, `ollama_cloud`, `mistral`, `openrouter`, `deepseek`). Defaults to `DEFAULT_LLM` or `google`.
 - `--model, -m`: Model name; supports aliases below. Defaults to provider’s default.
-- `--file, -f`: Path to input file to process (optional; reserved for helpers that consume files).
+- `--file, -f`: Path to input file to process (optional; reserved for helpers that consume files). In `script/cmd.jl`, this powers the `{{FILE}}`/`{{F}}` placeholder system described above.
 - `--attachment, -a`: Path to a file to attach (e.g., image for vision APIs).
 - `--schema-file`: Path to a JSON schema file for the response.
 - `--schema`: JSON schema for the response as a string.
@@ -372,7 +375,7 @@ Common arguments:
 - `--providers`: Print supported LLM providers (valid `--llm` choices) and exit.
 - `--llm-alias`: Print provider aliases for `--llm` and exit.
 - `--dry-run`: Print the JSON payload that would be sent and exit (no network call).
-- `--no-normalize`: Disable punctuation normalization (dashes/quotes) in output.
+- `--no-normalize`: Disable punctuation normalization (dashes/quotes) in output (not exposed by `script/cmd.jl` because shell commands must remain untouched).
 - `input_text` (positional): Prompt text; if omitted and required, stdin is read.
 
 ### Dry Run
