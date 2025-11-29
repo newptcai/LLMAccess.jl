@@ -17,12 +17,13 @@ Parse CLI arguments, applying sensible defaults and alias handling.
 """
 function parse_commandline(
     settings = create_default_settings();
-    require_input::Bool = true
+    require_input::Bool = true,
+    omit_args::Vector{String} = String[]
 )
     llm   = resolve_provider_alias(get_default_llm())
     model = get_default_model(llm)
     @debug "parse_commandline: Initial default_llm='$llm', initial default_model='$model' (before parsing args)"
-    return parse_commandline(settings, llm, model; require_input=require_input)
+    return parse_commandline(settings, llm, model; require_input=require_input, omit_args=omit_args)
 end
 
 """
@@ -31,12 +32,13 @@ end
 function parse_commandline(
     settings,
     default_llm::String;
-    require_input = true
+    require_input = true,
+    omit_args::Vector{String} = String[]
 )
     canonical_llm = resolve_provider_alias(default_llm)
     default_model = get_default_model(canonical_llm)
     @debug "parse_commandline: Using provided default_llm='$default_llm', derived default_model='$default_model'"
-    return parse_commandline(settings, canonical_llm, default_model; require_input=require_input)
+    return parse_commandline(settings, canonical_llm, default_model; require_input=require_input, omit_args=omit_args)
 end
 
 """
@@ -46,29 +48,115 @@ function parse_commandline(
     settings,
     default_llm::String,
     default_model::String;
-    require_input::Bool = true
+    require_input::Bool = true,
+    omit_args::Vector{String} = String[]
 )
-    @add_arg_table! settings begin
-        "--llm", "-l"; help = "LLM provider to use (aliases: g, oa, an, ol, m, or, ds)"; default = default_llm
-        "--model", "-m"; help = "Specific model to use"; default = default_model
-        "--file", "-f"; help = "Path to input file to process"; default = ""
-        "--attachment", "-a"; help = "Path to file attachment"; default = ""
-        "--schema-file"; help = "Path to a JSON schema file for the response"; default = ""
-        "--schema"; help = "JSON schema for the response as a string"; default = ""
-        "--temperature", "-t"; help = "Sampling temperature (0.0-2.0)"; arg_type = Float64; default = get_default_temperature()
-        "--debug", "-d"; help = "Enable debug logging"; action = :store_true
-        "--copy", "-c"; help = "Copy response to clipboard"; action = :store_true
-        "--think", "-k";            help = "Reasoning level: -1=auto, 0=none, 1=minimal, 2=low, 3=medium, 4=high."; arg_type = Int; default = 0
-        "--no-normalize"; help = "Disable punctuation normalization (dashes/quotes)"; dest_name = "no_normalize"; action = :store_true
-        "--alias"; help = "Print all model aliases and exit"; action = :store_true
-        "--providers"; help = "Print supported LLM providers (valid --llm choices) and exit"; action = :store_true
-        "--llm-alias"; help = "Print provider aliases for --llm and exit"; dest_name = "llm_alias"; action = :store_true
-        "--dry-run"; help = "Print JSON payload and do not send"; dest_name = "dry_run"; action = :store_true
-        "input_text"; help = "Input text/prompt (reads from stdin if empty)"; required = false
+    omit = Set(omit_args)
+    if !("llm" in omit)
+        @add_arg_table! settings begin
+            "--llm", "-l"; help = "LLM provider to use (aliases: g, oa, an, ol, m, or, ds)"; default = default_llm
+        end
+    end
+    if !("model" in omit)
+        @add_arg_table! settings begin
+            "--model", "-m"; help = "Specific model to use"; default = default_model
+        end
+    end
+    if !("file" in omit)
+        @add_arg_table! settings begin
+            "--file", "-f"; help = "Path to input file to process"; default = ""
+        end
+    end
+    if !("attachment" in omit)
+        @add_arg_table! settings begin
+            "--attachment", "-a"; help = "Path to file attachment"; default = ""
+        end
+    end
+    if !("schema-file" in omit)
+        @add_arg_table! settings begin
+            "--schema-file"; help = "Path to a JSON schema file for the response"; default = ""
+        end
+    end
+    if !("schema" in omit)
+        @add_arg_table! settings begin
+            "--schema"; help = "JSON schema for the response as a string"; default = ""
+        end
+    end
+    if !("temperature" in omit)
+        @add_arg_table! settings begin
+            "--temperature", "-t"; help = "Sampling temperature (0.0-2.0)"; arg_type = Float64; default = get_default_temperature()
+        end
+    end
+    if !("debug" in omit)
+        @add_arg_table! settings begin
+            "--debug", "-d"; help = "Enable debug logging"; action = :store_true
+        end
+    end
+    if !("copy" in omit)
+        @add_arg_table! settings begin
+            "--copy", "-c"; help = "Copy response to clipboard"; action = :store_true
+        end
+    end
+    if !("think" in omit)
+        @add_arg_table! settings begin
+            "--think", "-k"; help = "Reasoning level: -1=auto, 0=none, 1=minimal, 2=low, 3=medium, 4=high."; arg_type = Int; default = 0
+        end
+    end
+    if !("no_normalize" in omit)
+        @add_arg_table! settings begin
+            "--no-normalize"; help = "Disable punctuation normalization (dashes/quotes)"; dest_name = "no_normalize"; action = :store_true
+        end
+    end
+    if !("alias" in omit)
+        @add_arg_table! settings begin
+            "--alias"; help = "Print all model aliases and exit"; action = :store_true
+        end
+    end
+    if !("providers" in omit)
+        @add_arg_table! settings begin
+            "--providers"; help = "Print supported LLM providers (valid --llm choices) and exit"; action = :store_true
+        end
+    end
+    if !("llm-alias" in omit)
+        @add_arg_table! settings begin
+            "--llm-alias"; help = "Print provider aliases for --llm and exit"; dest_name = "llm_alias"; action = :store_true
+        end
+    end
+    if !("dry_run" in omit)
+        @add_arg_table! settings begin
+            "--dry-run"; help = "Print JSON payload and do not send"; dest_name = "dry_run"; action = :store_true
+        end
+    end
+    if !("input_text" in omit)
+        @add_arg_table! settings begin
+            "input_text"; help = "Input text/prompt (reads from stdin if empty)"; required = false
+        end
     end
 
     args = parse_args(settings)
-    
+
+    defaults = Dict(
+        "llm" => default_llm,
+        "model" => default_model,
+        "file" => "",
+        "attachment" => "",
+        "schema-file" => "",
+        "schema" => "",
+        "temperature" => get_default_temperature(),
+        "debug" => false,
+        "copy" => false,
+        "think" => 0,
+        "no_normalize" => false,
+        "alias" => false,
+        "providers" => false,
+        "llm_alias" => false,
+        "dry_run" => false,
+        "input_text" => nothing,
+    )
+    for (k, v) in defaults
+        args[k] = get(args, k, v)
+    end
+
     let think_level = args["think"]
         allowed_levels = [-1, 0, 1, 2, 3, 4]
         if !(think_level in allowed_levels)

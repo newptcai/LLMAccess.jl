@@ -28,9 +28,10 @@ function main(_)
         preformatted_epilog = true,
     )
 
+    omitted = ["schema", "schema-file", "file", "input_text"]
     run_cli_with_args(
         custom_settings;
-        parser = settings -> parse_commandline(settings; require_input=false),
+        parser = settings -> parse_commandline(settings; require_input=false, omit_args=omitted),
     ) do args
         attachment = strip(String(get(args, "attachment", "")))
         if isempty(attachment)

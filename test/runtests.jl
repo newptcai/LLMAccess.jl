@@ -1,3 +1,4 @@
+using ArgParse
 using LLMAccess
 using Test
 
@@ -190,6 +191,27 @@ const Core = LLMAccess.Core
             settings = LLMAccess.create_default_settings()
             parsed_args = LLMAccess.parse_commandline(settings, require_input=false)
             @test get(parsed_args, "no_normalize", false) == true
+
+            # Test case 7: omit input_text positional argument retains default
+            empty!(ARGS)
+            settings = LLMAccess.create_default_settings()
+            parsed_args = LLMAccess.parse_commandline(
+                settings;
+                require_input=false,
+                omit_args=["input_text"],
+            )
+            @test parsed_args["input_text"] === nothing
+
+            # Test case 8: schema defaults remain even when omitted
+            empty!(ARGS)
+            settings = LLMAccess.create_default_settings()
+            parsed_args = LLMAccess.parse_commandline(
+                settings;
+                require_input=false,
+                omit_args=["schema", "schema-file"],
+            )
+            @test parsed_args["schema"] == ""
+            @test parsed_args["schema-file"] == ""
         finally
             empty!(ARGS)
             append!(ARGS, original_ARGS)
