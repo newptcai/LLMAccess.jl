@@ -77,15 +77,27 @@ function handle_mistral_ocr_request(model, attach_file, dry_run, headers)
         error("mistral-ocr models require an attachment. Provide --attachment <image path>.")
     end
 
-    # Build OCR payload per Mistral API (document.image_url is a data: URL string).
+    # Build OCR payload per Mistral API, switching between image/document inputs automatically.
     mime_type, b64 = encode_file_to_base64(attach_file)
+    mime_string = string(mime_type)
+    data_url = "data:$(mime_string);base64,$b64"
+    is_image = startswith(lowercase(mime_string), "image/")
+    document_payload = if is_image
+        Dict(
+            "type" => "image_url",
+            "image_url" => data_url,
+        )
+    else
+        Dict(
+            "type" => "document_url",
+            "document_url" => data_url,
+        )
+    end
+
     url = "https://api.mistral.ai/v1/ocr"
     data = Dict(
         "model" => model,
-        "document" => Dict(
-            "type" => "image_url",
-            "image_url" => "data:$(mime_type);base64,$b64",
-        ),
+        "document" => document_payload,
         # Provide image bytes in response to simplify offline inspection.
         "include_image_base64" => true,
     )
