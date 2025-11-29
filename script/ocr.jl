@@ -82,7 +82,7 @@ function main(_)
         epilog = """
         Examples:
           ./ocr.jl -a scan.pdf
-          ./ocr.jl -a page.jpg --model mistral-ocr
+          ./ocr.jl -a page.jpg --model mistral-ocr-latest
         """,
         add_version = true,
         version = "v1.0.0",
