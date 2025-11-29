@@ -16,7 +16,10 @@ function main(_)
     )
 
     # Delegate CLI plumbing + --debug handling to the shared helper.
-    run_cli_with_args(custom_settings) do args
+    run_cli_with_args(
+        custom_settings;
+        parser = settings -> parse_commandline(settings; omit_args=["file"]),
+    ) do args
         # 1) Parse CLI args (provides defaults, reads stdin when needed, etc.)
         # 2) Validate input and prepend system instruction
         original = String(get(args, "input_text", ""))
