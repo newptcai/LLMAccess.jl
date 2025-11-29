@@ -18,7 +18,10 @@ function main(_)
     )
 
     # Mirror ask.jl: delegate error handling and Ctrl+C to run_cli_with_args
-    run_cli_with_args(custom_settings) do args
+    run_cli_with_args(
+        custom_settings;
+        parser = settings -> parse_commandline(settings; omit_args=["file", "schema", "schema-file"]),
+    ) do args
         result = call_llm(system_instruction, args)
 
         println("""
