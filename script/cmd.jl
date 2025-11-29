@@ -41,13 +41,11 @@ function main(_)
         "-n", "--non-iteractive"; help = "Print the command without prompting to run it"; dest_name = "non_iteractive"; action = :store_true
     end
 
-    # Mirror ask.jl: delegate error handling and Ctrl+C to run_cli
-    args_ref = Ref{Any}(nothing)
-    run_cli(() -> begin
-        # Avoid blocking for input when --cmd is provided (or in tests)
-        args = parse_commandline(custom_settings; require_input = false)
-        args_ref[] = args
-
+    # Mirror ask.jl: delegate error handling and Ctrl+C to run_cli_with_args
+    run_cli_with_args(
+        custom_settings;
+        parser = settings -> parse_commandline(settings; require_input = false),
+    ) do args
         # For this script, copy by default unless --no-copy is provided
         args["copy"] = !get(args, "no_copy", false)
 
@@ -82,11 +80,7 @@ function main(_)
             end
         end
         nothing
-    end; settings=custom_settings,
-         debug_getter=() -> begin
-             a = args_ref[]
-             a === nothing ? false : get(a, "debug", false)
-         end)
+    end
 end
 
 @main

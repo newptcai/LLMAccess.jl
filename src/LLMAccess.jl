@@ -6,6 +6,7 @@ export call_llm,
        get_llm_list,
        parse_commandline,
        run_cli,
+       run_cli_with_args,
         jina_reader,
        pandoc_reader
 
@@ -89,7 +90,7 @@ module CLI
     using Logging
     using ..Core
     include("cli.jl")
-    export parse_commandline, run_cli, create_default_settings
+    export parse_commandline, run_cli, run_cli_with_args, create_default_settings
 end # module CLI
 
 module Readers
@@ -120,7 +121,7 @@ using .Core: get_llm_list,
              OpenRouterLLM,
              OllamaLLM,
              OllamaCloudLLM
-using .CLI: parse_commandline, run_cli, create_default_settings
+using .CLI: parse_commandline, run_cli, run_cli_with_args, create_default_settings
 using .Readers: jina_reader, pandoc_reader
 
 end # module LLMAccess

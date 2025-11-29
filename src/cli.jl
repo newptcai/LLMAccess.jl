@@ -223,3 +223,27 @@ function run_cli(f::Function; settings=nothing, debug_getter::Function=() -> fal
         end
     end
 end
+
+"""
+    run_cli_with_args(f, settings; parser=parse_commandline)
+
+Convenience wrapper for CLI scripts: parse arguments with `parser(settings)`,
+wire the resulting dict into the standard `run_cli` error handler, and execute
+`f(args)` with consistent debug flag detection.
+"""
+function run_cli_with_args(
+    f::Function,
+    settings;
+    parser::Function = parse_commandline,
+)
+    args_ref = Ref{Any}(nothing)
+    return run_cli(() -> begin
+        args = parser(settings)
+        args_ref[] = args
+        f(args)
+    end; settings=settings,
+         debug_getter=() -> begin
+             parsed = args_ref[]
+             parsed === nothing ? false : get(parsed, "debug", false)
+         end)
+end
