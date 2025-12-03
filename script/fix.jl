@@ -46,21 +46,21 @@ function main(_)
         From a file via pipe:
           cat notes.tex | ./fix.jl -C "Prefer 'runtime' over 'run time'"
 
-        Profiles (use -p/--profile; short-hands in parentheses):
-          CSM (c, cs, csm)        — default math/CS focus
-          Buddhist (b, tnh)       — Thich Nhat Hanh: calm, compassionate, mindful
-          Poetic (p, mo)          — Mary Oliver: spare, luminous, nature-inflected
-          Humour (h, humor, jg)   — John Green: warm, witty, lightly self-aware
-          Professor (prof, instructor, teacher, course) — respectful, supportive academic tone
-          Friendly (friend, friendly, casual, warm)     — warm, relaxed, conversational (with contractions)
-          Business (biz, business, corporate, formal)   — concise, formal, professional
+        Profiles (use -p/--profile; each has one short alias and one full name):
+          CSM (c / csm)           — default math/CS focus
+          Buddhist (b / buddhist) — Thich Nhat Hanh: calm, compassionate, mindful
+          Poetic (p / poetic)     — Mary Oliver: spare, luminous, nature-inflected
+          Humour (h / humour)     — John Green: warm, witty, lightly self-aware
+          Professor (prof / professor) — respectful, supportive academic tone
+          Friendly (fr / friendly)    — warm, relaxed, conversational (with contractions)
+          Business (biz / business)   — concise, formal, professional
 
         Examples with profiles:
           echo "Teh algoritm is fast" | ./fix.jl -p b
           echo "note about limits"    | ./fix.jl -p poetic
           echo "intro paragraph"       | ./fix.jl -p h -C "Prefer contractions"
           echo "assignment note"       | ./fix.jl -p prof
-          echo "quick update"          | ./fix.jl -p friend
+          echo "quick update"          | ./fix.jl -p friendly
           echo "client email"          | ./fix.jl -p business
 
         Note: The instruction is embedded into the user message; no separate system prompt is sent.
@@ -77,7 +77,7 @@ function main(_)
         metavar = "MODIFY"
         default = ""
         "--profile", "-p"
-        help = "Editing profile/tone (short-hands: c/csm, b/tnh, p/poetic/mo, h/humor/jg, prof, friend, business)."
+        help = "Editing profile/tone (short/full: c/csm, b/buddhist, p/poetic, h/humour, prof/professor, fr/friendly, biz/business)."
         metavar = "PROFILE"
         default = "CSM"
     end
@@ -89,19 +89,19 @@ function main(_)
     ) do args
         function normalize_profile(p)
             t = lowercase(String(p)) |> strip
-            if t in ("c", "cs", "csm", "default", "std")
+            if t in ("c", "csm")
                 return :csm
-            elseif t in ("b", "tnh", "buddha", "buddhist", "mindful", "zen")
+            elseif t in ("b", "buddhist")
                 return :buddhist
-            elseif t in ("p", "poet", "poetic", "mo", "oliver", "mary-oliver", "mary")
+            elseif t in ("p", "poetic")
                 return :poetic
-            elseif t in ("h", "humour", "humor", "jg", "john-green", "green", "john")
+            elseif t in ("h", "humour")
                 return :humour
-            elseif t in ("prof", "professor", "instructor", "teacher", "course", "uni", "academic")
+            elseif t in ("prof", "professor")
                 return :professor
-            elseif t in ("friend", "friends", "friendly", "casual", "warm", "informal")
+            elseif t in ("fr", "friendly")
                 return :friendly
-            elseif t in ("biz", "business", "corporate", "professional", "formal", "office")
+            elseif t in ("biz", "business")
                 return :business
             else
                 return :csm
