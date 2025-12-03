@@ -22,6 +22,8 @@ Normalize LLM output by:
    - Add empty line before and after each list item
    - Break long lines (>80 chars) while preserving list structure
    - Format multi-line list items properly
+3. Removing trailing whitespace from each line.
+4. Stripping surrounding ``` fences when the entire output is wrapped in one code block.
 
 This is a minimal, opinionated normalization intended for plain-text output.
 """
@@ -48,6 +50,8 @@ function normalize_output_text(text::AbstractString)::String
 
     # Then apply markdown formatting
     result = format_markdown_text(result)
+    result = strip_trailing_whitespace(result)
+    result = strip_surrounding_code_fence(result)
 
     return result
 end
@@ -138,6 +142,42 @@ function format_markdown_text(text::AbstractString)::String
     end
 
     return join(formatted_lines, '\n')
+end
+
+"""
+    strip_trailing_whitespace(text::AbstractString) :: String
+
+Remove trailing spaces/tabs from each line without collapsing intentional blank lines.
+"""
+strip_trailing_whitespace(text::AbstractString)::String = replace(text, r"[ \t]+$"m => "")
+
+"""
+    strip_surrounding_code_fence(text::AbstractString) :: String
+
+If the text is entirely wrapped in a fenced code block, drop the opening/closing
+``` fences while preserving the inner content.
+"""
+function strip_surrounding_code_fence(text::AbstractString)::String
+    lines = split(text, '\n'; keepempty=true)
+    if length(lines) < 2
+        return text
+    end
+
+    first_line = strip(lines[1])
+    last_line = strip(lines[end])
+    if !(startswith(first_line, "```") && endswith(last_line, "```"))
+        return text
+    end
+
+    inner_lines = lines[2:end-1]
+    content = join(inner_lines, '\n')
+
+    # If only whitespace remains, collapse to an empty string to avoid stray fences.
+    if all(line -> isempty(strip(line)), split(content, '\n'; keepempty=true))
+        return ""
+    end
+
+    return content
 end
 
 """

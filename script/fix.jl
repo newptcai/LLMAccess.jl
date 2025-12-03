@@ -152,45 +152,9 @@ function main(_)
         args["input_text"] = instruction_user
         result = call_llm("", args)
 
-        # Post-process punctuation:
-        # - Replace em dash (—) -> ---
-        # - Replace en dash (–) -> --
-        # - Replace smart quotes -> straight quotes
-        processed = replace(result,
-            '—' => "---",
-            '–' => "--",
-            '“' => "\"",
-            '”' => "\"",
-            '‘' => "'",
-            '’' => "'",
-        )
-
-        # Use regex to remove trailing whitespace on each line (with multiline mode)
-        trimmed_text = replace(processed, r"\s+$"m => "")
-
-        # Remove markdown code block delimiters if all output is wrapped in them
-        # Check if text starts and ends with ``` and remove them
-        lines = split(trimmed_text, '\n')
-        if length(lines) >= 2
-            first_line = strip(lines[1])
-            last_line = strip(lines[end])
-
-            # Check if first line starts with ``` and last line ends with ```
-            if startswith(first_line, "```") && endswith(last_line, "```")
-                # Remove the first and last lines entirely (they are code block delimiters)
-                content_lines = lines[2:end-1]
-                trimmed_text = join(content_lines, '\n')
-
-                # If there's only whitespace left, return empty string
-                if all(line -> occursin(r"^\s*$", line), split(trimmed_text, '\n'))
-                    trimmed_text = ""
-                end
-            end
-        end
-
-        println(trimmed_text)
+        println(result)
         try
-            clipboard(trimmed_text)
+            clipboard(result)
         catch e
             println(stderr, "warning: failed to copy to clipboard: " * sprint(showerror, e))
         end
