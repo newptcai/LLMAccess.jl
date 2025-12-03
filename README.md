@@ -431,6 +431,8 @@ By default, responses are normalized to be shell/ASCII friendly and formatted fo
 - Empty line before and after each list item (- or * started)
 - Long lines (>80 chars) wrapped for readability
 - List items with linebreaks formatted with proper indentation
+- Trailing whitespace trimmed per line
+- Surrounding ``` fences stripped when the entire response is wrapped in one code block
 
 Disable normalization with the CLI:
 

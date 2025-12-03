@@ -78,12 +78,20 @@ julia --project script/cmd.jl --cmd 'echo hi'
 
 ## Output normalization
 
-By default, responses are normalized to replace certain Unicode punctuation with ASCII-friendly characters:
+By default, responses are normalized for readability:
 
+#### Punctuation
 - Em dash — -> `---`
 - En dash – -> `--`
 - Smart double quotes “ ” „ ‟ « » -> `"`
 - Smart single quotes ‘ ’ ‚ ‛ ʼ -> `'`
+
+#### Text Formatting
+- Empty line after each Markdown heading
+- Empty line before/after list items, with wrapped list continuations indented
+- Long lines (>80 chars) wrapped at word boundaries
+- Trailing whitespace on each line removed
+- Surrounding ``` fences stripped when the entire response is wrapped in a code block
 
 Disable with:
 
