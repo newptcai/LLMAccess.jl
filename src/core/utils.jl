@@ -10,34 +10,216 @@ end
 """
     normalize_output_text(text::AbstractString) :: String
 
-Normalize LLM output by replacing certain Unicode punctuation with ASCII-friendly
-alternatives:
+Normalize LLM output by:
+1. Replacing certain Unicode punctuation with ASCII-friendly alternatives:
+   - Em dash (—) -> "---"
+   - En dash (–) -> "--"
+   - Smart double quotes (" " „ ‟ « ») -> '"'
+   - Smart single quotes (' ' ‚ ‛ ʼ) -> "'"
 
-- Em dash (—) -> "---"
-- En dash (–) -> "--"
-- Smart double quotes (“ ” „ ‟ « ») -> '"'
-- Smart single quotes (‘ ’ ‚ ‛ ʼ) -> "'"
+2. Formatting markdown text:
+   - Add empty line after each Markdown heading
+   - Add empty line before and after each list item
+   - Break long lines (>80 chars) while preserving list structure
+   - Format multi-line list items properly
 
 This is a minimal, opinionated normalization intended for plain-text output.
 """
 function normalize_output_text(text::AbstractString)::String
     isempty(text) && return String(text)
-    return replace(
+
+    # First apply punctuation normalization
+    result = replace(
         String(text),
         '—' => "---",
         '–' => "--",
         '“' => '"',
-        '”' => '"',
+        '"' => '"',
         '„' => '"',
         '‟' => '"',
         '«' => '"',
         '»' => '"',
-        '‘' => '\'',
-        '’' => '\'',
+        ''' => '\'',
+        ''' => '\'',
         '‚' => '\'',
         '‛' => '\'',
         'ʼ' => '\''
     )
+
+    # Then apply markdown formatting
+    result = format_markdown_text(result)
+
+    return result
+end
+
+"""
+    format_markdown_text(text::AbstractString) :: String
+
+Format markdown text according to the specified rules:
+- Add empty line after each Markdown heading (# ... or ## ... etc)
+- Add empty line before and after each list item
+- Break long links (>80 chars) with line breaks
+- Format list items with line breaks properly
+"""
+function format_markdown_text(text::AbstractString)::String
+    lines = split(text, '\n')
+    formatted_lines = String[]
+
+    i = 1
+    while i <= length(lines)
+        line = lines[i]
+        stripped = strip(line)
+
+        # Rule 1: Add empty line after each Markdown heading
+        if occursin(r"^#+\s+", stripped)
+            push!(formatted_lines, line)
+            # Add empty line after heading if next line is not empty
+            if i < length(lines) && !isempty(strip(lines[i+1]))
+                push!(formatted_lines, "")
+            end
+            i += 1
+            continue
+        end
+
+        # Rule 2: Handle list items
+        if occursin(r"^[\-\*]\s+", line)
+            # Check if this is part of a multi-line list item
+            list_content = lstrip(line[3:end])  # Remove "- " or "* " prefix
+            full_list_item = list_content
+
+            # Collect consecutive lines that belong to the same list item
+            j = i + 1
+            while j <= length(lines)
+                next_line = lines[j]
+                next_stripped = strip(next_line)
+
+                # If next line is another list item, empty line, or heading, break
+                if occursin(r"^[\-\*]\s+", next_stripped) ||
+                   occursin(r"^#+\s+", next_stripped) ||
+                   next_stripped == ""
+                    break
+                end
+
+                # This line continues the current list item
+                if isempty(full_list_item)
+                    full_list_item = next_stripped
+                else
+                    full_list_item *= " " * next_stripped
+                end
+                j += 1
+            end
+
+            # Add empty line before list item if previous line is not empty
+            if !isempty(formatted_lines) && !isempty(formatted_lines[end])
+                push!(formatted_lines, "")
+            end
+
+            # Format the list item with proper indentation and line breaks
+            formatted_list_item = format_list_item_content(full_list_item)
+            push!(formatted_lines, "- " * formatted_list_item)
+
+            # Add empty line after list item
+            push!(formatted_lines, "")
+
+            i = j
+            continue
+        end
+
+        # Rule 3: Break long links (>80 chars)
+        formatted_line = break_long_lines(line, 80)
+        push!(formatted_lines, formatted_line)
+
+        i += 1
+    end
+
+    # Remove trailing empty lines
+    while !isempty(formatted_lines) && isempty(formatted_lines[end])
+        pop!(formatted_lines)
+    end
+
+    return join(formatted_lines, '\n')
+end
+
+"""
+    format_list_item_content(content::AbstractString) :: String
+
+Format content of a list item, handling line breaks and indentation.
+"""
+function format_list_item_content(content::AbstractString)::String
+    if length(content) <= 76  # 80 - 4 for "- " prefix
+        return content
+    end
+
+    words = split(content, ' ')
+    lines = String[]
+    current_line = ""
+
+    for word in words
+        test_line = isempty(current_line) ? word : current_line * " " * word
+        if length(test_line) <= 76
+            current_line = test_line
+        else
+            if !isempty(current_line)
+                push!(lines, current_line)
+            end
+            current_line = word
+        end
+    end
+
+    if !isempty(current_line)
+        push!(lines, current_line)
+    end
+
+    if length(lines) == 1
+        return lines[1]
+    else
+        # Multi-line list item: first line normal, subsequent lines indented
+        result = lines[1]
+        for line in lines[2:end]
+            result *= "\n    " * line  # 4 spaces indentation
+        end
+        return result
+    end
+end
+
+"""
+    break_long_lines(text::AbstractString, max_length::Int=80) :: String
+
+Break long lines in plain text, preserving word boundaries.
+Only breaks lines that are not part of list items or headings.
+"""
+function break_long_lines(text::AbstractString, max_length::Int=80)::String
+    if length(text) <= max_length
+        return text
+    end
+
+    # Don't break list items or headings here (handled elsewhere)
+    stripped = strip(text)
+    if occursin(r"^#+\s+", stripped) || occursin(r"^[\-\*]\s+", stripped)
+        return text
+    end
+
+    words = split(text, ' ')
+    lines = String[]
+    current_line = ""
+
+    for word in words
+        test_line = isempty(current_line) ? word : current_line * " " * word
+        if length(test_line) <= max_length
+            current_line = test_line
+        else
+            if !isempty(current_line)
+                push!(lines, current_line)
+            end
+            current_line = word
+        end
+    end
+
+    if !isempty(current_line)
+        push!(lines, current_line)
+    end
+
+    return join(lines, '\n')
 end
 
 """

@@ -418,24 +418,32 @@ julia --project script/ask.jl --llm google --attachment image.png --dry-run "des
 
 ### Output Normalization
 
-By default, responses are normalized to be shell/ASCII friendly:
+By default, responses are normalized to be shell/ASCII friendly and formatted for readability:
 
+#### Punctuation Normalization
 - Em dash — -> `---`
 - En dash – -> `--`
-- Smart double quotes “ ” „ ‟ « » -> `"`
-- Smart single quotes ‘ ’ ‚ ‛ ʼ -> `'`
+- Smart double quotes " " „ ‟ « » -> `"`
+- Smart single quotes ' ' ‚ ‛ ʼ -> `'`
+
+#### Text Formatting
+- Empty line after each Markdown heading (# ... or ## ... etc)
+- Empty line before and after each list item (- or * started)
+- Long lines (>80 chars) wrapped for readability
+- List items with linebreaks formatted with proper indentation
 
 Disable normalization with the CLI:
 
 ```bash
-julia --project script/ask.jl --no-normalize --llm google "“Quotes” and — dashes –"
+julia --project script/ask.jl --no-normalize --llm google ""Quotes" and — dashes –"
+julia --project script/ask.jl -z --llm google "Disable formatting with short flag"
 ```
 
 Programmatic control (name-based helper):
 
 ```julia
 using LLMAccess
-text = LLMAccess.call_llm("google", "", "“Quotes” and — dashes –"; normalize_output=false)
+text = LLMAccess.call_llm("google", "", ""Quotes" and — dashes –"; normalize_output=false)
 ```
 
 The helper `LLMAccess.normalize_output_text(str)` implements the transformation used by the dispatcher.

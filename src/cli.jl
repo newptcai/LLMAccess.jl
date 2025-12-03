@@ -104,7 +104,7 @@ function parse_commandline(
     end
     if !("no_normalize" in omit)
         @add_arg_table! settings begin
-            "--no-normalize"; help = "Disable punctuation normalization (dashes/quotes)"; dest_name = "no_normalize"; action = :store_true
+            "--no-normalize", "-z"; help = "Disable text normalization and formatting"; dest_name = "no_normalize"; action = :store_true
         end
     end
     if !("alias" in omit)

@@ -309,7 +309,7 @@ function main(_)
           wl.jl --list
         """,
         add_version = true,
-        version = "v2.0.1",
+        version = "v2.0.2",
         preformatted_description = true,
         preformatted_epilog = true,
     )
