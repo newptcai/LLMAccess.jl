@@ -230,7 +230,9 @@ function run_llm_definitions(word_to_lookup, args)
     end
     
     payload = strip_triple_backticks(raw_output)
-    # Basic sanitization: remove control chars that aren't \n, \r, \t
+    # Basic sanitization: replace newlines/tabs with spaces to prevent JSON parsing errors in strings
+    payload = replace(payload, r"[\n\r\t]" => " ")
+    # Remove remaining control chars
     payload = replace(payload, r"[\x00-\x08\x0B\x0C\x0E-\x1F]" => "")
     parsed = JSON.parse(payload)
 
@@ -309,7 +311,7 @@ function main(_)
           wl.jl --list
         """,
         add_version = true,
-        version = "v2.0.2",
+        version = "v2.0.3",
         preformatted_description = true,
         preformatted_epilog = true,
     )
