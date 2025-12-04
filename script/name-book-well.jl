@@ -535,30 +535,30 @@ function main(_)
         meta = read_exiftool_metadata(inpath)
 
         prompt = build_prompt(name, meta)
-        schema = """{
-          "type": "object",
-          "properties": {
-            "title": {
-              "type": "string",
-              "description": "The main title of the book, without subtitles."
-            },
-            "authors": {
-              "type": "array",
-              "items": { "type": "string" },
-              "description": "A list of author names, in order. E.g., [\"William Strunk Jr.\", \"E. B. White\"]"
-            },
-            "volume": {
-              "type": "string",
-              "description": "The explicit volume designation (e.g., \"3\", \"Vol. II\", \"Volume Three\") if the book is part of a numbered multi-volume set."
-            },
-            "edition": {
-              "type": "string",
-              "description": "The ordinal edition of the book, if available (e.g., \"2nd\", \"4th\"). Can be omitted if not found or if the edition is descriptive (e.g., \"Revised Edition\")."
-            }
-          },
-          "required": ["title", "authors"]
-        }
-        """
+        schema_dict = Dict(
+            "type" => "object",
+            "properties" => Dict(
+                "title" => Dict(
+                    "type" => "string",
+                    "description" => "The main title of the book, without subtitles.",
+                ),
+                "authors" => Dict(
+                    "type" => "array",
+                    "items" => Dict("type" => "string"),
+                    "description" => "A list of author names, in order. Example: [\"William Strunk Jr.\", \"E. B. White\"]",
+                ),
+                "volume" => Dict(
+                    "type" => "string",
+                    "description" => "The explicit volume designation if the book is part of a numbered multi-volume set (e.g., 3, Vol. II, Volume Three).",
+                ),
+                "edition" => Dict(
+                    "type" => "string",
+                    "description" => "The ordinal edition of the book, if available (e.g., 2nd, 4th). Can be omitted if not found or if the edition is descriptive such as Revised Edition.",
+                ),
+            ),
+            "required" => ["title", "authors"],
+        )
+        schema = JSON.json(schema_dict, 2)
 
         # Pass prompt to LLM; attachment is available as args["attachment"] already
         args["input_text"] = prompt
