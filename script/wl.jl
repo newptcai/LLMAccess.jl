@@ -146,9 +146,9 @@ function sanitize_field(value)
         return ""
     end
     if value isa AbstractString
-        return strip(normalize_whitespace(String(value)))
+        return String(strip(normalize_whitespace(String(value))))
     end
-    return strip(normalize_whitespace(string(value)))
+    return String(strip(normalize_whitespace(string(value))))
 end
 
 function strip_triple_backticks(text::AbstractString)
@@ -183,6 +183,7 @@ function run_llm_definitions(word_to_lookup, args)
     schema = Dict(
         "type" => "object",
         "properties" => Dict(
+            "corrected_word" => Dict("type" => "string", "description" => "Correct spelling of the target word. If the input is correct, return it as is."),
             "ipa" => Dict("type" => "string", "description" => "International Phonetic Alphabet spelling, may be empty"),
             "definitions" => Dict(
                 "type" => "array",
@@ -202,12 +203,13 @@ function run_llm_definitions(word_to_lookup, args)
                 "items" => Dict("type" => "string"),
             ),
         ),
-        "required" => ["definitions", "synonyms"],
+        "required" => ["corrected_word", "definitions", "synonyms"],
         "additionalProperties" => false,
     )
 
     system_instruction = """
     You are a precise lexicographer. Respond with a JSON object matching the provided schema.
+    - Correct the spelling of the input word if it is misspelled.
     - Provide at most $(max_defs) everyday definitions, ordered by commonness.
     - Only keep the most common defintions.
     - Include an example sentence for each definition when possible.
@@ -258,10 +260,15 @@ function run_llm_definitions(word_to_lookup, args)
         end
     end
 
+    corrected_word = sanitize_field(get(parsed, "corrected_word", word_to_lookup))
+    if isempty(corrected_word)
+        corrected_word = word_to_lookup
+    end
+
     synonyms_any = get(parsed, "synonyms", [])
     synonyms = String[]
     seen_syns = Set{String}()
-    target = lowercase(strip(word_to_lookup))
+    target = lowercase(strip(corrected_word))
     for syn_any in synonyms_any
         syn_str = sanitize_field(syn_any)
         if isempty(syn_str)
@@ -280,7 +287,7 @@ function run_llm_definitions(word_to_lookup, args)
         ipa = sanitize_field(parsed["ipa"])
     end
 
-    (senses = senses, synonyms = synonyms, ipa = ipa)
+    (senses = senses, synonyms = synonyms, ipa = ipa, corrected_word = corrected_word)
 end
 
 function build_result_from_llm(word_to_lookup, args)
@@ -289,9 +296,10 @@ function build_result_from_llm(word_to_lookup, args)
     isempty(senses) && return nothing
 
     synonyms = llm_data.synonyms
-    ipa = resolve_ipa(word_to_lookup, llm_data.ipa)
-    text = format_entry(word_to_lookup, ipa, senses, synonyms; max_defs = args["max-definitions"])
-    (text, :llm, true)
+    corrected_word = llm_data.corrected_word
+    ipa = resolve_ipa(corrected_word, llm_data.ipa)
+    text = format_entry(corrected_word, ipa, senses, synonyms; max_defs = args["max-definitions"])
+    (text, :llm, true, corrected_word)
 end
 
 function normalize_mode_arg(str)
@@ -453,7 +461,7 @@ function main(_)
             if cache_entry_stale(cached)
                 return nothing
             end
-            return (cached, :cache, false)
+            return (cached, :cache, false, word)
         end
 
         try
@@ -484,7 +492,7 @@ function main(_)
             end
         end
 
-        result_text, source, cache_needs_update = lookup_result
+        result_text, source, cache_needs_update, final_word = lookup_result
 
         compact_text = remove_empty_lines(result_text)
         if compact_text != result_text
@@ -496,7 +504,7 @@ function main(_)
                          (cache_write_mode == "llm-only" ? (source == :llm) : false)
 
         if cache_needs_update || should_persist
-            cache[word] = result_text
+            cache[final_word] = result_text
             if should_persist
                 save_cache(cache_file, cache)
             end
