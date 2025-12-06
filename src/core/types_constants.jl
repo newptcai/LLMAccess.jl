@@ -248,9 +248,24 @@ const MODEL_ALIASES = Dict(
     "nova-pro" => "amazon/nova-pro-v1",
     "gemma3-27b-or" => "google/gemma-3-27b-it",
     # Ollama local models
-    "gemma3-4b-ollama" => "gemma3:4b",
-    "gemma3-12b-ollama" => "gemma3:12b",
-    "qwen3-14b-ollama" => "qwen3:14b",
+    # Gemma 1
+    "gemma-2b" => "gemma:2b",
+    "gemma-7b" => "gemma:7b",
+    # Gemma 2
+    "gemma2-2b" => "gemma2:2b",
+    "gemma2-9b" => "gemma2:9b",
+    "gemma2-27b" => "gemma2:27b",
+    # Gemma 3
+    "gemma3-1b" => "gemma3:1b",
+    "gemma3-4b" => "gemma3:4b",
+    "gemma3-12b" => "gemma3:12b",
+    "gemma3-27b" => "gemma3:27b",
+    # Ministral 3
+    "ministral3-3b" => "ministral-3:3b",
+    "ministral3-8b" => "ministral-3:8b",
+    "ministral3-14b" => "ministral-3:14b",
+    # Other Ollama models
+    "qwen3-14b" => "qwen3:14b",
     "phi4-r" => "phi4-reasoning",
     "gemma3n-e4b" => "gemma3n:e4b",
     "gemma3n-e2b" => "gemma3n:e2b",
